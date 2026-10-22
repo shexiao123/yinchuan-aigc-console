@@ -4,9 +4,14 @@
  */
 window.API = (function () {
   // 注意：不能用 const cloud = window.cloud —— 端点故障转移时会重建 window.cloud，
-  // 闭包常量会一直指向旧 client。这里改用 getter 动态取，调用方式完全不变。
+  // 闭包常量会一直指向旧 client。这里改用 Proxy 动态取，调用方式完全不变。
+  // 另外 SDK 是异步加载的 CDN 脚本，window.cloud 可能尚未创建 —— 这里做保护。
   const cloud = new Proxy({}, {
-    get(_t, prop) { return window.cloud[prop] }
+    get(_t, prop) {
+      const c = window.cloud
+      if (!c) throw new Error('云服务尚未就绪，请稍后重试')
+      return c[prop]
+    }
   })
 
   /* ---------------- 佣金规则 ---------------- */
