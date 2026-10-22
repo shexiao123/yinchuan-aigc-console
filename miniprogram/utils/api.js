@@ -35,9 +35,31 @@ async function signOut() {
 async function listCategories() {
   const res = await cloud.database
     .from('categories')
-    .select('id, name, slug, icon, description, sort_order')
+    .select('id, name, slug, icon, description, image_url, sort_order')
     .order('sort_order', { ascending: true })
-  return unwrap(res, '分类加载失败') || []
+  const list = unwrap(res, '分类加载失败') || []
+  return attachCategoryImages(list)
+}
+
+/**
+ * 解析分类配图。
+ * image_url 可能是完整 http 地址（站点静态资源），也可能是云存储路径（需签名）。
+ */
+async function attachCategoryImages(categories) {
+  const list = categories || []
+  if (!list.length) return []
+  const samples = require('./samples')
+  return Promise.all(
+    list.map(async (c) => {
+      if (!c.image_url) return { ...c, imageUrl: '' }
+      if (String(c.image_url).startsWith('http')) return { ...c, imageUrl: c.image_url }
+      try {
+        return { ...c, imageUrl: await samples.signedUrl(c.image_url, 7200) }
+      } catch (e) {
+        return { ...c, imageUrl: '' }
+      }
+    })
+  )
 }
 
 async function listBanners() {

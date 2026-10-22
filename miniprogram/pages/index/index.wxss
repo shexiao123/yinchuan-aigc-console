@@ -112,7 +112,8 @@
 }
 
 .cat-item {
-  width: calc((100% - 40rpx) / 3);
+  /* 有配图后 3 列太挤（卡宽仅 210rpx），改 2 列 */
+  width: calc((100% - 20rpx) / 2);
   background: var(--card);
   border-radius: 22rpx;
   padding: 24rpx 16rpx 20rpx;
@@ -330,3 +331,31 @@
 }
 .banner-has-img .banner-inner { position: relative; z-index: 2; }
 .banner-has-img .banner-sub { max-width: 460rpx; }
+
+/* ---------------- 分类配图 ---------------- */
+/* 有配图的分类卡：图片通栏在上，文字在下 */
+.cat-item-has-img {
+  padding: 0 0 20rpx;
+  align-items: stretch;
+  overflow: hidden;
+}
+.cat-img-wrap {
+  display: block;
+  width: 100%;
+  height: 150rpx;
+  overflow: hidden;
+  background: var(--brand-soft);
+}
+.cat-img {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.cat-item-has-img .cat-name {
+  margin-top: 16rpx;
+  text-align: center;
+}
+.cat-item-has-img .cat-desc {
+  text-align: center;
+  margin-top: 4rpx;
+}

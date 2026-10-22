@@ -33,9 +33,12 @@
       <text class="section-more" bindtap="onSeeAll">全部服务 ›</text>
     </view>
     <view class="cat-grid">
-      <view class="cat-item" wx:for="{{categories}}" wx:key="id" bindtap="onCategoryTap" data-slug="{{item.slug}}">
-        <view class="cat-icon-wrap">
+      <view class="cat-item {{item.imageUrl ? 'cat-item-has-img' : ''}}" wx:for="{{categories}}" wx:key="id" bindtap="onCategoryTap" data-slug="{{item.slug}}">
+        <view class="cat-icon-wrap" wx:if="{{!item.imageUrl}}">
           <text class="cat-icon">{{item.icon}}</text>
+        </view>
+        <view class="cat-img-wrap" wx:else>
+          <image class="cat-img" src="{{item.imageUrl}}" mode="aspectFill" />
         </view>
         <text class="cat-name">{{item.name}}</text>
         <text class="cat-desc ellipsis">{{item.description}}</text>

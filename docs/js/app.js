@@ -568,8 +568,8 @@
           ${categories
             .map(
               (c) => `
-            <a class="cat-item" href="#/services?category=${c.slug}">
-              <span class="cat-icon-wrap">${c.icon || '🎬'}</span>
+            <a class="cat-item ${c.imageUrl ? 'cat-item-has-img' : ''}" href="#/services?category=${c.slug}">
+              ${c.imageUrl ? `<span class="cat-img-wrap"><img class="cat-img" src="${API.esc(c.imageUrl)}" alt="${API.esc(c.name || '')}" loading="lazy" /></span>` : `<span class="cat-icon-wrap">${c.icon || '🎬'}</span>`}
               <span class="cat-name">${API.esc(c.name)}</span>
               <span class="cat-desc">${API.esc(c.description)}</span>
             </a>`

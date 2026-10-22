@@ -1185,3 +1185,34 @@ img { max-width: 100%; display: block; }
 }
 .hero-banner-has-img .banner-text { z-index: 2; }
 .hero-banner-has-img .banner-sub { max-width: 460px; }
+
+/* ---------------- 分类配图 ---------------- */
+/* 有配图的分类卡：图片通栏在上，文字在下 */
+.cat-item-has-img {
+  padding: 0 0 18px;
+  align-items: stretch;
+  overflow: hidden;
+}
+.cat-img-wrap {
+  display: block;
+  width: 100%;
+  aspect-ratio: 3 / 2;
+  overflow: hidden;
+  background: var(--brand-soft);
+}
+.cat-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform .3s;
+}
+.cat-item-has-img:hover .cat-img { transform: scale(1.04); }
+.cat-item-has-img .cat-name {
+  padding: 16px 16px 0;
+  text-align: center;
+}
+.cat-item-has-img .cat-desc {
+  padding: 0 16px;
+  text-align: center;
+}
