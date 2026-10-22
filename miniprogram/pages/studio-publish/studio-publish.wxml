@@ -1,0 +1,138 @@
+<view class="page">
+  <!-- 申请成为服务者 -->
+  <block wx:if="{{mode === 'identity'}}">
+    <view class="apply-banner">
+      <text class="apply-banner-title">申请成为服务者</text>
+      <text class="apply-banner-text">提交后平台会审核你的资料，通常 1 个工作日内出结果。审核通过即可接单、上架服务、查看收益。</text>
+    </view>
+
+    <view class="container section" style="margin-top: 20rpx;">
+      <view class="card card-pad">
+        <text class="block-title">服务者信息</text>
+
+        <view class="field">
+          <text class="field-label">服务者名称</text>
+          <input class="input" placeholder="例如：晨末映画" placeholder-class="input-placeholder" value="{{nickname}}" bindinput="onNicknameInput" maxlength="20" />
+        </view>
+
+        <view class="field">
+          <text class="field-label">所在城市</text>
+          <input class="input" placeholder="银川" placeholder-class="input-placeholder" value="{{city}}" bindinput="onCityInput" maxlength="20" />
+        </view>
+
+        <view class="field">
+          <text class="field-label">擅长方向</text>
+          <input class="input" placeholder="用顿号或空格分隔，最多 6 个，如 婚礼跟拍、婚礼微电影" placeholder-class="input-placeholder" value="{{tagsText}}" bindinput="onIdentityTagsInput" maxlength="60" />
+        </view>
+
+        <view class="field">
+          <text class="field-label">个人简介</text>
+          <textarea class="textarea" placeholder="介绍你的从业年限、风格、擅长场景，让客户更信任你" placeholder-class="input-placeholder" value="{{bio}}" bindinput="onBioInput" maxlength="200" />
+        </view>
+      </view>
+    </view>
+
+    <view class="form-error" wx:if="{{formError}}">
+      <text class="form-error-text">{{formError}}</text>
+    </view>
+
+    <view class="container section">
+      <button class="btn btn-primary btn-block" bindtap="onSubmit" loading="{{submitting}}" disabled="{{submitting}}">提交申请</button>
+      <text class="submit-note">审核通过后会自动开通服务者身份，无需重复提交</text>
+    </view>
+  </block>
+
+  <!-- 上架服务 -->
+  <block wx:if="{{mode === 'service'}}">
+    <view class="container section" style="margin-top: 24rpx;">
+      <view class="card card-pad">
+        <text class="block-title">服务信息</text>
+
+        <!-- 服务封面 -->
+        <view class="field">
+          <text class="field-label">服务封面</text>
+          <view class="cover-picker" bindtap="onPickCover">
+            <image wx:if="{{coverUrl}}" class="cover-picker-img" src="{{coverUrl}}" mode="aspectFill" />
+            <view wx:else class="cover-picker-empty">
+              <text class="cover-picker-icon">🖼</text>
+              <text class="cover-picker-text">点击上传封面图</text>
+              <text class="cover-picker-hint">建议 3:2 横图，JPG/PNG，不超过 5MB</text>
+            </view>
+            <view class="cover-picker-loading" wx:if="{{uploadingCover}}">
+              <text class="cover-picker-loading-text">上传中…</text>
+            </view>
+          </view>
+          <view class="cover-actions" wx:if="{{coverUrl}}">
+            <button class="btn btn-soft btn-xs" bindtap="onPickCover" disabled="{{uploadingCover}}">更换</button>
+            <button class="btn btn-ghost btn-xs" bindtap="onRemoveCover">移除</button>
+          </view>
+        </view>
+
+        <view class="field">
+          <text class="field-label">服务名称</text>
+          <input class="input" placeholder="例如：AI 婚礼微电影 · 快剪版" placeholder-class="input-placeholder" value="{{title}}" bindinput="onTitleInput" maxlength="40" />
+        </view>
+
+        <view class="field">
+          <text class="field-label">副标题</text>
+          <input class="input" placeholder="一句话卖点，如「3 分钟成片，含 AI 修色」" placeholder-class="input-placeholder" value="{{subtitle}}" bindinput="onSubtitleInput" maxlength="40" />
+        </view>
+
+        <view class="field">
+          <text class="field-label">服务分类</text>
+          <picker mode="selector" range="{{categories}}" range-key="name" value="{{categoryIndex}}" bindchange="onCategoryChange">
+            <view class="picker-box">
+              <text class="picker-text">{{categories[categoryIndex].name || '选择分类'}}</text>
+              <text class="picker-arrow">›</text>
+            </view>
+          </picker>
+        </view>
+
+        <view class="field">
+          <text class="field-label">价格（元）</text>
+          <input class="input" type="digit" placeholder="0.00" placeholder-class="input-placeholder" value="{{priceYuan}}" bindinput="onPriceInput" />
+        </view>
+
+        <view class="field">
+          <text class="field-label">划线价（元，选填）</text>
+          <input class="input" type="digit" placeholder="用于展示优惠" placeholder-class="input-placeholder" value="{{originalPriceYuan}}" bindinput="onOriginalPriceInput" />
+        </view>
+
+        <view class="field-row">
+          <view class="field field-half">
+            <text class="field-label">计价单位</text>
+            <input class="input" placeholder="单" placeholder-class="input-placeholder" value="{{unit}}" bindinput="onUnitInput" maxlength="6" />
+          </view>
+          <view class="field field-half">
+            <text class="field-label">服务规格</text>
+            <input class="input" placeholder="如 3 分钟" placeholder-class="input-placeholder" value="{{duration}}" bindinput="onDurationInput" maxlength="20" />
+          </view>
+        </view>
+
+        <view class="field">
+          <text class="field-label">交付周期（工作日）</text>
+          <input class="input" type="number" placeholder="7" placeholder-class="input-placeholder" value="{{deliveryDays}}" bindinput="onDeliveryDaysInput" maxlength="3" />
+        </view>
+
+        <view class="field">
+          <text class="field-label">服务标签</text>
+          <input class="input" placeholder="最多 6 个，如 双机位、含精修30张" placeholder-class="input-placeholder" value="{{tagsText}}" bindinput="onTagsInput" maxlength="60" />
+        </view>
+
+        <view class="field">
+          <text class="field-label">详细描述</text>
+          <textarea class="textarea" placeholder="说明服务包含什么、流程是怎样的、交付什么内容" placeholder-class="input-placeholder" value="{{description}}" bindinput="onDescriptionInput" maxlength="500" />
+        </view>
+      </view>
+    </view>
+
+    <view class="form-error" wx:if="{{formError}}">
+      <text class="form-error-text">{{formError}}</text>
+    </view>
+
+    <view class="container section">
+      <button class="btn btn-primary btn-block" bindtap="onSubmit" loading="{{submitting}}" disabled="{{submitting}}">确认上架</button>
+      <text class="submit-note">上架后客户即可看到并下单，可随时下架</text>
+    </view>
+  </block>
+</view>

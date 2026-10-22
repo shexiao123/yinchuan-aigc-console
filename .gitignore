@@ -1,0 +1,43 @@
+# 依赖
+node_modules/
+miniprogram_npm/
+
+# WorkBuddy 运行时数据（不要提交）
+.workbuddy/
+*.genie
+
+# 部署标记
+.wbapp_*
+
+# 日志与临时文件
+*.log
+npm-debug.log*
+yarn-error.log*
+.DS_Store
+Thumbs.db
+
+# 编辑器
+.vscode/
+.idea/
+*.swp
+
+# 生成的图片素材（体积大，可重新生成）
+assets/covers/*.png
+assets/covers/hero/*.png
+assets/covers/regen/
+assets/covers/v2/
+assets/covers/v2check/
+assets/covers/good/
+assets/covers/opt/
+assets/covers/final/
+assets/covers/*.js
+assets/covers/*.py
+assets/covers/wm-check*.png
+assets/covers/sheet.jpg
+assets/covers/final-sheet.jpg
+assets/covers/hero/hero-*.jpg
+assets/covers/hero/hero-sheet.jpg
+
+# 文档截图（体积大）
+docs/*.png
+docs/*.jpg

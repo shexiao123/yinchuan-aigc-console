@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>数据同步 · 宁夏云辇文化科技有限公司</title>
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="assets/admin.css">
+</head>
+<body>
+<div class="admin-shell">
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <span class="sidebar-logo">银川AIGC数字文化产业基地</span>
+      <span class="sidebar-sub">宁夏云辇文化科技有限公司</span>
+      <span class="sidebar-role">◆ 平台管理端</span>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-group-label">返回</div>
+      <div class="side-item" data-go="admin.html"><span class="side-icon">‹</span>管理端主页</div>
+      <div class="nav-group-label">说明</div>
+      <div class="side-item active"><span class="side-icon">⇄</span>数据同步</div>
+    </nav>
+    <div class="sidebar-foot"><a href="index.html" style="color:rgba(255,255,255,.5)">← 返回客户端</a></div>
+  </aside>
+
+  <div class="admin-main">
+    <header class="admin-topbar">
+      <div style="display:flex;align-items:center;gap:12px">
+        <span class="admin-page-title">客户端数据同步</span>
+      </div>
+      <div class="admin-topbar-right">
+        <span class="muted" id="syncStatus"></span>
+      </div>
+    </header>
+
+    <main class="admin-content" style="max-width: 880px">
+      <div class="card card-pad" style="margin-bottom:16px">
+        <div class="card-title" style="margin-bottom:10px">为什么需要同步</div>
+        <p class="muted" style="line-height:1.85">
+          微信小程序与网页版分属两个独立的云环境，数据默认不互通。
+          客户在小程序下的订单，需要在这里导入一次，管理端才能看到并处理。
+          网页版客户端下的订单则实时可见，无需导入。
+        </p>
+      </div>
+
+      <div class="card card-pad" style="margin-bottom:16px">
+        <div class="card-title" style="margin-bottom:6px">第一步 · 在小程序里导出</div>
+        <p class="muted" style="line-height:1.8;margin-bottom:14px">
+          用管理员账号在小程序打开「我的 → 平台后台 → 导出订单数据」，把生成的文本完整复制下来。
+        </p>
+        <ol style="padding-left:22px;color:var(--ink-2);font-size:13.5px;line-height:2">
+          <li>打开微信小程序「宁夏云辇文化科技有限公司」</li>
+          <li>进入「我的」→「平台后台」</li>
+          <li>点「导出订单数据」，得到一段 JSON 文本</li>
+          <li>复制这段文本，粘贴到下方输入框</li>
+        </ol>
+      </div>
+
+      <div class="card card-pad" style="margin-bottom:16px">
+        <div class="card-title" style="margin-bottom:12px">第二步 · 粘贴并导入</div>
+        <div class="field">
+          <label class="field-label">小程序导出的 JSON 数据</label>
+          <textarea class="textarea" id="syncInput" style="height:180px;font-family:ui-monospace,Consolas,monospace;font-size:12px"
+            placeholder='{"exported_at":"...","source":"miniprogram","count":5,"orders":[...]}'></textarea>
+        </div>
+        <div style="display:flex;gap:10px;align-items:center">
+          <button class="btn btn-primary" id="importBtn">导入订单</button>
+          <button class="btn btn-ghost" id="previewBtn">仅预览</button>
+          <span class="muted" id="importMsg"></span>
+        </div>
+      </div>
+
+      <div class="card" id="resultCard" hidden>
+        <div class="card-head">
+          <div class="card-title">导入结果</div>
+          <span class="muted" id="resultSummary"></span>
+        </div>
+        <div class="table-wrap">
+          <table class="data">
+            <thead><tr><th>订单号</th><th>标题</th><th>客户</th><th>金额</th><th>状态</th><th>处理</th></tr></thead>
+            <tbody id="resultBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@tencent-ai/workbuddy-cloud-sdk@dev/lib/index.global.js"></script>
+<script src="js/config.js"></script>
+<script src="js/api.js"></script>
+<script>
+(function () {
+  const $ = (s) => document.querySelector(s)
+  const API = window.API
+  let toastTimer
+  function toast(m) { const t = $('#toast'); t.textContent = m; t.classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), 2400) }
+
+  // 导入需要管理员身份（RLS 拦截非 owner 的写入），所以先检查登录态
+  let isAdmin = false
+  async function ensureAdmin() {
+    const session = await API.getSession()
+    if (!session || !session.user) {
+      toast('请先在管理端登录后再导入')
+      setTimeout(() => { window.location.href = 'admin.html' }, 1200)
+      return false
+    }
+    isAdmin = await API.isStaff(session.user.id)
+    if (!isAdmin) {
+      toast('当前账号不是平台管理员，无法导入')
+      setTimeout(() => { window.location.href = 'admin.html' }, 1200)
+      return false
+    }
+    return true
+  }
+
+  function parseInput() {
+    const raw = $('#syncInput').value.trim()
+    if (!raw) throw new Error('请先粘贴小程序导出的数据')
+    let data
+    try { data = JSON.parse(raw) } catch (e) { throw new Error('数据格式有误，请确认完整复制了导出的内容') }
+    if (!data || !Array.isArray(data.orders)) throw new Error('数据格式有误：缺少 orders 字段')
+    return data
+  }
+
+  $('#previewBtn').addEventListener('click', () => {
+    try {
+      const data = parseInput()
+      $('#importMsg').textContent = `共 ${data.orders.length} 条订单待导入（来源：${data.source || '未知'}）`
+      toast('解析成功')
+    } catch (e) {
+      $('#importMsg').textContent = ''
+      toast(e.message)
+    }
+  })
+
+  $('#importBtn').addEventListener('click', async () => {
+    const btn = $('#importBtn')
+    btn.disabled = true
+    $('#importMsg').textContent = '导入中…'
+    let data
+    try { data = parseInput() } catch (e) { $('#importMsg').textContent = ''; toast(e.message); btn.disabled = false; return }
+
+    if (!(await ensureAdmin())) { btn.disabled = false; $('#importMsg').textContent = ''; return }
+
+    let created = 0, skipped = 0, failed = 0
+    const results = []
+    // 先取现有订单号，避免重复导入
+    let existing = []
+    try {
+      const list = await API.adminListOrders('', 500)
+      existing = list.map((x) => x.order_no)
+    } catch (e) {
+      /* 忽略，按全新处理 */
+    }
+
+    for (const o of data.orders) {
+      try {
+        if (existing.includes(o.order_no)) { skipped++; results.push({ ...o, action: '已存在' }); continue }
+        const res = await window.cloud.database.from('orders').insert({
+          order_no: o.order_no,
+          service_id: o.service_id,
+          provider_id: o.provider_id ?? null,
+          provider_owner_id: null,
+          customer_id: 'imported_' + String(o.id || Date.now()),
+          customer_name: o.customer_name || null,
+          title: o.title,
+          requirement: o.requirement || '',
+          shoot_date: o.shoot_date || null,
+          amount: o.amount,
+          platform_fee: o.platform_fee,
+          status: o.status,
+          timeline: [{ key: o.status, text: '从小程序同步导入', at: o.created_at }],
+          created_at: o.created_at
+        }).select()
+        if (res.error) { failed++; results.push({ ...o, action: '失败：' + (res.error.message || '') }) }
+        else { created++; existing.push(o.order_no); results.push({ ...o, action: '已导入' }) }
+      } catch (e) {
+        failed++
+        results.push({ ...o, action: '失败：' + (e.message || '') })
+      }
+    }
+
+    btn.disabled = false
+    $('#importMsg').textContent = ''
+    $('#resultCard').hidden = false
+    $('#resultSummary').textContent = `导入 ${created} · 跳过 ${skipped} · 失败 ${failed}`
+    $('#resultBody').innerHTML = results.map((r) => {
+      const st = { open:'待接单', taken:'已接单', producing:'制作中', delivered:'待确认', completed:'已完成', cancelled:'已取消' }[r.status] || r.status
+      return `<tr>
+        <td class="mono">${r.order_no || ''}</td>
+        <td class="td-strong">${r.title || ''}</td>
+        <td>${r.customer_name || '匿名'}</td>
+        <td class="td-amount td-num">¥${(Number(r.amount || 0) / 100).toFixed(2)}</td>
+        <td>${st}</td>
+        <td class="muted">${r.action}</td>
+      </tr>`
+    }).join('')
+    toast(`导入完成：新增 ${created} 条`)
+  })
+
+  $('#syncStatus').textContent = '数据同步工具'
+
+  // 进来先检查登录态，未登录给出提示
+  ensureAdmin().catch(() => {})
+})()
+</script>
+</body>
+</html>

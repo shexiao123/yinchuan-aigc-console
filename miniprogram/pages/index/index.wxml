@@ -1,0 +1,116 @@
+<view class="page">
+  <!-- 顶部品牌区 -->
+  <view class="hero">
+    <view class="hero-row">
+      <view class="hero-brand">
+        <text class="hero-logo">银川AIGC数字文化产业基地</text>
+        <text class="hero-slogan">宁夏云辇文化科技有限公司</text>
+      </view>
+      <view class="hero-city">
+        <text class="hero-city-icon">📍</text>
+        <text class="hero-city-text">银川</text>
+      </view>
+    </view>
+
+    <!-- 轮播 -->
+    <swiper class="banner-swiper" indicator-dots="{{false}}" autoplay="{{true}}" circular="{{true}}" interval="4200" duration="420">
+      <swiper-item wx:for="{{banners}}" wx:key="id" bindtap="onBannerTap" data-slug="{{item.link_value}}" data-type="{{item.link_type}}">
+        <view class="banner {{item.themeClass}} {{item.hasImage ? 'banner-has-img' : ''}}" style="{{item.imageUrl ? 'background-image:url(' + item.imageUrl + ')' : ''}}">
+          <view class="banner-inner">
+            <text class="banner-title">{{item.title}}</text>
+            <text class="banner-sub">{{item.subtitle}}</text>
+          </view>
+          <text class="banner-mark" wx:if="{{!item.hasImage}}">MG</text>
+        </view>
+      </swiper-item>
+    </swiper>
+  </view>
+
+  <!-- 分类 -->
+  <view class="container section">
+    <view class="section-head">
+      <text class="section-title">服务分类</text>
+      <text class="section-more" bindtap="onSeeAll">全部服务 ›</text>
+    </view>
+    <view class="cat-grid">
+      <view class="cat-item" wx:for="{{categories}}" wx:key="id" bindtap="onCategoryTap" data-slug="{{item.slug}}">
+        <view class="cat-icon-wrap">
+          <text class="cat-icon">{{item.icon}}</text>
+        </view>
+        <text class="cat-name">{{item.name}}</text>
+        <text class="cat-desc ellipsis">{{item.description}}</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 热门服务 -->
+  <view class="container section" wx:if="{{!loading}}">
+    <view class="section-head">
+      <text class="section-title">热销服务</text>
+      <text class="section-sub">按销量排序</text>
+      <text class="section-more" bindtap="onSeeAll">更多 ›</text>
+    </view>
+
+    <view class="svc-list">
+      <view class="svc-item card" wx:for="{{hotServices}}" wx:key="id" bindtap="onServiceTap" data-id="{{item.id}}">
+        <view class="svc-cover {{item.coverClass}}">
+          <image wx:if="{{item.coverUrl}}" class="svc-cover-img" src="{{item.coverUrl}}" mode="aspectFill" />
+          <text wx:else class="svc-cover-mark">MG</text>
+        </view>
+        <view class="svc-body">
+          <text class="svc-title ellipsis">{{item.title}}</text>
+          <text class="svc-sub ellipsis">{{item.subtitle}}</text>
+          <view class="svc-tags">
+            <text class="tag" wx:for="{{item.tags}}" wx:for-item="t" wx:key="*this">{{t}}</text>
+          </view>
+          <view class="svc-foot">
+            <text class="svc-sales">已售 {{item.sales_count}}</text>
+            <view class="svc-price">
+              <text class="price"><text class="price-symbol">¥</text><text class="price-value">{{item.priceText}}</text></text>
+              <text class="price-old" wx:if="{{item.oldPriceText}}">¥{{item.oldPriceText}}</text>
+              <text class="price-unit">/{{item.unit}}</text>
+            </view>
+          </view>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 推荐服务者 -->
+  <view class="container section" wx:if="{{!loading && providers.length}}">
+    <view class="section-head">
+      <text class="section-title">推荐服务者</text>
+      <text class="section-sub">按完成单量</text>
+    </view>
+    <view class="prov-list">
+      <view class="prov-item card" wx:for="{{providers}}" wx:key="id" bindtap="onProviderTap" data-id="{{item.id}}">
+        <view class="avatar avatar-md"><text>{{item.initial}}</text></view>
+        <view class="prov-body">
+          <view class="prov-name-row">
+            <text class="prov-name">{{item.nickname}}</text>
+            <text class="prov-verified" wx:if="{{item.is_verified}}">✓ 认证</text>
+          </view>
+          <view class="prov-meta">
+            <text class="prov-rate">★ {{item.ratingText}}</text>
+            <text class="prov-dot">·</text>
+            <text class="prov-count">完成 {{item.orders_done}} 单</text>
+            <text class="prov-dot">·</text>
+            <text class="prov-count">{{item.city}}</text>
+          </view>
+        </view>
+        <text class="prov-arrow">›</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 平台说明 -->
+  <view class="container section" wx:if="{{settings}}">
+    <view class="notice card card-pad">
+      <text class="notice-title">平台规则</text>
+      <text class="notice-text">{{settings.notice}}</text>
+      <text class="notice-text">最低下单金额 ¥{{settings.min_order_amount / 100}}，服务热线 {{settings.support_phone}}</text>
+    </view>
+  </view>
+
+  <view class="loading-box" wx:if="{{loading}}">正在加载…</view>
+</view>

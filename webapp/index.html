@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#FBF7F2">
+<title>宁夏云辇文化科技有限公司 · 婚礼微电影 / 品牌宣传片 / 短视频剪辑接单平台</title>
+<meta name="description" content="银川AIGC数字文化产业基地是面向婚礼与品牌方的影视制作接单平台。拍摄跟拍、视频剪辑、AI 婚礼微电影、品牌宣传片，一条龙下单与接单。">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+<!-- 顶栏 -->
+<header class="topbar">
+  <div class="topbar-inner">
+    <a class="brand" href="#/">
+      <span class="brand-logo">银川AIGC数字文化产业基地</span>
+      <span class="brand-slogan">宁夏云辇文化科技有限公司</span>
+    </a>
+
+    <nav class="nav" id="nav">
+      <a class="nav-link" data-route="home" href="#/">首页</a>
+      <a class="nav-link" data-route="services" href="#/services">全部服务</a>
+      <a class="nav-link" data-route="hall" href="#/hall">需求大厅</a>
+      <a class="nav-link" data-route="orders" href="#/orders">我的订单</a>
+      <a class="nav-link" data-route="studio" href="#/studio">接单工作台</a>
+      <a class="nav-link" data-route="membership" href="#/membership">会员</a>
+      <a class="nav-link" data-route="profile" href="#/profile">我的</a>
+      <a class="nav-link nav-link-icon" data-route="notifications" href="#/notifications" title="消息通知">
+        🔔<span class="nav-badge" id="navNotifyBadge" hidden>0</span>
+      </a>
+    </nav>
+
+    <div class="topbar-right">
+      <div class="user-chip" id="userChip" hidden>
+        <span class="user-avatar" id="userAvatar">客</span>
+        <span class="user-name" id="userName">用户</span>
+        <button class="link-btn" id="logoutBtn">退出</button>
+      </div>
+      <button class="btn btn-primary btn-sm" id="loginBtn">登录 / 注册</button>
+      <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="菜单">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<!-- 移动端底部导航 -->
+<nav class="mobile-nav" id="mobileNav">
+  <a class="mobile-nav-item" data-route="home" href="#/"><span class="mi-icon">🏠</span><span>首页</span></a>
+  <a class="mobile-nav-item" data-route="services" href="#/services"><span class="mi-icon">🔍</span><span>找服务</span></a>
+  <a class="mobile-nav-item" data-route="hall" href="#/hall"><span class="mi-icon">📋</span><span>需求大厅</span></a>
+  <a class="mobile-nav-item" data-route="orders" href="#/orders"><span class="mi-icon">📦</span><span>订单</span></a>
+  <a class="mobile-nav-item" data-route="studio" href="#/studio"><span class="mi-icon">🎬</span><span>工作台</span></a>
+</nav>
+
+<main id="app" class="app"></main>
+
+<footer class="footer">
+  <div class="footer-inner">
+    <div class="footer-col">
+      <span class="footer-logo">银川AIGC数字文化产业基地</span>
+      <p class="footer-text">银川AIGC数字文化产业基地是面向婚礼与品牌方的影视制作接单平台。拍摄、剪辑、AI 婚礼微电影、品牌宣传片，一条龙下单与接单。</p>
+    </div>
+    <div class="footer-col">
+      <span class="footer-title">服务分类</span>
+      <a href="#/services?category=wedding-shoot">婚礼跟拍</a>
+      <a href="#/services?category=wedding-film">婚礼微电影</a>
+      <a href="#/services?category=brand-film">品牌宣传片</a>
+      <a href="#/services?category=short-video">短视频剪辑</a>
+    </div>
+    <div class="footer-col">
+      <span class="footer-title">服务者</span>
+      <a href="#/studio">接单工作台</a>
+      <a href="#/hall">需求大厅</a>
+      <a href="#/provider/1">查看作品集</a>
+    </div>
+    <div class="footer-col">
+      <span class="footer-title">联系我们</span>
+      <a href="#/support" id="footerSupportLink">在线客服</a>
+      <span class="footer-text" id="footerPhone">0951-8888666</span>
+      <span class="footer-text">银川</span>
+    </div>
+  </div>
+  <div class="footer-bottom">宁夏云辇文化科技有限公司 · 让每一次心动都有画面</div>
+</footer>
+
+<!-- 登录弹层 -->
+<div class="modal-mask" id="loginModal">
+  <div class="modal">
+    <button class="modal-close" id="loginClose" aria-label="关闭">×</button>
+    <div class="login-head">
+      <span class="login-logo">银川AIGC数字文化产业基地</span>
+      <span class="login-slogan">宁夏云辇文化科技有限公司</span>
+    </div>
+
+    <div class="login-tabs">
+      <button class="login-tab active" data-login="phone">手机号登录</button>
+      <button class="login-tab" data-login="wechat">微信扫码登录</button>
+    </div>
+
+    <!-- 手机号 -->
+    <div class="login-pane" id="panePhone">
+      <p class="login-desc">未注册的手机号将自动创建账号</p>
+      <div class="field-row-inline">
+        <input class="input" id="phoneInput" type="tel" inputmode="numeric" maxlength="11" placeholder="请输入 11 位手机号">
+        <button class="btn btn-soft" id="sendCodeBtn">获取验证码</button>
+      </div>
+      <p class="field-error" id="phoneError"></p>
+      <input class="input" id="codeInput" inputmode="numeric" maxlength="6" placeholder="请输入短信验证码" disabled>
+      <button class="btn btn-primary btn-block" id="phoneLoginBtn">登录 / 注册</button>
+    </div>
+
+    <!-- 微信 -->
+    <div class="login-pane" id="paneWechat" hidden>
+      <p class="login-desc">使用微信扫码登录，扫码后自动完成授权</p>
+      <div class="qr-box">
+        <div class="qr-placeholder" id="qrPlaceholder">点击下方按钮生成二维码</div>
+        <img class="qr-img" id="qrImg" alt="微信登录二维码" hidden>
+      </div>
+      <button class="btn btn-primary btn-block" id="wechatLoginBtn">生成登录二维码</button>
+      <p class="login-tip">二维码需要在微信内打开本页面后生成，localhost 下无法使用该方式。</p>
+    </div>
+
+    <p class="login-error" id="loginError" hidden></p>
+    <p class="login-agree">登录即表示同意《服务协议》与《隐私保护指引》</p>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- 评价弹层 -->
+<div class="modal-mask" id="reviewModal">
+  <div class="modal" style="max-width: 520px">
+    <button class="modal-close" id="reviewClose" aria-label="关闭">×</button>
+    <div class="modal-title" id="reviewTitle">写评价</div>
+    <p class="login-desc" id="reviewOrderText" style="margin-bottom:16px"></p>
+
+    <div class="field">
+      <label class="field-label">服务评分</label>
+      <div class="review-star-picker" id="reviewStars">
+        <button class="review-star" data-score="1" type="button">★</button>
+        <button class="review-star" data-score="2" type="button">★</button>
+        <button class="review-star" data-score="3" type="button">★</button>
+        <button class="review-star" data-score="4" type="button">★</button>
+        <button class="review-star" data-score="5" type="button">★</button>
+        <span class="review-score-text" id="reviewScoreText">非常满意</span>
+      </div>
+    </div>
+
+    <div class="field">
+      <label class="field-label">选择标签（最多 3 个）</label>
+      <div class="review-tags" id="reviewTags"></div>
+    </div>
+
+    <div class="field">
+      <label class="field-label">评价内容</label>
+      <textarea
+        class="review-textarea"
+        id="reviewContent"
+        maxlength="500"
+        placeholder="说说这次合作的感受：拍得怎么样？沟通是否顺畅？成片交付满意吗？"
+      ></textarea>
+      <div class="review-count"><span id="reviewCount">0</span>/500</div>
+    </div>
+
+    <div class="field">
+      <label class="field-label">晒图（最多 3 张）</label>
+      <div class="review-images" id="reviewImages"></div>
+      <input type="file" id="reviewFile" accept="image/*" multiple hidden />
+    </div>
+
+    <p class="login-error" id="reviewError" hidden></p>
+
+    <div class="modal-actions">
+      <button class="btn btn-primary" id="reviewSubmit">提交评价</button>
+    </div>
+  </div>
+</div>
+
+<!-- 通用操作弹层（确认框 / 表单） -->
+<div class="modal-mask" id="actionModal">
+  <div class="modal" style="max-width: 560px">
+    <button class="modal-close" id="actionClose" aria-label="关闭">×</button>
+    <div class="modal-title" id="actionTitle">操作</div>
+    <div id="actionBody"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="actionCancel">取消</button>
+      <button class="btn btn-primary" id="actionOk">确定</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@tencent-ai/workbuddy-cloud-sdk@dev/lib/index.global.js"></script>
+<script src="js/config.js"></script>
+<script src="js/api.js"></script>
+<script src="js/samples.js"></script>
+<script src="js/adaptive-grid.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

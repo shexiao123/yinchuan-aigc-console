@@ -1,0 +1,468 @@
+/* ---------------- 会员中心 ---------------- */
+
+.card-membership {
+  background: linear-gradient(135deg, #3A2E26 0%, #4A3A2E 100%);
+  color: #fff;
+  border: none;
+  margin-top: 24rpx;
+}
+
+.card-membership-off {
+  background: linear-gradient(135deg, #4A4038 0%, #5A4C40 100%);
+}
+
+.mem-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20rpx;
+}
+
+.mem-head-left {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
+.mem-tier {
+  font-size: 34rpx;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: 1rpx;
+}
+
+.mem-expire {
+  font-size: 22rpx;
+  color: rgba(255, 255, 255, 0.6);
+  margin-top: 8rpx;
+}
+
+.mem-days {
+  display: flex;
+  align-items: baseline;
+  gap: 4rpx;
+  flex-shrink: 0;
+}
+
+.mem-days-num {
+  font-size: 52rpx;
+  font-weight: 700;
+  color: #E8B87A;
+  line-height: 1;
+}
+
+.mem-days-unit {
+  font-size: 22rpx;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.mem-lock {
+  font-size: 40rpx;
+  flex-shrink: 0;
+}
+
+.mem-perks {
+  display: flex;
+  gap: 12rpx;
+  margin-top: 28rpx;
+}
+
+.mem-perk {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 14rpx;
+  padding: 16rpx 12rpx;
+  text-align: center;
+}
+
+.mem-perk-label {
+  display: block;
+  font-size: 20rpx;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.mem-perk-value {
+  display: block;
+  font-size: 28rpx;
+  font-weight: 700;
+  color: #fff;
+  margin-top: 6rpx;
+}
+
+.mem-perk-ok {
+  color: #7FD1A0;
+}
+
+.mem-actions {
+  display: flex;
+  gap: 16rpx;
+  margin-top: 24rpx;
+}
+
+.mem-actions .btn {
+  flex: 1;
+}
+
+/* 保证金 */
+.dep-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.dep-amount {
+  display: block;
+  font-size: 40rpx;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.dep-label {
+  display: block;
+  font-size: 22rpx;
+  color: var(--ink-3);
+  margin-top: 4rpx;
+}
+
+.dep-note {
+  font-size: 22rpx;
+  color: var(--ink-3);
+  line-height: 1.6;
+  margin-top: 18rpx;
+  padding-top: 18rpx;
+  border-top: 1rpx solid var(--line);
+}
+
+/* 套餐 */
+.plan-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20rpx;
+}
+
+.plan-card {
+  background: var(--card);
+  border: 2rpx solid var(--line);
+  border-radius: 22rpx;
+  padding: 28rpx 24rpx;
+  transition: border-color .2s, box-shadow .2s;
+}
+
+.plan-card-on {
+  border-color: var(--brand);
+  box-shadow: 0 4rpx 20rpx rgba(180, 120, 60, 0.12);
+}
+
+.plan-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16rpx;
+}
+
+.plan-left {
+  flex: 1;
+  min-width: 0;
+}
+
+.plan-name {
+  display: block;
+  font-size: 32rpx;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.plan-desc {
+  display: block;
+  font-size: 22rpx;
+  color: var(--ink-3);
+  margin-top: 8rpx;
+  line-height: 1.5;
+}
+
+.plan-price {
+  display: flex;
+  align-items: baseline;
+  flex-shrink: 0;
+}
+
+.plan-price-num {
+  font-size: 44rpx;
+  font-weight: 700;
+  color: var(--brand);
+  line-height: 1;
+}
+
+.plan-price-unit {
+  font-size: 22rpx;
+  color: var(--ink-3);
+  margin-left: 4rpx;
+}
+
+.plan-fees {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10rpx;
+  margin-top: 18rpx;
+}
+
+.plan-fee {
+  font-size: 20rpx;
+  color: var(--ink-2);
+  background: #F5EFE8;
+  padding: 4rpx 12rpx;
+  border-radius: 8rpx;
+}
+
+.plan-benefits {
+  margin-top: 18rpx;
+  padding-top: 18rpx;
+  border-top: 1rpx solid var(--line);
+}
+
+.plan-benefit {
+  display: flex;
+  align-items: flex-start;
+  gap: 10rpx;
+  margin-bottom: 10rpx;
+}
+
+.plan-benefit:last-child {
+  margin-bottom: 0;
+}
+
+.plan-benefit-dot {
+  font-size: 22rpx;
+  color: var(--brand);
+  flex-shrink: 0;
+  line-height: 1.5;
+}
+
+.plan-benefit-text {
+  font-size: 23rpx;
+  color: var(--ink-2);
+  line-height: 1.5;
+  flex: 1;
+}
+
+.mem-submit {
+  margin-top: 28rpx;
+}
+
+.mem-tip {
+  font-size: 21rpx;
+  color: var(--ink-3);
+  line-height: 1.6;
+  margin-top: 16rpx;
+  text-align: center;
+}
+
+/* 支付弹层 */
+.mask {
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  background: rgba(40, 30, 24, 0.45);
+  z-index: 200;
+  display: flex;
+  align-items: flex-end;
+}
+
+.pay-sheet {
+  width: 100%;
+  background: var(--card);
+  border-radius: 28rpx 28rpx 0 0;
+  padding: 32rpx 28rpx calc(32rpx + env(safe-area-inset-bottom));
+}
+
+.pay-sheet-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24rpx;
+}
+
+.pay-title {
+  font-size: 32rpx;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.pay-close {
+  font-size: 40rpx;
+  color: var(--ink-3);
+  line-height: 1;
+  padding: 0 8rpx;
+}
+
+.pay-lines {
+  background: #F7F2EC;
+  border-radius: 18rpx;
+  padding: 8rpx 24rpx;
+}
+
+.pay-line {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20rpx 0;
+  border-bottom: 1rpx solid #EDE4D9;
+}
+
+.pay-line:last-child {
+  border-bottom: none;
+}
+
+.pay-line-total {
+  border-top: 1rpx solid #EDE4D9;
+}
+
+.pay-label {
+  font-size: 26rpx;
+  color: var(--ink-2);
+}
+
+.pay-line-total .pay-label {
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.pay-value {
+  font-size: 26rpx;
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.pay-line-total .pay-value {
+  font-size: 34rpx;
+  color: var(--brand);
+  font-weight: 700;
+}
+
+.pay-actions {
+  display: flex;
+  gap: 20rpx;
+  margin-top: 28rpx;
+}
+
+.pay-actions .btn {
+  flex: 1;
+}
+
+/* 记录 */
+.rec-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16rpx;
+  padding: 22rpx 24rpx;
+  border-bottom: 1rpx solid var(--line);
+}
+
+.rec-row:last-child {
+  border-bottom: none;
+}
+
+.rec-left {
+  flex: 1;
+  min-width: 0;
+}
+
+.rec-title {
+  display: block;
+  font-size: 26rpx;
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.rec-sub {
+  display: block;
+  font-size: 21rpx;
+  color: var(--ink-3);
+  margin-top: 6rpx;
+}
+
+.rec-right {
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.rec-amount {
+  display: block;
+  font-size: 27rpx;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.rec-status {
+  display: inline-block;
+  font-size: 20rpx;
+  padding: 3rpx 12rpx;
+  border-radius: 8rpx;
+  margin-top: 8rpx;
+}
+
+.rec-status-paid {
+  background: #E3F3E9;
+  color: #2E7D4F;
+}
+
+.rec-status-pending {
+  background: #FBF0DC;
+  color: #A9752B;
+}
+
+.rec-status-cancelled,
+.rec-status-refunded {
+  background: #F2EBE3;
+  color: var(--ink-3);
+}
+
+.log-row {
+  padding: 18rpx 24rpx;
+  border-bottom: 1rpx solid var(--line);
+}
+
+.log-row:last-child {
+  border-bottom: none;
+}
+
+.log-action {
+  font-size: 25rpx;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.log-detail {
+  display: block;
+  font-size: 22rpx;
+  color: var(--ink-2);
+  margin-top: 6rpx;
+  line-height: 1.5;
+}
+
+.log-time {
+  display: block;
+  font-size: 20rpx;
+  color: var(--ink-3);
+  margin-top: 6rpx;
+}
+
+.mem-foot {
+  text-align: center;
+  margin: 40rpx 0 20rpx;
+}
+
+.mem-foot-text {
+  font-size: 22rpx;
+  color: var(--ink-3);
+}
+
+.mem-foot-link {
+  font-size: 22rpx;
+  color: var(--brand);
+  margin-left: 8rpx;
+}

@@ -1,0 +1,9 @@
+{
+  "name": "guangying-orders",
+  "version": "1.0.0",
+  "description": "宁夏云辇文化科技有限公司 - 影视制作接单平台",
+  "private": true,
+  "dependencies": {
+    "@tencent-ai/workbuddy-cloud-sdk": "dev"
+  }
+}

@@ -1,0 +1,53 @@
+<view class="page page-with-tabbar">
+  <view class="filter-bar">
+    <scroll-view scroll-x="{{true}}" show-scrollbar="{{false}}">
+      <view class="filter-row">
+        <view
+          class="filter-chip {{activeKey === item.key ? 'filter-chip-active' : ''}}"
+          wx:for="{{filters}}"
+          wx:key="key"
+          bindtap="onFilterTap"
+          data-key="{{item.key}}"
+        >
+          <text>{{item.label}}</text>
+        </view>
+      </view>
+    </scroll-view>
+  </view>
+
+  <view class="container">
+    <view class="role-hint" wx:if="{{loggedIn && role === 'provider'}}">
+      <text class="role-hint-text">当前展示你接到的订单</text>
+    </view>
+    <view class="role-hint" wx:elif="{{loggedIn}}">
+      <text class="role-hint-text">当前展示你购买的服务订单</text>
+    </view>
+
+    <view class="order-list" wx:if="{{!loading && orders.length}}">
+      <view class="order-item card" wx:for="{{orders}}" wx:key="id" bindtap="onOrderTap" data-id="{{item.id}}">
+        <view class="order-head">
+          <text class="order-title ellipsis">{{item.title}}</text>
+          <text class="badge badge-{{item.tone}}">{{item.statusText}}</text>
+        </view>
+        <view class="order-meta">
+          <text class="order-no">{{item.order_no}}</text>
+          <text class="order-time">{{item.timeText}}</text>
+        </view>
+        <view class="order-foot">
+          <text class="order-amount">¥{{item.amountText}}</text>
+          <text class="order-arrow">查看进度 ›</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="empty" wx:if="{{!loading && !orders.length}}">
+      <text class="empty-icon">📋</text>
+      <text class="empty-text" wx:if="{{loggedIn}}">这里还没有订单</text>
+      <text class="empty-text" wx:else>登录后查看你的订单</text>
+      <text class="empty-hint" wx:if="{{loggedIn}}">去首页看看有哪些服务</text>
+      <button class="btn btn-soft btn-sm empty-btn" wx:if="{{!loggedIn}}" bindtap="onGoLogin">去登录</button>
+    </view>
+
+    <view class="loading-box" wx:if="{{loading}}">正在加载…</view>
+  </view>
+</view>

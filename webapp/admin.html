@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>宁夏云辇文化科技有限公司 · 管理端</title>
+<meta name="robots" content="noindex">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="assets/admin.css">
+</head>
+<body>
+
+<div class="admin-shell">
+  <!-- 侧栏 -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-brand">
+      <span class="sidebar-logo">银川AIGC数字文化产业基地</span>
+      <span class="sidebar-sub">宁夏云辇文化科技有限公司</span>
+      <span class="sidebar-role">◆ 平台管理端</span>
+    </div>
+
+    <nav class="sidebar-nav" id="sidebarNav">
+      <div class="nav-group-label">数据</div>
+      <div class="side-item active" data-page="dashboard"><span class="side-icon">▤</span>运营概览</div>
+
+      <div class="nav-group-label">交易</div>
+      <div class="side-item" data-page="orders"><span class="side-icon">▦</span>订单管理<span class="side-badge" id="badgeOrders" hidden>0</span></div>
+      <div class="side-item" data-page="settlements"><span class="side-icon">¥</span>结算与提现<span class="side-badge" id="badgeSettle" hidden>0</span></div>
+
+      <div class="nav-group-label">供给</div>
+      <div class="side-item" data-page="providers"><span class="side-icon">◈</span>服务者管理</div>
+      <div class="side-item" data-page="applications"><span class="side-icon">◷</span>入驻审核<span class="side-badge" id="badgeApply" hidden>0</span></div>
+      <div class="side-item" data-page="services"><span class="side-icon">◇</span>服务与分类</div>
+
+      <div class="nav-group-label">运营</div>
+      <div class="side-item" data-page="content"><span class="side-icon">▣</span>首页与内容</div>
+      <div class="side-item" data-page="settings"><span class="side-icon">⚙</span>平台设置</div>
+      <div class="side-item" data-page="members"><span class="side-icon">👑</span>会员管理<span class="side-badge" id="badgeMember" hidden>0</span></div>
+      <div class="side-item" data-page="support"><span class="side-icon">💬</span>客服会话</div>
+      <div class="side-item" data-page="logs"><span class="side-icon">◷</span>操作日志</div>
+    </nav>
+
+    <div class="sidebar-foot">
+      <div id="sideUser">未登录</div>
+      <div style="margin-top:8px">
+        <a href="sync.html" style="color:rgba(255,255,255,.5)">⇄ 客户端数据同步</a>
+      </div>
+      <div style="margin-top:6px">
+        <a href="index.html" style="color:rgba(255,255,255,.5)">← 返回客户端</a>
+      </div>
+    </div>
+  </aside>
+
+  <div class="drawer-mask" id="drawerMask"></div>
+
+  <!-- 主区 -->
+  <div class="admin-main">
+    <header class="admin-topbar">
+      <div style="display:flex;align-items:center;gap:12px">
+        <button class="drawer-toggle" id="drawerToggle" aria-label="菜单">☰</button>
+        <span class="admin-page-title" id="pageTitle">运营概览</span>
+      </div>
+      <div class="admin-topbar-right">
+        <span class="muted" id="todayLabel"></span>
+        <span class="admin-user">
+          <span class="admin-avatar" id="adminAvatar">管</span>
+          <span id="adminName">管理员</span>
+        </span>
+        <button class="btn btn-ghost btn-sm" id="logoutBtn">退出</button>
+      </div>
+    </header>
+
+    <main class="admin-content" id="adminContent">
+      <div class="loading">加载中…</div>
+    </main>
+  </div>
+</div>
+
+<!-- 登录遮罩 -->
+<div class="modal-mask" id="loginMask" style="z-index: 250">
+  <div class="modal" style="max-width: 420px">
+    <div class="modal-title">管理端登录</div>
+    <p class="muted" style="margin-bottom:16px;line-height:1.7">
+      管理端仅对平台管理员开放。请先用管理码验证身份，再绑定手机号。
+    </p>
+
+    <!-- 第一步：管理码验证 -->
+    <div class="field">
+      <label class="field-label">管理码</label>
+      <input class="input" id="adminInvite" placeholder="例如 MG2026ADMIN8842">
+    </div>
+    <button class="btn btn-primary btn-block" id="adminCheckCode">验证管理码</button>
+
+    <!-- 第二步：绑定手机号 -->
+    <div id="paneBind" hidden style="margin-top:18px;padding-top:18px;border-top:1px solid var(--line)">
+      <p class="muted" style="margin-bottom:14px;line-height:1.7" id="bindTip">管理码有效。请验证手机号以绑定管理员账号。</p>
+      <div class="field">
+        <label class="field-label">手机号</label>
+        <input class="input" id="adminPhone2" type="tel" maxlength="11" placeholder="请输入 11 位手机号">
+      </div>
+      <div class="field">
+        <label class="field-label">短信验证码</label>
+        <div style="display:flex;gap:9px">
+          <input class="input" id="adminCode2" maxlength="6" placeholder="验证码" disabled>
+          <button class="btn btn-soft" id="adminSendCode2" style="flex-shrink:0">获取验证码</button>
+        </div>
+      </div>
+      <button class="btn btn-primary btn-block" id="adminBindBtn">绑定并登录</button>
+    </div>
+
+    <p class="muted" id="adminLoginError" style="color:#A8463A;min-height:18px"></p>
+  </div>
+</div>
+
+<!-- 通用操作弹层 -->
+<div class="modal-mask" id="actionMask">
+  <div class="modal">
+    <button class="modal-close" id="actionClose">×</button>
+    <div class="modal-title" id="actionTitle">操作</div>
+    <div id="actionBody"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="actionCancel">取消</button>
+      <button class="btn btn-primary" id="actionOk">确定</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@tencent-ai/workbuddy-cloud-sdk@dev/lib/index.global.js"></script>
+<script src="js/config.js"></script>
+<script src="js/api.js"></script>
+<script src="js/platform-rules.js"></script>
+<script src="js/adaptive-grid.js"></script>
+<script src="js/admin.js"></script>
+</body>
+</html>

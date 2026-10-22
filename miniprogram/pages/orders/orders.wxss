@@ -1,0 +1,107 @@
+.filter-bar {
+  background: var(--card);
+  padding: 20rpx 0 6rpx;
+  box-shadow: 0 2rpx 10rpx rgba(120, 90, 60, 0.05);
+}
+
+.filter-row {
+  display: flex;
+  padding: 0 28rpx 16rpx;
+  white-space: nowrap;
+}
+
+.filter-chip {
+  display: inline-flex;
+  align-items: center;
+  height: 60rpx;
+  padding: 0 26rpx;
+  border-radius: 30rpx;
+  font-size: 26rpx;
+  color: var(--ink-2);
+  margin-right: 14rpx;
+  flex-shrink: 0;
+  background: #F7F2EC;
+}
+
+.filter-chip-active {
+  background: var(--brand);
+  color: #fff;
+  font-weight: 500;
+}
+
+.role-hint {
+  padding: 22rpx 0 6rpx;
+}
+
+.role-hint-text {
+  font-size: 23rpx;
+  color: var(--ink-3);
+}
+
+.order-list {
+  display: flex;
+  flex-direction: column;
+  gap: 22rpx;
+  margin-top: 22rpx;
+}
+
+.order-item {
+  padding: 26rpx 28rpx;
+}
+
+.order-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.order-title {
+  flex: 1;
+  min-width: 0;
+  font-size: 29rpx;
+  font-weight: 600;
+  color: var(--ink);
+  margin-right: 18rpx;
+}
+
+.order-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 12rpx;
+}
+
+.order-no {
+  font-size: 22rpx;
+  color: var(--ink-3);
+  font-family: 'SF Mono', Consolas, monospace;
+}
+
+.order-time {
+  font-size: 22rpx;
+  color: var(--ink-3);
+}
+
+.order-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 18rpx;
+  padding-top: 18rpx;
+  border-top: 1rpx solid var(--line);
+}
+
+.order-amount {
+  font-size: 32rpx;
+  font-weight: 700;
+  color: var(--brand);
+}
+
+.order-arrow {
+  font-size: 24rpx;
+  color: var(--ink-3);
+}
+
+.empty-btn {
+  margin-top: 28rpx;
+}

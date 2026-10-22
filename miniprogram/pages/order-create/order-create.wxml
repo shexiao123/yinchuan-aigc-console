@@ -1,0 +1,126 @@
+<view class="page">
+  <view class="loading-box" wx:if="{{loading}}">正在加载…</view>
+
+  <block wx:if="{{!loading && service}}">
+    <!-- 服务摘要 -->
+    <view class="card card-pad order-svc">
+      <view class="order-svc-cover {{service.coverClass}}">
+        <image wx:if="{{service.coverUrl}}" class="order-svc-cover-img" src="{{service.coverUrl}}" mode="aspectFill" />
+        <text wx:else class="order-svc-mark">MG</text>
+      </view>
+      <view class="order-svc-body">
+        <text class="order-svc-title ellipsis">{{service.title}}</text>
+        <text class="order-svc-sub ellipsis">{{service.subtitle}}</text>
+        <text class="order-svc-price">¥{{service.priceText}} / {{service.unit}}</text>
+      </view>
+    </view>
+
+    <!-- 服务者 -->
+    <view class="container section" wx:if="{{provider}}">
+      <view class="card card-pad prov-row">
+        <view class="avatar avatar-md"><text>{{provider.initial}}</text></view>
+        <view class="prov-row-body">
+          <text class="prov-row-name">{{provider.nickname}}</text>
+          <text class="prov-row-sub">{{provider.city}} · 完成 {{provider.orders_done}} 单</text>
+        </view>
+        <text class="prov-row-tip" wx:if="{{publishMode === 'direct'}}">指定服务者</text>
+        <text class="prov-row-tip prov-row-tip-open" wx:else>公开需求</text>
+      </view>
+    </view>
+
+    <!-- 发布方式 -->
+    <view class="container section">
+      <view class="card card-pad">
+        <text class="block-title">发布方式</text>
+
+        <view class="mode-item {{publishMode === 'direct' ? 'mode-item-active' : ''}}" bindtap="onModeChange" data-mode="direct">
+          <view class="mode-radio {{publishMode === 'direct' ? 'mode-radio-on' : ''}}"></view>
+          <view class="mode-body">
+            <text class="mode-title">指定给该服务者</text>
+            <text class="mode-desc">{{provider ? provider.nickname : '服务者'}} 接单后直接开始沟通，适合已经确定合作对象。</text>
+          </view>
+        </view>
+
+        <view class="mode-item {{publishMode === 'open' ? 'mode-item-active' : ''}}" bindtap="onModeChange" data-mode="open">
+          <view class="mode-radio {{publishMode === 'open' ? 'mode-radio-on' : ''}}"></view>
+          <view class="mode-body">
+            <text class="mode-title">发布到需求大厅</text>
+            <text class="mode-desc">不指定人，所有服务者都能抢单，谁先接由谁服务，价格更灵活。</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 需求表单 -->
+    <view class="container section">
+      <view class="card card-pad">
+        <view class="field">
+          <text class="field-label">订单标题</text>
+          <input
+            class="input"
+            placeholder="例如：10 月 18 日 婚礼当日跟拍与快剪"
+            placeholder-class="input-placeholder"
+            value="{{title}}"
+            bindinput="onTitleInput"
+            maxlength="40"
+          />
+        </view>
+
+        <view class="field">
+          <text class="field-label">拍摄 / 交付日期</text>
+          <picker mode="date" value="{{shootDate}}" start="2020-01-01" bindchange="onDateChange">
+            <view class="picker-box">
+              <text class="picker-text {{shootDate ? '' : 'picker-placeholder'}}">{{shootDate || '选择期望日期（可留空）'}}</text>
+              <text class="picker-arrow">›</text>
+            </view>
+          </picker>
+        </view>
+
+        <view class="field">
+          <text class="field-label">需求描述</text>
+          <textarea
+            class="textarea"
+            placeholder="说说你想要什么：场地、人数、风格倾向、需要哪些片段、是否需要加急等"
+            placeholder-class="input-placeholder"
+            value="{{requirement}}"
+            bindinput="onRequirementInput"
+            maxlength="500"
+          />
+          <text class="field-counter">{{requirement.length}} / 500</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 费用明细 -->
+    <view class="container section">
+      <view class="card card-pad">
+        <text class="block-title">费用明细</text>
+        <view class="fee-row">
+          <text class="fee-label">服务金额</text>
+          <text class="fee-value">¥{{amountText}}</text>
+        </view>
+        <view class="fee-row">
+          <text class="fee-label">平台服务费</text>
+          <text class="fee-value fee-dim">¥{{feeText}}（{{commissionRate}}%）</text>
+        </view>
+        <view class="divider"></view>
+        <view class="fee-row">
+          <text class="fee-label fee-total-label">实付金额</text>
+          <text class="fee-total">¥{{amountText}}</text>
+        </view>
+        <text class="fee-note">平台服务费由服务者承担，从其收入中扣除，不额外向你收取。</text>
+      </view>
+    </view>
+
+    <view class="form-error" wx:if="{{formError}}">
+      <text class="form-error-text">{{formError}}</text>
+    </view>
+
+    <view class="container section">
+      <button class="btn btn-primary btn-block" bindtap="onSubmit" loading="{{submitting}}" disabled="{{submitting}}">
+        提交订单
+      </button>
+      <text class="submit-note">提交后服务者会尽快接单，接单前可随时取消</text>
+    </view>
+  </block>
+</view>

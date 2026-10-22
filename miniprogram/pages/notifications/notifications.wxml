@@ -1,0 +1,54 @@
+<view class="container section">
+  <!-- 未登录 -->
+  <view class="card card-pad" wx:if="{{!loading && !loggedIn}}">
+    <view class="empty">
+      <text class="empty-icon">🔔</text>
+      <text class="empty-text">登录后查看消息</text>
+      <text class="empty-hint">接单、交付、审核结果都会在这里提醒你</text>
+      <button class="btn btn-primary btn-sm empty-btn" bindtap="onGoLogin">去登录</button>
+    </view>
+  </view>
+
+  <!-- 加载中 -->
+  <view class="card card-pad" wx:if="{{loading}}">
+    <text class="empty-text">正在加载…</text>
+  </view>
+
+  <block wx:if="{{!loading && loggedIn}}">
+    <!-- 操作栏 -->
+    <view class="notify-bar" wx:if="{{unread > 0}}">
+      <text class="notify-bar-text">你有 {{unread}} 条未读消息</text>
+      <text class="notify-bar-action" bindtap="onReadAll">全部已读</text>
+    </view>
+
+    <!-- 消息列表 -->
+    <view class="card notify-list" wx:if="{{list.length}}">
+      <view
+        class="notify-item {{item.isUnread ? 'notify-unread' : ''}}"
+        wx:for="{{list}}"
+        wx:key="id"
+        data-id="{{item.id}}"
+        data-link-type="{{item.link_type}}"
+        data-link-id="{{item.link_id}}"
+        bindtap="onTap"
+      >
+        <view class="notify-dot" wx:if="{{item.isUnread}}"></view>
+        <view class="notify-body">
+          <view class="notify-head">
+            <text class="notify-title">{{item.title}}</text>
+            <text class="notify-type">{{item.typeText}}</text>
+          </view>
+          <text class="notify-text" wx:if="{{item.body}}">{{item.body}}</text>
+          <text class="notify-time">{{item.timeText}}</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="card card-pad" wx:else>
+      <view class="empty">
+        <text class="empty-icon">📭</text>
+        <text class="empty-text">{{emptyText}}</text>
+      </view>
+    </view>
+  </block>
+</view>

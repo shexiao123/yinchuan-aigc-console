@@ -1,0 +1,182 @@
+<view class="page">
+  <!-- 未登录 -->
+  <view class="empty" wx:if="{{!loading && !loggedIn}}">
+    <text class="empty-icon">👑</text>
+    <text class="empty-text">会员中心</text>
+    <text class="empty-hint">登录后查看会员状态、保证金与开通记录</text>
+    <button class="btn btn-primary btn-sm empty-btn" bindtap="onGoLogin">去登录</button>
+  </view>
+
+  <block wx:else>
+    <!-- 当前会员状态 -->
+    <view class="card card-membership" wx:if="{{status.isMember}}">
+      <view class="mem-head">
+        <view class="mem-head-left">
+          <text class="mem-tier">{{status.planName}}</text>
+          <text class="mem-expire">有效期至 {{status.expireAt}}</text>
+        </view>
+        <view class="mem-days">
+          <text class="mem-days-num">{{status.daysLeft}}</text>
+          <text class="mem-days-unit">天</text>
+        </view>
+      </view>
+      <view class="mem-perks">
+        <view class="mem-perk">
+          <text class="mem-perk-label">接单佣金</text>
+          <text class="mem-perk-value">{{status.commissionText}}%</text>
+        </view>
+        <view class="mem-perk">
+          <text class="mem-perk-label">在架上限</text>
+          <text class="mem-perk-value">{{status.maxServices}} 个</text>
+        </view>
+        <view class="mem-perk">
+          <text class="mem-perk-label">接单资格</text>
+          <text class="mem-perk-value mem-perk-ok">已开通</text>
+        </view>
+      </view>
+      <view class="mem-actions">
+        <button class="btn btn-soft btn-sm" bindtap="onRenew">续费一个月</button>
+        <button class="btn btn-ghost btn-sm" bindtap="onCancel">取消会员</button>
+      </view>
+    </view>
+
+    <!-- 未开通：引导 -->
+    <view class="card card-membership card-membership-off" wx:if="{{!status.isMember}}">
+      <view class="mem-head">
+        <view class="mem-head-left">
+          <text class="mem-tier">未开通会员</text>
+          <text class="mem-expire">开通会员后才能接单、发布服务</text>
+        </view>
+        <text class="mem-lock">🔒</text>
+      </view>
+    </view>
+
+    <!-- 保证金 -->
+    <view class="section" wx:if="{{deposit}}">
+      <view class="section-title">我的保证金</view>
+      <view class="card card-pad">
+        <view class="dep-row">
+          <view>
+            <text class="dep-amount">¥{{depositAmountText}}</text>
+            <text class="dep-label">已冻结（可退）</text>
+          </view>
+          <text class="badge badge-pending">冻结中</text>
+        </view>
+        <view class="dep-note">保证金用于保障订单履约。退出接单或平台解约时可原路退还。</view>
+      </view>
+    </view>
+
+    <!-- 套餐选择 -->
+    <view class="section">
+      <view class="section-title">选择套餐</view>
+      <view class="plan-list">
+        <view
+          class="plan-card {{item.selected ? 'plan-card-on' : ''}}"
+          wx:for="{{plans}}"
+          wx:key="code"
+          data-code="{{item.code}}"
+          bindtap="onSelectPlan"
+        >
+          <view class="plan-top">
+            <view class="plan-left">
+              <text class="plan-name">{{item.name}}</text>
+              <text class="plan-desc">{{item.description}}</text>
+            </view>
+            <view class="plan-price">
+              <text class="plan-price-num">¥{{item.priceText}}</text>
+              <text class="plan-price-unit">/{{item.periodText}}</text>
+            </view>
+          </view>
+          <view class="plan-fees">
+            <text class="plan-fee">保证金 ¥{{item.depositText}}</text>
+            <text class="plan-fee">入驻费 ¥{{item.onboardingText}}</text>
+            <text class="plan-fee">佣金 {{item.commissionText}}%</text>
+          </view>
+          <view class="plan-benefits">
+            <view class="plan-benefit" wx:for="{{item.benefitsList}}" wx:for-item="b" wx:key="*this">
+              <text class="plan-benefit-dot">✓</text>
+              <text class="plan-benefit-text">{{b}}</text>
+            </view>
+          </view>
+        </view>
+      </view>
+
+      <button class="btn btn-primary btn-block mem-submit" bindtap="onSubscribe" disabled="{{paying}}" loading="{{paying}}">
+        开通会员
+      </button>
+      <view class="mem-tip">
+        首次开通需一次性支付会员费、保证金与入驻费。保证金可退，会员费按月计。
+      </view>
+    </view>
+
+    <!-- 支付明细弹层 -->
+    <view class="mask" wx:if="{{showPay}}" bindtap="onClosePay">
+      <view class="pay-sheet" catchtap="onClosePay">
+        <view class="pay-sheet-head" catchtap="onClosePay">
+          <text class="pay-title">确认开通</text>
+          <text class="pay-close" catchtap="onClosePay">×</text>
+        </view>
+        <view class="pay-lines" catchtap="onClosePay">
+          <view class="pay-line" catchtap="onClosePay">
+            <text class="pay-label">会员费</text>
+            <text class="pay-value">¥{{breakdown.membershipText}}</text>
+          </view>
+          <view class="pay-line" wx:if="{{breakdown.depositText}}" catchtap="onClosePay">
+            <text class="pay-label">保证金（可退）</text>
+            <text class="pay-value">¥{{breakdown.depositText}}</text>
+          </view>
+          <view class="pay-line" wx:if="{{breakdown.onboardingText}}" catchtap="onClosePay">
+            <text class="pay-label">入驻费（一次性）</text>
+            <text class="pay-value">¥{{breakdown.onboardingText}}</text>
+          </view>
+          <view class="pay-line pay-line-total" catchtap="onClosePay">
+            <text class="pay-label">合计</text>
+            <text class="pay-value">¥{{breakdown.totalText}}</text>
+          </view>
+          <view class="pay-line" catchtap="onClosePay">
+            <text class="pay-label">会员有效期</text>
+            <text class="pay-value">{{breakdown.periodDays}} 天</text>
+          </view>
+        </view>
+        <view class="pay-actions" catchtap="onClosePay">
+          <button class="btn btn-ghost btn-sm" catchtap="onClosePay">取消</button>
+          <button class="btn btn-primary btn-sm" catchtap="onConfirmPay">确认支付</button>
+        </view>
+      </view>
+    </view>
+
+    <!-- 开通记录 -->
+    <view class="section" wx:if="{{orders.length}}">
+      <view class="section-title">开通记录</view>
+      <view class="card">
+        <view class="rec-row" wx:for="{{orders}}" wx:key="id">
+          <view class="rec-left">
+            <text class="rec-title">{{item.plan_name}}</text>
+            <text class="rec-sub">{{item.order_no}} · {{item.createdAtText}}</text>
+          </view>
+          <view class="rec-right">
+            <text class="rec-amount">¥{{item.amountText}}</text>
+            <text class="rec-status rec-status-{{item.status}}">{{item.statusText}}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 变更日志 -->
+    <view class="section" wx:if="{{logs.length}}">
+      <view class="section-title">会员记录</view>
+      <view class="card">
+        <view class="log-row" wx:for="{{logs}}" wx:key="id">
+          <text class="log-action">{{item.actionText}}</text>
+          <text class="log-detail">{{item.detail}}</text>
+          <text class="log-time">{{item.createdAtText}}</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="mem-foot">
+      <text class="mem-foot-text">对会员或保证金有疑问？</text>
+      <text class="mem-foot-link" bindtap="onGoSupport">联系人工客服</text>
+    </view>
+  </block>
+</view>

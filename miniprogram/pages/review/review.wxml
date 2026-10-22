@@ -1,0 +1,108 @@
+<view class="container section">
+  <!-- 加载中 -->
+  <view class="card card-pad" wx:if="{{loading}}">
+    <text class="empty-text">正在加载订单…</text>
+  </view>
+
+  <!-- 错误态 -->
+  <view class="card card-pad" wx:if="{{!loading && error && !order}}">
+    <text class="empty-text">{{error}}</text>
+    <view class="empty-gap"></view>
+    <button class="btn btn-soft btn-block" bindtap="onBack">返回</button>
+  </view>
+
+  <block wx:if="{{!loading && order}}">
+    <!-- 订单摘要 -->
+    <view class="card card-pad order-brief">
+      <view class="order-brief-head">
+        <text class="order-brief-title">{{service.title}}</text>
+        <text class="order-brief-amount">{{order.amountText}}</text>
+      </view>
+      <view class="order-brief-sub" wx:if="{{provider}}">
+        服务者：{{provider.nickname}}
+      </view>
+    </view>
+
+    <!-- 评分 -->
+    <view class="card card-pad">
+      <text class="block-title">服务评分</text>
+      <view class="rating-row">
+        <view
+          class="rating-star {{item <= rating ? 'star-on' : ''}}"
+          wx:for="{{ratingStars}}"
+          wx:key="*this"
+          data-score="{{item}}"
+          bindtap="onRatingTap"
+        >
+          ★
+        </view>
+        <text class="rating-text">{{ratingText}}</text>
+      </view>
+
+      <!-- 标签 -->
+      <view class="tag-section">
+        <text class="tag-label">选择标签（最多 3 个）</text>
+        <view class="tag-wrap">
+          <view
+            class="tag-chip {{tagStates[item] ? 'chip-on' : ''}}"
+            wx:for="{{allTags}}"
+            wx:key="*this"
+            data-tag="{{item}}"
+            bindtap="onTagTap"
+          >
+            {{item}}
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 评价内容 -->
+    <view class="card card-pad">
+      <text class="block-title">评价内容</text>
+      <textarea
+        class="review-textarea"
+        placeholder="说说这次合作的感受：拍得怎么样？沟通是否顺畅？成片交付满意吗？"
+        placeholder-class="input-placeholder"
+        maxlength="500"
+        value="{{content}}"
+        bindinput="onContentInput"
+        auto-height
+      />
+      <text class="word-count">{{content.length}}/500</text>
+    </view>
+
+    <!-- 图片 -->
+    <view class="card card-pad">
+      <text class="block-title">晒图（最多 3 张）</text>
+      <view class="image-row">
+        <view class="image-item" wx:for="{{images}}" wx:key="*this">
+          <image
+            class="image-thumb"
+            src="{{item}}"
+            mode="aspectFill"
+            data-index="{{index}}"
+            bindtap="onPreviewImage"
+          />
+          <view class="image-remove" data-index="{{index}}" catchtap="onRemoveImage">×</view>
+        </view>
+        <view class="image-add" wx:if="{{images.length < 3}}" bindtap="onAddImage">
+          <text class="image-add-icon">＋</text>
+          <text class="image-add-text">添加</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="error-tip" wx:if="{{error}}">{{error}}</view>
+
+    <view class="container section">
+      <button
+        class="btn btn-primary btn-block"
+        bindtap="onSubmit"
+        loading="{{submitting}}"
+        disabled="{{submitting}}"
+      >
+        提交评价
+      </button>
+    </view>
+  </block>
+</view>

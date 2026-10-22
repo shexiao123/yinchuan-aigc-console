@@ -1,0 +1,143 @@
+<view class="page">
+  <view class="loading-box" wx:if="{{loading}}">正在加载…</view>
+
+  <view class="empty" wx:if="{{!loading && !isStaff}}">
+    <text class="empty-icon">🔐</text>
+    <text class="empty-text">仅平台管理员可见</text>
+    <text class="empty-hint">需要平台运营账号权限</text>
+    <button class="btn btn-soft btn-sm empty-btn" bindtap="onActivate" wx:if="{{loggedIn && !activating}}">
+      输入邀请码激活
+    </button>
+    <button class="btn btn-primary btn-sm empty-btn" bindtap="onGoLogin" wx:if="{{!loggedIn}}">
+      去登录
+    </button>
+  </view>
+
+  <!-- 激活管理员：内联输入卡片 -->
+  <view class="container section" wx:if="{{activating}}">
+    <view class="card card-pad">
+      <text class="block-title">激活管理员身份</text>
+      <text class="activate-hint">输入平台发放的邀请码，激活后即可查看运营数据。</text>
+      <input
+        class="input activate-input"
+        placeholder="邀请码，如 MG2026ADMIN8842"
+        placeholder-class="input-placeholder"
+        value="{{inviteCode}}"
+        bindinput="onInviteInput"
+        maxlength="32"
+      />
+      <text class="activate-error" wx:if="{{activateError}}">{{activateError}}</text>
+      <view class="activate-actions">
+        <button class="btn btn-ghost btn-sm" bindtap="onActivateCancel">取消</button>
+        <button
+          class="btn btn-primary btn-sm"
+          bindtap="onActivateSubmit"
+          loading="{{activating}}"
+          disabled="{{activating}}"
+        >
+          激活
+        </button>
+      </view>
+    </view>
+  </view>
+
+  <block wx:if="{{!loading && isStaff}}">
+    <!-- 数据看板 -->
+    <view class="admin-head">
+      <text class="admin-title">平台总览</text>
+      <text class="admin-sub">银川AIGC数字文化产业基地 · 运营数据</text>
+    </view>
+
+    <view class="container">
+      <view class="admin-stats">
+        <view class="admin-stat">
+          <text class="admin-stat-value">{{stats.total}}</text>
+          <text class="admin-stat-label">订单总数</text>
+        </view>
+        <view class="admin-stat">
+          <text class="admin-stat-value">{{stats.open}}</text>
+          <text class="admin-stat-label">待接单</text>
+        </view>
+        <view class="admin-stat">
+          <text class="admin-stat-value">{{stats.inProgress}}</text>
+          <text class="admin-stat-label">进行中</text>
+        </view>
+        <view class="admin-stat">
+          <text class="admin-stat-value">{{stats.completed}}</text>
+          <text class="admin-stat-label">已完成</text>
+        </view>
+      </view>
+
+      <view class="card card-pad admin-gmv">
+        <view class="admin-gmv-label">
+          <text>累计成交额</text>
+          <text class="admin-gmv-note">已扣除取消订单</text>
+        </view>
+        <text class="admin-gmv-value">¥{{gmvText}}</text>
+      </view>
+
+      <view class="admin-mini">
+        <view class="admin-mini-item">
+          <text class="admin-mini-value">{{stats.providers}}</text>
+          <text class="admin-mini-label">服务者</text>
+        </view>
+        <view class="admin-mini-item">
+          <text class="admin-mini-value">{{stats.services}}</text>
+          <text class="admin-mini-label">在架服务</text>
+        </view>
+        <view class="admin-mini-item">
+          <text class="admin-mini-value">{{stats.categories}}</text>
+          <text class="admin-mini-label">服务分类</text>
+        </view>
+        <view class="admin-mini-item">
+          <text class="admin-mini-value">{{stats.cancelled}}</text>
+          <text class="admin-mini-label">已取消</text>
+        </item>
+      </view>
+    </view>
+
+    <!-- 订单管理 -->
+    <view class="container section">
+      <view class="section-head">
+        <text class="section-title-sm">订单管理</text>
+        <button class="btn btn-soft btn-sm" bindtap="onExport">导出订单数据</button>
+      </view>
+
+      <scroll-view scroll-x="{{true}}" show-scrollbar="{{false}}">
+        <view class="filter-row">
+          <view
+            class="filter-chip {{activeKey === item.key ? 'filter-chip-active' : ''}}"
+            wx:for="{{filters}}"
+            wx:key="key"
+            bindtap="onFilterTap"
+            data-key="{{item.key}}"
+          >
+            <text>{{item.label}}</text>
+          </view>
+        </view>
+      </scroll-view>
+
+      <view class="admin-order-list" wx:if="{{orders.length}}">
+        <view class="admin-order card" wx:for="{{orders}}" wx:key="id" bindtap="onOrderTap" data-id="{{item.id}}">
+          <view class="admin-order-head">
+            <text class="admin-order-title ellipsis">{{item.title}}</text>
+            <text class="badge badge-{{item.tone}}">{{item.statusText}}</text>
+          </view>
+          <view class="admin-order-meta">
+            <text class="admin-order-no">{{item.order_no}}</text>
+            <text class="admin-order-time">{{item.timeText}}</text>
+          </view>
+          <view class="admin-order-foot">
+            <text class="admin-order-amount">¥{{item.amountText}}</text>
+            <text class="admin-order-fee">平台服务费 ¥{{item.feeText}}</text>
+          </view>
+        </view>
+      </view>
+
+      <view class="empty" wx:if="{{!orders.length}}">
+        <text class="empty-icon">📊</text>
+        <text class="empty-text">该状态下暂无订单</text>
+      </view>
+    </view>
+  </block>
+</view>

@@ -1,0 +1,54 @@
+{
+  "pages": [
+    "pages/index/index",
+    "pages/services/services",
+    "pages/service-detail/service-detail",
+    "pages/review/review",
+    "pages/notifications/notifications",
+    "pages/support/support",
+    "pages/order-create/order-create",
+    "pages/orders/orders",
+    "pages/order-detail/order-detail",
+    "pages/studio/studio",
+    "pages/studio-publish/studio-publish",
+    "pages/membership/membership",
+    "pages/profile-edit/profile-edit",
+    "pages/admin/admin",
+    "pages/login/login",
+    "pages/profile/profile"
+  ],
+  "window": {
+    "backgroundTextStyle": "light",
+    "navigationBarBackgroundColor": "#FBF7F2",
+    "navigationBarTitleText": "AIGC数字文化产业基地",
+    "navigationBarTextStyle": "black",
+    "backgroundColor": "#FBF7F2"
+  },
+  "tabBar": {
+    "color": "#9A8E85",
+    "selectedColor": "#C4703F",
+    "backgroundColor": "#FFFFFF",
+    "borderStyle": "white",
+    "list": [
+      {
+        "pagePath": "pages/index/index",
+        "text": "首页"
+      },
+      {
+        "pagePath": "pages/orders/orders",
+        "text": "订单"
+      },
+      {
+        "pagePath": "pages/studio/studio",
+        "text": "接单"
+      },
+      {
+        "pagePath": "pages/profile/profile",
+        "text": "我的"
+      }
+    ]
+  },
+  "lazyCodeLoading": "requiredComponents",
+  "style": "v2",
+  "sitemapLocation": "sitemap.json"
+}

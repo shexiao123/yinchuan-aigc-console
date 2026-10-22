@@ -1,0 +1,219 @@
+<view class="page page-with-tabbar">
+  <!-- 未登录 -->
+  <view class="empty" wx:if="{{!loading && !loggedIn}}">
+    <text class="empty-icon">🎬</text>
+    <text class="empty-text">登录后开始接单</text>
+    <text class="empty-hint">成为服务者，上架你的服务</text>
+    <button class="btn btn-primary btn-sm empty-btn" bindtap="onBecomeProvider">去登录 / 开通</button>
+  </view>
+
+  <!-- 未开通服务者身份 -->
+  <view class="apply-state" wx:if="{{!loading && loggedIn && !hasProvider}}">
+    <!-- 审核中 -->
+    <block wx:if="{{application && application.status === 'pending'}}">
+      <view class="apply-state-icon">⏳</view>
+      <text class="apply-state-title">申请审核中</text>
+      <text class="apply-state-desc">你于 {{application.nickname}} 的服务者申请已提交，平台会在 1 个工作日内完成审核。</text>
+      <view class="apply-state-card card card-pad">
+        <view class="spec-row"><text class="spec-label">服务者名称</text><text class="spec-value">{{application.nickname}}</text></view>
+        <view class="spec-row"><text class="spec-label">所在城市</text><text class="spec-value">{{application.city}}</text></view>
+        <view class="spec-row"><text class="spec-label">擅长方向</text>
+          <view class="spec-tags"><text class="tag" wx:for="{{application.tags}}" wx:for-item="t" wx:key="*this">{{t}}</text></view>
+        </view>
+      </view>
+      <text class="apply-state-hint">审核期间可以先浏览需求大厅，了解平台规则</text>
+    </block>
+
+    <!-- 已驳回 -->
+    <block wx:elif="{{application && application.status === 'rejected'}}">
+      <view class="apply-state-icon">⚠️</view>
+      <text class="apply-state-title">申请未通过</text>
+      <text class="apply-state-desc">{{application.admin_note || '资料信息不完整，请补充后重新提交。'}}</text>
+      <button class="btn btn-primary btn-sm apply-state-btn" bindtap="onBecomeProvider">重新提交申请</button>
+    </block>
+
+    <!-- 未申请 -->
+    <block wx:else>
+      <view class="apply-state-icon">✨</view>
+      <text class="apply-state-title">你还不是服务者</text>
+      <text class="apply-state-desc">提交申请通过后即可接单、上架服务、查看收益</text>
+      <button class="btn btn-primary btn-sm apply-state-btn" bindtap="onBecomeProvider">申请成为服务者</button>
+    </block>
+  </view>
+
+  <block wx:if="{{!loading && hasProvider}}">
+    <!-- 身份卡 -->
+    <view class="studio-head">
+      <view class="studio-profile">
+        <view class="avatar avatar-lg"><text>{{provider.initial}}</text></view>
+        <view class="studio-profile-body">
+          <view class="studio-name-row">
+            <text class="studio-name">{{provider.nickname}}</text>
+            <text class="prov-verified" wx:if="{{provider.is_verified}}">✓ 认证</text>
+          </view>
+          <text class="studio-meta">★ {{provider.rating}} · 完成 {{provider.orders_done}} 单 · {{provider.city}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 会员横幅 -->
+    <view class="mem-banner" wx:if="{{isMember}}" bindtap="onGoMembership">
+      <view class="mem-banner-left">
+        <text class="mem-banner-title">{{memberPlanName}}</text>
+        <text class="mem-banner-sub">剩余 {{memberDaysLeft}} 天 · 点击查看权益</text>
+      </view>
+      <text class="mem-banner-badge">👑</text>
+    </view>
+    <view class="mem-banner mem-banner-off" wx:else bindtap="onGoMembership">
+      <view class="mem-banner-left">
+        <text class="mem-banner-title">未开通会员</text>
+        <text class="mem-banner-sub">开通会员后才能接单 · 点击开通</text>
+      </view>
+      <text class="mem-banner-badge">🔒</text>
+    </view>
+
+    <!-- 我的佣金率 -->
+    <view class="comm-card" wx:if="{{commissionRate}}">
+      <view class="comm-left">
+        <text class="comm-label">我的接单佣金率</text>
+        <text class="comm-hint">{{isMember ? '会员档位优惠价' : '开通会员可降低佣金'}}</text>
+      </view>
+      <text class="comm-value">{{commissionRate}}%</text>
+    </view>
+
+    <!-- 数据 -->
+    <view class="container">
+      <view class="stat-row">
+        <view class="stat-item">
+          <text class="stat-value">{{stats.pending}}</text>
+          <text class="stat-label">待处理</text>
+        </view>
+        <view class="stat-item">
+          <text class="stat-value">{{stats.doing}}</text>
+          <text class="stat-label">进行中</text>
+        </view>
+        <view class="stat-item">
+          <text class="stat-value">{{stats.done}}</text>
+          <text class="stat-label">已完成</text>
+        </view>
+        <view class="stat-item stat-item-income">
+          <text class="stat-value stat-income">¥{{stats.income / 100}}</text>
+          <text class="stat-label">累计收入</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 分段 -->
+    <view class="container section">
+      <view class="seg">
+        <view class="seg-item {{tab === 'hall' ? 'seg-item-active' : ''}}" bindtap="onTabTap" data-tab="hall">
+          <text>需求大厅{{claimable.length ? ' (' + claimable.length + ')' : ''}}</text>
+        </view>
+        <view class="seg-item {{tab === 'orders' ? 'seg-item-active' : ''}}" bindtap="onTabTap" data-tab="orders">
+          <text>我的订单</text>
+        </view>
+        <view class="seg-item {{tab === 'services' ? 'seg-item-active' : ''}}" bindtap="onTabTap" data-tab="services">
+          <text>我的服务</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 需求大厅 -->
+    <view class="container" wx:if="{{tab === 'hall'}}">
+      <view class="hall-list" wx:if="{{claimable.length}}">
+        <view class="hall-item card" wx:for="{{claimable}}" wx:key="id">
+          <view class="hall-head">
+            <text class="hall-title ellipsis">{{item.title}}</text>
+            <text class="hall-amount">¥{{item.amountText}}</text>
+          </view>
+          <text class="hall-req ellipsis-2">{{item.requirement || '客户未填写额外要求'}}</text>
+          <view class="hall-meta">
+            <text class="hall-meta-item">{{item.customer_name || '匿名客户'}}</text>
+            <text class="hall-dot">·</text>
+            <text class="hall-meta-item">{{item.timeText}}</text>
+            <text class="hall-dot" wx:if="{{item.shoot_date}}">·</text>
+            <text class="hall-meta-item" wx:if="{{item.shoot_date}}">期望 {{item.shoot_date}}</text>
+          </view>
+          <view class="hall-actions">
+            <button class="btn btn-ghost btn-sm hall-btn" bindtap="onOrderTap" data-id="{{item.id}}">查看详情</button>
+            <button class="btn btn-primary btn-sm hall-btn hall-btn-primary" bindtap="onClaim" data-id="{{item.id}}">我要接单</button>
+          </view>
+        </view>
+      </view>
+
+      <view class="empty" wx:if="{{!claimable.length}}">
+        <text class="empty-icon">📭</text>
+        <text class="empty-text">需求大厅暂时是空的</text>
+        <text class="empty-hint">客户发布需求后会出现在这里</text>
+      </view>
+    </view>
+
+    <!-- 我的订单 -->
+    <view class="container" wx:if="{{tab === 'orders'}}">
+      <view class="hall-list" wx:if="{{myOrders.length}}">
+        <view class="hall-item card" wx:for="{{myOrders}}" wx:key="id" bindtap="onOrderTap" data-id="{{item.id}}">
+          <view class="hall-head">
+            <text class="hall-title ellipsis">{{item.title}}</text>
+            <text class="badge badge-{{item.tone}}">{{item.statusText}}</text>
+          </view>
+          <view class="hall-meta">
+            <text class="hall-meta-item">客户 {{item.customer_name || '匿名'}}</text>
+            <text class="hall-dot">·</text>
+            <text class="hall-meta-item">{{item.timeText}}</text>
+          </view>
+          <view class="hall-actions">
+            <text class="hall-income">收入 ¥{{item.incomeText}}</text>
+            <button class="btn btn-soft btn-sm hall-btn" catchtap="onOrderTap" data-id="{{item.id}}">处理订单</button>
+          </view>
+        </view>
+      </view>
+
+      <view class="empty" wx:if="{{!myOrders.length}}">
+        <text class="empty-icon">📋</text>
+        <text class="empty-text">还没有接到订单</text>
+        <text class="empty-hint">去需求大厅看看</text>
+      </view>
+    </view>
+
+    <!-- 我的服务 -->
+    <view class="container" wx:if="{{tab === 'services'}}">
+      <view class="svc-toolbar">
+        <text class="muted">共 {{myServices.length}} 个服务</text>
+        <button class="btn btn-primary btn-sm" bindtap="onPublish">+ 上架服务</button>
+      </view>
+
+      <view class="my-svc-list" wx:if="{{myServices.length}}">
+        <view class="my-svc card" wx:for="{{myServices}}" wx:key="id">
+          <view class="my-svc-cover {{item.coverClass}}">
+            <text class="my-svc-mark">MG</text>
+          </view>
+          <view class="my-svc-body">
+            <text class="my-svc-title ellipsis">{{item.title}}</text>
+            <view class="my-svc-meta">
+              <text class="my-svc-price">¥{{item.priceText}}</text>
+              <text class="my-svc-status {{item.status === 'on' ? 'status-on' : 'status-off'}}">{{item.statusText}}</text>
+              <text class="my-svc-sales">已售 {{item.sales_count}}</text>
+              <text class="my-svc-sales">{{item.sampleCount}} 个样片</text>
+            </view>
+            <view class="my-svc-actions">
+              <button class="btn btn-soft btn-sm" bindtap="onUploadSample" data-id="{{item.id}}">上传样片</button>
+              <button class="btn btn-ghost btn-sm" bindtap="onServiceTap" data-id="{{item.id}}">查看</button>
+              <button class="btn btn-ghost btn-sm" bindtap="onToggleService" data-id="{{item.id}}" data-next="{{item.status === 'on' ? 'off' : 'on'}}">
+                {{item.status === 'on' ? '下架' : '重新上架'}}
+              </button>
+            </view>
+          </view>
+        </view>
+      </view>
+
+      <view class="empty" wx:if="{{!myServices.length}}">
+        <text class="empty-icon">🧩</text>
+        <text class="empty-text">还没有上架服务</text>
+        <text class="empty-hint">上架后客户就能看到并下单</text>
+        <button class="btn btn-primary btn-sm empty-btn" bindtap="onPublish">立即上架</button>
+      </view>
+    </view>
+  </block>
+
+  <view class="loading-box" wx:if="{{loading}}">正在加载…</view>
+</view>

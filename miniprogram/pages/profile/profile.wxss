@@ -1,0 +1,286 @@
+.profile-head {
+  padding: 36rpx 28rpx 30rpx;
+  background: linear-gradient(150deg, #E8B27A 0%, #C4703F 60%, #A85A2D 100%);
+}
+
+.profile-row {
+  display: flex;
+  align-items: center;
+}
+
+.profile-avatar {
+  background: rgba(255, 255, 255, 0.24);
+  color: #fff;
+  border: 2rpx solid rgba(255, 255, 255, 0.4);
+  overflow: hidden;
+}
+
+.profile-avatar-img {
+  width: 100%;
+  height: 100%;
+}
+
+.profile-info {
+  flex: 1;
+  min-width: 0;
+  margin-left: 22rpx;
+  display: flex;
+  flex-direction: column;
+}
+
+.profile-name {
+  font-size: 34rpx;
+  font-weight: 700;
+  color: #fff;
+}
+
+.profile-role {
+  font-size: 23rpx;
+  color: rgba(255, 255, 255, 0.88);
+  margin-top: 8rpx;
+}
+
+.profile-btn {
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--brand-deep);
+  flex-shrink: 0;
+}
+
+.profile-exit {
+  font-size: 24rpx;
+  color: rgba(255, 255, 255, 0.9);
+  flex-shrink: 0;
+  padding: 12rpx 20rpx;
+}
+
+.profile-stats {
+  display: flex;
+  margin-top: 30rpx;
+  background: rgba(255, 255, 255, 0.16);
+  border-radius: 20rpx;
+  padding: 22rpx 0;
+  backdrop-filter: blur(8rpx);
+}
+
+.profile-stat {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border-right: 1rpx solid rgba(255, 255, 255, 0.22);
+}
+
+.profile-stat:last-child {
+  border-right: none;
+}
+
+.profile-stat-value {
+  font-size: 32rpx;
+  font-weight: 700;
+  color: #fff;
+}
+
+.profile-stat-label {
+  font-size: 21rpx;
+  color: rgba(255, 255, 255, 0.82);
+  margin-top: 6rpx;
+}
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  height: 100rpx;
+  padding: 0 28rpx;
+  border-bottom: 1rpx solid var(--line);
+}
+
+.menu-item:last-child {
+  border-bottom: none;
+}
+
+.menu-icon {
+  font-size: 32rpx;
+  margin-right: 20rpx;
+  width: 44rpx;
+}
+
+.menu-text {
+  flex: 1;
+  font-size: 28rpx;
+  color: var(--ink);
+}
+
+.menu-value {
+  font-size: 24rpx;
+  color: var(--ink-3);
+  margin-right: 10rpx;
+}
+
+.menu-arrow {
+  font-size: 34rpx;
+  color: #CFC4BA;
+}
+
+.menu-badge {
+  min-width: 34rpx;
+  height: 34rpx;
+  padding: 0 10rpx;
+  border-radius: 17rpx;
+  background: var(--brand);
+  color: #fff;
+  font-size: 20rpx;
+  font-weight: 600;
+  text-align: center;
+  line-height: 34rpx;
+  margin-right: 10rpx;
+}
+
+.rules {
+  background: linear-gradient(135deg, #FBF3EA, #F7EFE4);
+}
+
+.rules-title {
+  display: block;
+  font-size: 26rpx;
+  font-weight: 600;
+  color: var(--brand-deep);
+  margin-bottom: 10rpx;
+}
+
+.rules-text {
+  display: block;
+  font-size: 23rpx;
+  color: var(--ink-2);
+  line-height: 1.8;
+}
+
+.profile-foot {
+  padding: 60rpx 0 20rpx;
+  text-align: center;
+}
+
+.profile-foot-text {
+  font-size: 22rpx;
+  color: #C3B8AE;
+  letter-spacing: 1rpx;
+}
+
+/* ---------------- 我的资料卡 ---------------- */
+.profile-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16rpx;
+  margin-top: 20rpx;
+}
+
+.profile-card-left {
+  display: flex;
+  align-items: center;
+  gap: 20rpx;
+  flex: 1;
+  min-width: 0;
+}
+
+.profile-card-avatar {
+  width: 88rpx;
+  height: 88rpx;
+  border-radius: 50%;
+  overflow: hidden;
+  background: var(--brand-soft);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.profile-card-avatar-img {
+  width: 100%;
+  height: 100%;
+}
+
+.profile-card-avatar-ph {
+  font-size: 30rpx;
+  font-weight: 700;
+  color: var(--brand);
+}
+
+.profile-card-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.profile-card-title {
+  display: block;
+  font-size: 30rpx;
+  font-weight: 700;
+  color: var(--ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.profile-card-sub {
+  display: block;
+  font-size: 22rpx;
+  color: var(--ink-3);
+  margin-top: 6rpx;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.profile-card-right {
+  display: flex;
+  align-items: center;
+  gap: 6rpx;
+  flex-shrink: 0;
+}
+
+.profile-card-edit {
+  font-size: 24rpx;
+  color: var(--brand);
+}
+
+.profile-card-arrow {
+  font-size: 30rpx;
+  color: var(--ink-3);
+}
+
+/* 资料完整度 */
+.profile-progress {
+  margin-top: 16rpx;
+}
+
+.profile-progress-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16rpx;
+  margin-bottom: 14rpx;
+}
+
+.profile-progress-title {
+  font-size: 25rpx;
+  color: var(--ink-2);
+  font-weight: 600;
+}
+
+.profile-progress-hint {
+  font-size: 21rpx;
+  color: var(--ink-3);
+}
+
+.profile-progress-bar {
+  height: 10rpx;
+  background: #F0E9E0;
+  border-radius: 999rpx;
+  overflow: hidden;
+}
+
+.profile-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #C99A5E, #B4783C);
+  border-radius: 999rpx;
+  transition: width .3s;
+}

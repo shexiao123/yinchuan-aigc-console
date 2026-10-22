@@ -1,0 +1,151 @@
+<view class="page page-with-tabbar">
+  <!-- 头部 -->
+  <view class="profile-head">
+    <view class="profile-row">
+      <view class="avatar avatar-lg profile-avatar">
+        <image wx:if="{{user.avatarUrl}}" class="profile-avatar-img" src="{{user.avatarUrl}}" mode="aspectFill" />
+        <text wx:else>{{initial}}</text>
+      </view>
+      <view class="profile-info">
+        <text class="profile-name" wx:if="{{loggedIn}}">{{user.name}}</text>
+        <text class="profile-name" wx:else>未登录</text>
+        <text class="profile-role" wx:if="{{provider}}">服务者 · {{provider.nickname}}</text>
+        <text class="profile-role" wx:elif="{{loggedIn}}">客户</text>
+        <text class="profile-role" wx:else>登录后开始下单与接单</text>
+      </view>
+      <button class="btn btn-soft btn-sm profile-btn" wx:if="{{!loggedIn}}" bindtap="onLogin">登录</button>
+      <text class="profile-exit" wx:else bindtap="onLogout">退出</text>
+    </view>
+
+    <view class="profile-stats" wx:if="{{loggedIn}}">
+      <view class="profile-stat">
+        <text class="profile-stat-value">{{orderCount}}</text>
+        <text class="profile-stat-label">订单</text>
+      </view>
+      <view class="profile-stat" wx:if="{{provider}}">
+        <text class="profile-stat-value">¥{{incomeText}}</text>
+        <text class="profile-stat-label">累计收入</text>
+      </view>
+      <view class="profile-stat" wx:if="{{provider}}">
+        <text class="profile-stat-value">{{provider.orders_done}}</text>
+        <text class="profile-stat-label">完成单量</text>
+      </view>
+      <view class="profile-stat" wx:if="{{!provider}}">
+        <text class="profile-stat-value">—</text>
+        <text class="profile-stat-label">服务者身份</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="container">
+    <!-- 我的资料 -->
+    <view class="card card-pad profile-card" wx:if="{{loggedIn}}" bindtap="onEditProfile">
+      <view class="profile-card-left">
+        <view class="profile-card-avatar">
+          <image wx:if="{{myProfile.avatarUrl}}" class="profile-card-avatar-img" src="{{myProfile.avatarUrl}}" mode="aspectFill" />
+          <text wx:else class="profile-card-avatar-ph">{{initial}}</text>
+        </view>
+        <view class="profile-card-body">
+          <text class="profile-card-title">{{myProfile.nickname || user.name || '未设置昵称'}}</text>
+          <text class="profile-card-sub" wx:if="{{myProfile.bio}}">{{myProfile.bio}}</text>
+          <text class="profile-card-sub" wx:else>{{myProfile.city || '银川'}} · 完善资料更容易被客户找到</text>
+        </view>
+      </view>
+      <view class="profile-card-right">
+        <text class="profile-card-edit">编辑</text>
+        <text class="profile-card-arrow">›</text>
+      </view>
+    </view>
+
+    <!-- 资料完整度 -->
+    <view class="card card-pad profile-progress" wx:if="{{loggedIn && profileCompleteness < 100}}">
+      <view class="profile-progress-head">
+        <text class="profile-progress-title">资料完整度 {{profileCompleteness}}%</text>
+        <text class="profile-progress-hint">{{profileMissing}}</text>
+      </view>
+      <view class="profile-progress-bar">
+        <view class="profile-progress-fill" style="width:{{profileCompleteness}}%"></view>
+      </view>
+    </view>
+
+    <!-- 功能区 -->
+    <view class="section">
+      <view class="card">
+        <view class="menu-item" bindtap="onNotifications">
+          <text class="menu-icon">🔔</text>
+          <text class="menu-text">消息通知</text>
+          <text class="menu-badge" wx:if="{{unread > 0}}">{{unread}}</text>
+          <text class="menu-arrow">›</text>
+        </view>
+        <view class="menu-item" bindtap="onEditProfile">
+          <text class="menu-icon">👤</text>
+          <text class="menu-text">个人资料</text>
+          <text class="menu-value" wx:if="{{myProfile.nickname}}">{{myProfile.nickname}}</text>
+          <text class="menu-value" wx:else>未设置</text>
+          <text class="menu-arrow">›</text>
+        </view>
+        <view class="menu-item" bindtap="onMembership">
+          <text class="menu-icon">👑</text>
+          <text class="menu-text">会员中心</text>
+          <text class="menu-value">{{memberValue}}</text>
+          <text class="menu-arrow">›</text>
+        </view>
+        <view class="menu-item" bindtap="onOrders">
+          <text class="menu-icon">📋</text>
+          <text class="menu-text">我的订单</text>
+          <text class="menu-arrow">›</text>
+        </view>
+        <view class="menu-item" bindtap="onStudio">
+          <text class="menu-icon">🎬</text>
+          <text class="menu-text">接单工作台</text>
+          <text class="menu-arrow">›</text>
+        </view>
+        <view class="menu-item" bindtap="onPublish" wx:if="{{provider}}">
+          <text class="menu-icon">➕</text>
+          <text class="menu-text">上架新服务</text>
+          <text class="menu-arrow">›</text>
+        </view>
+        <view class="menu-item" bindtap="onAdmin">
+          <text class="menu-icon">📊</text>
+          <text class="menu-text">平台后台</text>
+          <text class="menu-arrow">›</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 客服 -->
+    <view class="section">
+      <view class="card">
+        <view class="menu-item" bindtap="onOnlineSupport">
+          <text class="menu-icon">💬</text>
+          <text class="menu-text">在线客服</text>
+          <text class="menu-value">人工回复</text>
+          <text class="menu-arrow">›</text>
+        </view>
+        <view class="menu-item" bindtap="onContact">
+          <text class="menu-icon">☎️</text>
+          <text class="menu-text">客服电话</text>
+          <text class="menu-value">{{settings.support_phone}}</text>
+          <text class="menu-arrow">›</text>
+        </view>
+        <view class="menu-item" bindtap="onAbout">
+          <text class="menu-icon">ℹ️</text>
+          <text class="menu-text">关于银川AIGC数字文化产业基地</text>
+          <text class="menu-arrow">›</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 规则 -->
+    <view class="section" wx:if="{{settings}}">
+      <view class="card card-pad rules">
+        <text class="rules-title">平台规则</text>
+        <text class="rules-text">{{settings.notice}}</text>
+      </view>
+    </view>
+
+    <view class="profile-foot">
+      <text class="profile-foot-text">宁夏云辇文化科技有限公司 · 让每一次心动都有画面</text>
+    </view>
+  </view>
+</view>

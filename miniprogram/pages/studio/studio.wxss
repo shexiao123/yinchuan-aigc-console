@@ -1,0 +1,409 @@
+.studio-head {
+  padding: 34rpx 28rpx 30rpx;
+  background: linear-gradient(140deg, #A8BC96 0%, #6E7F5C 100%);
+}
+
+.studio-profile {
+  display: flex;
+  align-items: center;
+}
+
+.studio-profile-body {
+  flex: 1;
+  min-width: 0;
+  margin-left: 22rpx;
+}
+
+.studio-name-row {
+  display: flex;
+  align-items: center;
+}
+
+.studio-name {
+  font-size: 32rpx;
+  font-weight: 700;
+  color: #fff;
+}
+
+.prov-verified {
+  font-size: 20rpx;
+  color: var(--brand-deep);
+  background: var(--brand-soft);
+  padding: 2rpx 12rpx;
+  border-radius: 16rpx;
+  margin-left: 12rpx;
+}
+
+.studio-meta {
+  display: block;
+  font-size: 23rpx;
+  color: rgba(255, 255, 255, 0.88);
+  margin-top: 10rpx;
+}
+
+.apply-state {
+  padding: 90rpx 48rpx 40rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.apply-state-icon {
+  font-size: 72rpx;
+  opacity: 0.85;
+}
+
+.apply-state-title {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: var(--ink);
+  margin-top: 20rpx;
+}
+
+.apply-state-desc {
+  font-size: 25rpx;
+  color: var(--ink-2);
+  line-height: 1.7;
+  margin-top: 12rpx;
+  max-width: 520rpx;
+}
+
+.apply-state-card {
+  width: 100%;
+  max-width: 560rpx;
+  margin-top: 28rpx;
+  text-align: left;
+}
+
+.apply-state-btn {
+  margin-top: 32rpx;
+}
+
+.apply-state-hint {
+  font-size: 22rpx;
+  color: var(--ink-3);
+  margin-top: 24rpx;
+}
+
+.stat-row {
+  display: flex;
+  background: var(--card);
+  border-radius: 24rpx;
+  box-shadow: var(--shadow);
+  margin-top: -18rpx;
+  padding: 26rpx 0;
+  position: relative;
+  z-index: 2;
+}
+
+.stat-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border-right: 1rpx solid var(--line);
+}
+
+.stat-item:last-child {
+  border-right: none;
+}
+
+.stat-value {
+  font-size: 34rpx;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.stat-income {
+  font-size: 28rpx;
+  color: var(--brand);
+}
+
+.stat-label {
+  font-size: 22rpx;
+  color: var(--ink-3);
+  margin-top: 6rpx;
+}
+
+.seg {
+  display: flex;
+  background: #F2EBE3;
+  border-radius: 16rpx;
+  padding: 6rpx;
+}
+
+.seg-item {
+  flex: 1;
+  height: 64rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12rpx;
+  font-size: 25rpx;
+  color: var(--ink-2);
+}
+
+.seg-item-active {
+  background: var(--card);
+  color: var(--brand-deep);
+  font-weight: 600;
+  box-shadow: 0 2rpx 8rpx rgba(120, 90, 60, 0.1);
+}
+
+.hall-list {
+  display: flex;
+  flex-direction: column;
+  gap: 22rpx;
+  margin-top: 22rpx;
+  padding-bottom: 30rpx;
+}
+
+.hall-item {
+  padding: 26rpx 28rpx;
+}
+
+.hall-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.hall-title {
+  flex: 1;
+  min-width: 0;
+  font-size: 29rpx;
+  font-weight: 600;
+  color: var(--ink);
+  margin-right: 18rpx;
+}
+
+.hall-amount {
+  font-size: 30rpx;
+  font-weight: 700;
+  color: var(--brand);
+  flex-shrink: 0;
+}
+
+.hall-req {
+  display: block;
+  font-size: 24rpx;
+  color: var(--ink-2);
+  line-height: 1.65;
+  margin-top: 12rpx;
+}
+
+.hall-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-top: 14rpx;
+  font-size: 22rpx;
+  color: var(--ink-3);
+}
+
+.hall-meta-item {
+  color: var(--ink-3);
+}
+
+.hall-dot {
+  margin: 0 10rpx;
+}
+
+.hall-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  margin-top: 20rpx;
+  padding-top: 20rpx;
+  border-top: 1rpx solid var(--line);
+}
+
+.hall-btn {
+  margin-left: 16rpx;
+}
+
+.hall-btn-primary {
+  min-width: 180rpx;
+}
+
+.hall-income {
+  flex: 1;
+  font-size: 26rpx;
+  font-weight: 600;
+  color: var(--olive);
+}
+
+.svc-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 26rpx 0 18rpx;
+}
+
+.my-svc-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20rpx;
+  padding-bottom: 30rpx;
+}
+
+.my-svc {
+  display: flex;
+  padding: 0;
+  overflow: hidden;
+}
+
+.my-svc-cover {
+  width: 170rpx;
+  min-height: 170rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.my-svc-mark {
+  font-size: 38rpx;
+  font-weight: 800;
+  color: rgba(255, 255, 255, 0.32);
+}
+
+.my-svc-body {
+  flex: 1;
+  min-width: 0;
+  padding: 22rpx 24rpx;
+}
+
+.my-svc-title {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.my-svc-meta {
+  display: flex;
+  align-items: center;
+  margin-top: 12rpx;
+  font-size: 22rpx;
+}
+
+.my-svc-price {
+  color: var(--brand);
+  font-weight: 600;
+  font-size: 26rpx;
+}
+
+.my-svc-status {
+  margin-left: 16rpx;
+  padding: 2rpx 12rpx;
+  border-radius: 14rpx;
+}
+
+.status-on {
+  background: #E6F0E6;
+  color: #4F7A4F;
+}
+
+.status-off {
+  background: #EFEBE6;
+  color: var(--ink-3);
+}
+
+.my-svc-sales {
+  margin-left: 16rpx;
+  color: var(--ink-3);
+}
+
+.my-svc-actions {
+  display: flex;
+  margin-top: 16rpx;
+}
+
+.my-svc-actions .btn {
+  margin-right: 16rpx;
+}
+
+.empty-btn {
+  margin-top: 28rpx;
+}
+
+/* 会员横幅 */
+.mem-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16rpx;
+  margin: 24rpx 28rpx 0;
+  padding: 24rpx 26rpx;
+  background: linear-gradient(135deg, #3A2E26 0%, #4A3A2E 100%);
+  border-radius: 20rpx;
+}
+
+.mem-banner-off {
+  background: linear-gradient(135deg, #5A4C40 0%, #6A5A4C 100%);
+}
+
+.mem-banner-left {
+  flex: 1;
+  min-width: 0;
+}
+
+.mem-banner-title {
+  display: block;
+  font-size: 28rpx;
+  font-weight: 700;
+  color: #fff;
+}
+
+.mem-banner-sub {
+  display: block;
+  font-size: 21rpx;
+  color: rgba(255, 255, 255, 0.6);
+  margin-top: 6rpx;
+}
+
+.mem-banner-badge {
+  font-size: 36rpx;
+  flex-shrink: 0;
+}
+
+/* 我的佣金率 */
+.comm-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16rpx;
+  margin: 20rpx 28rpx 0;
+  padding: 22rpx 26rpx;
+  background: var(--card);
+  border: 1rpx solid var(--line);
+  border-radius: 18rpx;
+}
+
+.comm-left {
+  flex: 1;
+  min-width: 0;
+}
+
+.comm-label {
+  display: block;
+  font-size: 26rpx;
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.comm-hint {
+  display: block;
+  font-size: 21rpx;
+  color: var(--ink-3);
+  margin-top: 6rpx;
+}
+
+.comm-value {
+  font-size: 40rpx;
+  font-weight: 700;
+  color: var(--brand);
+  flex-shrink: 0;
+  line-height: 1;
+}

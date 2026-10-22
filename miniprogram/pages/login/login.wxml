@@ -1,0 +1,32 @@
+<view class="login-page">
+  <view class="login-bg"></view>
+
+  <view class="login-top">
+    <view class="login-logo">银川AIGC数字文化产业基地</view>
+    <text class="login-slogan">宁夏云辇文化科技有限公司</text>
+  </view>
+
+  <view class="login-card">
+    <text class="login-title">登录后开始下单与接单</text>
+    <text class="login-desc">用微信授权即可，无需单独注册账号。登录后可浏览全部作品与评价、发布需求、接单赚收益。</text>
+
+    <button class="btn btn-primary btn-block login-btn" bindtap="onWechatLogin" loading="{{loading}}" disabled="{{loading}}">
+      微信一键登录
+    </button>
+
+    <view class="login-agree" bindtap="onAgreeChange">
+      <view class="check-box {{agreed ? 'check-box-on' : ''}}">
+        <text wx:if="{{agreed}}">✓</text>
+      </view>
+      <text class="login-agree-text">我已阅读并同意《服务协议》与《隐私保护指引》</text>
+    </view>
+
+    <view class="login-error" wx:if="{{errorMsg}}">
+      <text class="login-error-text">{{errorMsg}}</text>
+    </view>
+  </view>
+
+  <view class="login-bottom">
+    <text class="login-note">拍摄 · 剪辑 · AI 婚礼微电影 · 品牌宣传片</text>
+  </view>
+</view>

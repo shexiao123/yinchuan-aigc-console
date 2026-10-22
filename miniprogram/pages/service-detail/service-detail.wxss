@@ -1,0 +1,396 @@
+.detail-cover {
+  height: 340rpx;
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding: 0 40rpx;
+  overflow: hidden;
+}
+
+.detail-cover-text {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+}
+
+.detail-cover-cat {
+  font-size: 22rpx;
+  color: rgba(255, 255, 255, 0.8);
+  letter-spacing: 2rpx;
+  margin-bottom: 14rpx;
+}
+
+.detail-cover-title {
+  font-size: 42rpx;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: 2rpx;
+}
+
+.detail-cover-sub {
+  font-size: 24rpx;
+  color: rgba(255, 255, 255, 0.88);
+  margin-top: 12rpx;
+}
+
+.detail-cover-mark {
+  position: absolute;
+  right: 24rpx;
+  bottom: -40rpx;
+  font-size: 180rpx;
+  font-weight: 800;
+  color: rgba(255, 255, 255, 0.13);
+}
+
+.price-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 26rpx 28rpx;
+  background: var(--card);
+  box-shadow: 0 2rpx 12rpx rgba(120, 90, 60, 0.06);
+}
+
+.price-left {
+  display: flex;
+  align-items: baseline;
+}
+
+.price-right {
+  display: flex;
+  align-items: center;
+}
+
+.price-stat {
+  font-size: 23rpx;
+  color: var(--ink-3);
+  margin-left: 24rpx;
+}
+
+.price-stat:first-child {
+  color: var(--brand);
+}
+
+.prov-card {
+  display: flex;
+  align-items: center;
+}
+
+.prov-card-body {
+  flex: 1;
+  min-width: 0;
+  margin-left: 22rpx;
+}
+
+.prov-card-name-row {
+  display: flex;
+  align-items: center;
+}
+
+.prov-card-name {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.prov-verified {
+  font-size: 20rpx;
+  color: var(--brand-deep);
+  background: var(--brand-soft);
+  padding: 2rpx 12rpx;
+  border-radius: 16rpx;
+  margin-left: 12rpx;
+}
+
+.prov-card-bio {
+  display: block;
+  font-size: 24rpx;
+  color: var(--ink-2);
+  margin-top: 10rpx;
+  line-height: 1.6;
+}
+
+.prov-card-meta {
+  display: flex;
+  align-items: center;
+  margin-top: 12rpx;
+  font-size: 22rpx;
+  color: var(--ink-3);
+}
+
+.prov-dot {
+  margin: 0 10rpx;
+}
+
+.prov-arrow {
+  font-size: 36rpx;
+  color: #CFC4BA;
+}
+
+.sample-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 20rpx;
+}
+
+.sample-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20rpx;
+}
+
+.sample-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.sample-cover {
+  position: relative;
+  width: 100%;
+  height: 190rpx;
+  border-radius: 14rpx;
+  overflow: hidden;
+  background: #1C1815;
+}
+
+.sample-img {
+  width: 100%;
+  height: 100%;
+}
+
+.sample-video-wrap {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #6B5F55, #40372F);
+  position: relative;
+}
+
+.sample-play {
+  font-size: 48rpx;
+  color: rgba(255, 255, 255, 0.9);
+  line-height: 1;
+}
+
+.sample-play-lock {
+  font-size: 44rpx;
+  opacity: 0.92;
+  line-height: 1;
+  filter: drop-shadow(0 2rpx 6rpx rgba(0, 0, 0, 0.4));
+}
+
+.sample-lock-text {
+  font-size: 20rpx;
+  color: rgba(255, 255, 255, 0.9);
+  margin-top: 12rpx;
+  background: rgba(28, 24, 21, 0.5);
+  padding: 4rpx 14rpx;
+  border-radius: 12rpx;
+}
+
+.sample-duration {
+  position: absolute;
+  right: 10rpx;
+  bottom: 10rpx;
+  font-size: 20rpx;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.5);
+  padding: 2rpx 10rpx;
+  border-radius: 10rpx;
+}
+
+.sample-badge {
+  position: absolute;
+  left: 10rpx;
+  top: 10rpx;
+  font-size: 22rpx;
+  background: rgba(0, 0, 0, 0.42);
+  padding: 2rpx 10rpx;
+  border-radius: 10rpx;
+}
+
+.sample-name {
+  font-size: 25rpx;
+  font-weight: 500;
+  color: var(--ink);
+  margin-top: 12rpx;
+}
+
+.sample-size {
+  font-size: 20rpx;
+  color: var(--ink-3);
+  margin-top: 4rpx;
+}
+
+.sample-hint {
+  display: block;
+  font-size: 21rpx;
+  color: var(--ink-3);
+  text-align: center;
+  margin-top: 20rpx;
+}
+
+.block-title {
+  display: block;
+  font-size: 30rpx;
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: 16rpx;
+}
+
+.block-text {
+  display: block;
+  font-size: 26rpx;
+  color: var(--ink-2);
+  line-height: 1.85;
+}
+
+.spec-row {
+  display: flex;
+  align-items: flex-start;
+  padding: 14rpx 0;
+}
+
+.spec-label {
+  width: 150rpx;
+  font-size: 25rpx;
+  color: var(--ink-3);
+  flex-shrink: 0;
+}
+
+.spec-value {
+  flex: 1;
+  font-size: 25rpx;
+  color: var(--ink);
+}
+
+.spec-tags {
+  flex: 1;
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.review-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 8rpx;
+}
+
+.review-item {
+  display: flex;
+  padding: 24rpx 0;
+  border-bottom: 1rpx solid var(--line);
+}
+
+.review-item:last-child {
+  border-bottom: none;
+}
+
+.review-body {
+  flex: 1;
+  min-width: 0;
+  margin-left: 18rpx;
+}
+
+.review-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.review-name {
+  font-size: 26rpx;
+  font-weight: 500;
+  color: var(--ink);
+}
+
+.review-stars {
+  font-size: 22rpx;
+  color: var(--brand);
+}
+
+.review-text {
+  display: block;
+  font-size: 25rpx;
+  color: var(--ink-2);
+  line-height: 1.75;
+  margin-top: 10rpx;
+}
+
+.review-time {
+  display: block;
+  font-size: 22rpx;
+  color: var(--ink-3);
+  margin-top: 10rpx;
+}
+
+.review-reply {
+  margin-top: 14rpx;
+  background: #FAF6F1;
+  border-radius: 14rpx;
+  padding: 16rpx 18rpx;
+}
+
+.review-reply-label {
+  font-size: 23rpx;
+  color: var(--brand-deep);
+  font-weight: 500;
+}
+
+.review-reply-text {
+  font-size: 23rpx;
+  color: var(--ink-2);
+  line-height: 1.7;
+}
+
+.action-side {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.action-side-title {
+  font-size: 34rpx;
+  font-weight: 700;
+  color: var(--brand);
+}
+
+.action-side-sub {
+  font-size: 21rpx;
+  color: var(--ink-3);
+}
+
+.action-btn {
+  width: 260rpx;
+  flex-shrink: 0;
+}
+
+/* 服务封面图：铺底显示，文字加蒙层保证可读 */
+.detail-cover-img {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+}
+.detail-cover.has-img {
+  background: #2A231C;
+}
+.detail-cover.has-img::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(90deg, rgba(30, 24, 18, 0.78) 0%, rgba(30, 24, 18, 0.45) 60%, rgba(30, 24, 18, 0.25) 100%);
+  z-index: 1;
+}

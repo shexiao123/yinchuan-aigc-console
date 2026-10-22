@@ -1,0 +1,90 @@
+<view class="support-page">
+  <!-- 加载中 -->
+  <view class="support-center" wx:if="{{loading}}">
+    <text class="empty-text">正在连接客服…</text>
+  </view>
+
+  <!-- 未登录 -->
+  <view class="support-center" wx:if="{{!loading && !loggedIn}}">
+    <text class="empty-icon">💬</text>
+    <text class="empty-text">登录后联系人工客服</text>
+    <text class="empty-hint">客服会在工作时间内回复</text>
+    <button class="btn btn-primary btn-sm" bindtap="onGoLogin">去登录</button>
+  </view>
+
+  <!-- 客服模式：会话列表 -->
+  <view class="conv-list-wrap" wx:if="{{!loading && loggedIn && staffMode}}">
+    <view class="conv-list-head">
+      <text class="conv-list-title">客户咨询</text>
+      <text class="conv-list-sub">共 {{conversations.length}} 个进行中的会话</text>
+    </view>
+    <view class="conv-list" wx:if="{{conversations.length}}">
+      <view
+        class="conv-item"
+        wx:for="{{conversations}}"
+        wx:key="id"
+        data-id="{{item.id}}"
+        bindtap="onPickConversation"
+      >
+        <view class="conv-avatar">{{item.customerInitial}}</view>
+        <view class="conv-body">
+          <view class="conv-head">
+            <text class="conv-name">{{item.customer_name || '客户'}}</text>
+            <text class="conv-time">{{item.timeText}}</text>
+          </view>
+          <text class="conv-last ellipsis">{{item.last_message || '（还没有消息）'}}</text>
+        </view>
+        <view class="conv-badge" wx:if="{{item.unread_for_staff > 0}}">{{item.unread_for_staff}}</view>
+      </view>
+    </view>
+    <view class="support-center" wx:else>
+      <text class="empty-icon">📭</text>
+      <text class="empty-text">暂时没有客户咨询</text>
+    </view>
+  </view>
+
+  <!-- 聊天界面 -->
+  <block wx:if="{{!loading && loggedIn && !staffMode && conversation}}">
+    <scroll-view class="msg-list" scroll-y scroll-into-view="{{scrollTo}}" scroll-with-animation>
+      <!-- 欢迎语 -->
+      <view class="msg-welcome">
+        <text class="msg-welcome-text">你好，这里是银川AIGC数字文化产业基地人工客服。有问题直接说，我们会尽快回复。</text>
+      </view>
+
+      <view
+        class="msg-row {{item.mine ? 'msg-row-mine' : ''}}"
+        wx:for="{{messages}}"
+        wx:key="id"
+        id="msg-{{item.id}}"
+      >
+        <view class="msg-bubble {{item.mine ? 'msg-bubble-mine' : ''}}">
+          <text class="msg-text">{{item.content}}</text>
+        </view>
+        <text class="msg-time">{{item.timeText}}</text>
+      </view>
+
+      <view class="msg-row msg-row-mine" wx:if="{{messages.length === 0}}">
+        <view class="msg-bubble msg-bubble-mine msg-bubble-hint">
+          <text class="msg-text">发消息描述你的问题</text>
+        </view>
+      </view>
+    </scroll-view>
+
+    <!-- 输入区 -->
+    <view class="input-bar">
+      <input
+        class="input-bar-field"
+        placeholder="描述你的问题…"
+        placeholder-class="input-placeholder"
+        value="{{input}}"
+        bindinput="onInput"
+        confirm-type="send"
+        bindconfirm="onSend"
+        maxlength="500"
+      />
+      <button class="input-bar-send" bindtap="onSend" loading="{{sending}}" disabled="{{sending || !input}}">
+        发送
+      </button>
+    </view>
+  </block>
+</view>

@@ -1,0 +1,116 @@
+<view class="page">
+  <view class="loading-box" wx:if="{{loading}}">正在加载…</view>
+
+  <view class="empty" wx:if="{{!loading && !loggedIn}}">
+    <text class="empty-icon">🔒</text>
+    <text class="empty-text">登录后查看订单详情</text>
+  </view>
+
+  <block wx:if="{{!loading && loggedIn && order}}">
+    <!-- 状态头 -->
+    <view class="status-head">
+      <text class="status-title">{{order.statusText}}</text>
+      <text class="status-sub">订单号 {{order.order_no}}</text>
+    </view>
+
+    <!-- 时间线 -->
+    <view class="container section">
+      <view class="card card-pad">
+        <text class="block-title">订单进度</text>
+        <view class="timeline">
+          <view class="tl-item" wx:for="{{order.timeline}}" wx:key="index">
+            <view class="tl-dot-wrap">
+              <view class="tl-dot"></view>
+              <view class="tl-line" wx:if="{{index < order.timeline.length - 1}}"></view>
+            </view>
+            <view class="tl-body">
+              <text class="tl-text">{{item.text}}</text>
+              <text class="tl-time">{{item.timeText}}</text>
+            </view>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 需求信息 -->
+    <view class="container section">
+      <view class="card card-pad">
+        <text class="block-title">需求信息</text>
+        <view class="spec-row">
+          <text class="spec-label">订单标题</text>
+          <text class="spec-value">{{order.title}}</text>
+        </view>
+        <view class="spec-row" wx:if="{{order.shoot_date}}">
+          <text class="spec-label">期望日期</text>
+          <text class="spec-value">{{order.shoot_date}}</text>
+        </view>
+        <view class="spec-row">
+          <text class="spec-label">需求描述</text>
+          <text class="spec-value spec-value-wrap">{{order.requirement || '客户未填写额外要求'}}</text>
+        </view>
+        <view class="spec-row">
+          <text class="spec-label">下单时间</text>
+          <text class="spec-value">{{order.timeText}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 服务信息 -->
+    <view class="container section" wx:if="{{service}}">
+      <view class="card card-pad svc-card" bindtap="onServiceTap">
+        <view class="svc-card-body">
+          <text class="svc-card-title ellipsis">{{service.title}}</text>
+          <text class="svc-card-sub ellipsis">{{service.subtitle}}</text>
+        </view>
+        <text class="prov-arrow">›</text>
+      </view>
+    </view>
+
+    <!-- 服务者 -->
+    <view class="container section" wx:if="{{provider}}">
+      <view class="card card-pad prov-card">
+        <view class="avatar avatar-md"><text>{{provider.initial}}</text></view>
+        <view class="prov-card-body">
+          <text class="prov-card-name">{{provider.nickname}}</text>
+          <text class="prov-card-sub">★ {{provider.rating}} · 完成 {{provider.orders_done}} 单</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 费用 -->
+    <view class="container section">
+      <view class="card card-pad">
+        <view class="fee-row">
+          <text class="fee-label">服务金额</text>
+          <text class="fee-value">¥{{order.amountText}}</text>
+        </view>
+        <view class="fee-row">
+          <text class="fee-label">平台服务费</text>
+          <text class="fee-value fee-dim">¥{{order.feeText}}</text>
+        </view>
+        <view class="divider"></view>
+        <view class="fee-row">
+          <text class="fee-label fee-total-label">订单金额</text>
+          <text class="fee-total">¥{{order.amountText}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 底部操作 -->
+    <view class="action-bar" wx:if="{{order.status !== 'cancelled'}}">
+      <!-- 客户视角 -->
+      <block wx:if="{{isCustomer}}">
+        <button class="btn btn-ghost action-cancel" wx:if="{{order.status !== 'completed'}}" bindtap="onCancel" disabled="{{acting}}">取消订单</button>
+        <button class="btn btn-primary action-btn" wx:if="{{order.status === 'delivered'}}" bindtap="onConfirm" disabled="{{acting}}">确认完成</button>
+        <button class="btn btn-primary action-btn" wx:if="{{order.status === 'completed' && !reviewed}}" bindtap="onEvaluate" disabled="{{acting}}">写评价</button>
+        <button class="btn btn-soft action-btn" wx:if="{{order.status === 'completed' && reviewed}}" bindtap="onEvaluate" disabled="{{acting}}">修改评价</button>
+      </block>
+      <!-- 服务者视角 -->
+      <block wx:if="{{isProvider}}">
+        <button class="btn btn-primary action-btn" wx:if="{{order.status === 'taken'}}" bindtap="onStartProducing" disabled="{{acting}}">开始制作</button>
+        <button class="btn btn-primary action-btn" wx:if="{{order.status === 'producing'}}" bindtap="onDeliver" disabled="{{acting}}">交付成片</button>
+        <button class="btn btn-soft action-btn" wx:if="{{order.status === 'open'}}" disabled="{{acting}}">等待客户确认接单</button>
+      </block>
+    </view>
+  </block>
+</view>

@@ -1,0 +1,139 @@
+<view class="page">
+  <view class="edit-loading" wx:if="{{loading}}">加载中…</view>
+
+  <block wx:else>
+    <!-- 头像 -->
+    <view class="card card-pad edit-section">
+      <view class="edit-avatar-row">
+        <view class="avatar avatar-xl edit-avatar" bindtap="onChooseAvatar">
+          <image wx:if="{{form.avatarUrl}}" class="edit-avatar-img" src="{{form.avatarUrl}}" mode="aspectFill" />
+          <text wx:else class="edit-avatar-ph">头像</text>
+          <view class="edit-avatar-mask" wx:if="{{!uploading}}">
+            <text class="edit-avatar-camera">📷</text>
+          </view>
+          <view class="edit-avatar-loading" wx:if="{{uploading}}">上传中</view>
+        </view>
+        <view class="edit-avatar-side">
+          <text class="edit-avatar-title">头像</text>
+          <text class="edit-avatar-hint">点击更换，支持 JPG/PNG，不超过 5MB</text>
+          <view class="edit-avatar-actions">
+            <button class="btn btn-soft btn-xs" bindtap="onChooseAvatar" disabled="{{uploading}}">选择图片</button>
+            <button class="btn btn-ghost btn-xs" wx:if="{{form.avatarUrl}}" bindtap="onRemoveAvatar">移除</button>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 基本资料 -->
+    <view class="card card-pad edit-section">
+      <text class="edit-section-title">基本资料</text>
+
+      <view class="edit-field">
+        <text class="edit-label">昵称<text class="edit-required">*</text></text>
+        <input class="edit-input" value="{{form.nickname}}" maxlength="20" placeholder="给自己起个名字" bindinput="onNicknameInput" />
+      </view>
+
+      <view class="edit-field">
+        <text class="edit-label">所在城市</text>
+        <picker class="edit-picker" mode="selector" range="{{cityOptions}}" value="{{cityIndex}}" bindchange="onCityChange">
+          <view class="edit-picker-inner">
+            <text class="edit-picker-text">{{form.city}}</text>
+            <text class="edit-picker-arrow">›</text>
+          </view>
+        </picker>
+      </view>
+
+      <view class="edit-field">
+        <text class="edit-label">性别</text>
+        <picker class="edit-picker" mode="selector" range="{{genderOptions}}" range-key="label" value="{{genderIndex}}" bindchange="onGenderChange">
+          <view class="edit-picker-inner">
+            <text class="edit-picker-text">{{genderLabel}}</text>
+            <text class="edit-picker-arrow">›</text>
+          </view>
+        </picker>
+      </view>
+
+      <view class="edit-field">
+        <text class="edit-label">生日</text>
+        <picker class="edit-picker" mode="date" value="{{form.birthday}}" bindchange="onBirthdayChange">
+          <view class="edit-picker-inner">
+            <text class="edit-picker-text edit-picker-muted">{{form.birthday || '未填写'}}</text>
+            <text class="edit-picker-arrow">›</text>
+          </view>
+        </picker>
+      </view>
+
+      <view class="edit-field">
+        <text class="edit-label">个人简介</text>
+        <textarea class="edit-textarea" value="{{form.bio}}" maxlength="200" placeholder="介绍一下你的从业经历、风格与擅长场景，让客户更信任你" bindinput="onBioInput" />
+        <text class="edit-count">{{bioCount}}/200</text>
+      </view>
+    </view>
+
+    <!-- 擅长方向 -->
+    <view class="card card-pad edit-section">
+      <text class="edit-section-title">擅长方向</text>
+      <text class="edit-section-hint">最多 8 个，用于在需求大厅和搜索里被找到</text>
+
+      <view class="edit-tag-list">
+        <view class="edit-tag" wx:for="{{form.tags}}" wx:key="*this">
+          <text class="edit-tag-text">{{item}}</text>
+          <text class="edit-tag-x" data-tag="{{item}}" bindtap="onRemoveTag">×</text>
+        </view>
+      </view>
+
+      <view class="edit-tag-add">
+        <input class="edit-input edit-input-inline" value="{{tagInput}}" maxlength="12" placeholder="输入标签后点添加" bindinput="onTagInput" confirm-type="done" bindconfirm="onAddTag" />
+        <button class="btn btn-soft btn-sm" bindtap="onAddTag">添加</button>
+      </view>
+
+      <view class="edit-preset-wrap">
+        <text class="edit-preset-label">常用</text>
+        <view class="edit-preset-list">
+          <view
+            class="edit-preset {{p.selected ? 'edit-preset-on' : ''}}"
+            wx:for="{{tagPresets}}"
+            wx:for-item="p"
+            wx:key="text"
+            data-tag="{{p.text}}"
+            bindtap="onPickPreset"
+          >{{p.text}}</view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 联系方式与隐私 -->
+    <view class="card card-pad edit-section">
+      <text class="edit-section-title">联系方式与隐私</text>
+
+      <view class="edit-field">
+        <text class="edit-label">手机号</text>
+        <input class="edit-input" type="number" maxlength="11" value="{{form.phone}}" placeholder="用于接单通知，不填不影响下单" bindinput="onPhoneInput" />
+      </view>
+
+      <view class="edit-switch-row">
+        <view class="edit-switch-text">
+          <text class="edit-switch-title">对客户公开手机号</text>
+          <text class="edit-switch-hint">关闭后客户只能通过平台客服联系你</text>
+        </view>
+        <switch checked="{{showPhone}}" color="#B4783C" bindchange="onTogglePhone" />
+      </view>
+
+      <view class="edit-switch-row">
+        <view class="edit-switch-text">
+          <text class="edit-switch-title">公开所在城市</text>
+          <text class="edit-switch-hint">关闭后只显示「宁夏」</text>
+        </view>
+        <switch checked="{{showCity}}" color="#B4783C" bindchange="onToggleCity" />
+      </view>
+    </view>
+
+    <view class="edit-error" wx:if="{{error}}">{{error}}</view>
+
+    <button class="btn btn-primary btn-block edit-save" bindtap="onSave" disabled="{{saving}}" loading="{{saving}}">
+      {{saving ? '保存中…' : '保存资料'}}
+    </button>
+
+    <view class="edit-foot">资料仅用于接单与身份展示，平台不会对外出售</view>
+  </block>
+</view>

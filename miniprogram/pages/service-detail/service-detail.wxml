@@ -1,0 +1,143 @@
+<view class="page page-with-tabbar">
+  <view class="loading-box" wx:if="{{loading}}">正在加载…</view>
+
+  <block wx:if="{{!loading && service}}">
+    <!-- 封面 -->
+    <view class="detail-cover {{service.coverClass}} {{service.coverUrl ? 'has-img' : ''}}">
+      <image wx:if="{{service.coverUrl}}" class="detail-cover-img" src="{{service.coverUrl}}" mode="aspectFill" />
+      <view class="detail-cover-text">
+        <text class="detail-cover-cat">{{service.unit}} · {{service.duration}}</text>
+        <text class="detail-cover-title">{{service.title}}</text>
+        <text class="detail-cover-sub">{{service.subtitle}}</text>
+      </view>
+      <text wx:if="{{!service.coverUrl}}" class="detail-cover-mark">MG</text>
+    </view>
+
+    <!-- 价格条 -->
+    <view class="price-bar">
+      <view class="price-left">
+        <text class="price"><text class="price-symbol">¥</text><text class="price-value">{{service.priceText}}</text></text>
+        <text class="price-old" wx:if="{{service.oldPriceText}}">¥{{service.oldPriceText}}</text>
+        <text class="price-unit">/ {{service.unit}}</text>
+      </view>
+      <view class="price-right">
+        <text class="price-stat">★ {{service.rating}}</text>
+        <text class="price-stat">已售 {{service.sales_count}}</text>
+      </view>
+    </view>
+
+    <!-- 服务者 -->
+    <view class="container section">
+      <view class="card card-pad prov-card" wx:if="{{provider}}" bindtap="onProviderTap">
+        <view class="avatar avatar-lg"><text>{{provider.initial}}</text></view>
+        <view class="prov-card-body">
+          <view class="prov-card-name-row">
+            <text class="prov-card-name">{{provider.nickname}}</text>
+            <text class="prov-verified" wx:if="{{provider.is_verified}}">✓ 认证</text>
+          </view>
+          <text class="prov-card-bio ellipsis-2">{{provider.bio}}</text>
+          <view class="prov-card-meta">
+            <text>★ {{provider.ratingText}}</text>
+            <text class="prov-dot">·</text>
+            <text>完成 {{provider.orders_done}} 单</text>
+            <text class="prov-dot">·</text>
+            <text>{{provider.city}}</text>
+          </view>
+        </view>
+        <text class="prov-arrow">›</text>
+      </view>
+    </view>
+
+    <!-- 服务内容 -->
+    <view class="container section">
+      <view class="card card-pad">
+        <text class="block-title">服务内容</text>
+        <text class="block-text">{{service.description}}</text>
+
+        <view class="divider"></view>
+
+        <view class="spec-row">
+          <text class="spec-label">交付周期</text>
+          <text class="spec-value">{{service.delivery_days}} 个工作日</text>
+        </view>
+        <view class="spec-row">
+          <text class="spec-label">服务规格</text>
+          <text class="spec-value">{{service.duration}}</text>
+        </view>
+        <view class="spec-row">
+          <text class="spec-label">服务分类</text>
+          <view class="spec-tags">
+            <text class="tag" wx:for="{{service.tags}}" wx:for-item="t" wx:key="*this">{{t}}</text>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <!-- 宣传样片 -->
+    <view class="container section" wx:if="{{samples.length}}">
+      <view class="card card-pad">
+        <view class="sample-head">
+          <text class="block-title">宣传样片</text>
+          <text class="muted">{{samples.length}} 个作品</text>
+        </view>
+        <view class="sample-grid">
+          <view class="sample-item" wx:for="{{samples}}" wx:key="id" bindtap="onPlaySample" data-index="{{index}}">
+            <view class="sample-cover">
+              <image wx:if="{{item.media_type === 'image' && item.url}}" class="sample-img" src="{{item.url}}" mode="aspectFill" />
+              <view wx:else class="sample-video-wrap">
+                <text class="sample-play" wx:if="{{!item.locked}}">▶</text>
+                <text class="sample-play sample-play-lock" wx:else>{{item.media_type === 'video' ? '🎬' : '🖼'}}</text>
+                <text class="sample-duration" wx:if="{{item.durationText && !item.locked}}">{{item.durationText}}</text>
+                <text class="sample-lock-text" wx:if="{{item.locked}}">登录后观看</text>
+              </view>
+              <view class="sample-badge" wx:if="{{item.media_type === 'video'}}">🎬</view>
+            </view>
+            <text class="sample-name ellipsis">{{item.title}}</text>
+            <text class="sample-size">{{item.sizeText}}</text>
+          </view>
+        </view>
+        <text class="sample-hint">点击样片可全屏预览</text>
+      </view>
+    </view>
+
+    <!-- 评价 -->
+    <view class="container section">
+      <view class="card card-pad">
+        <view class="review-head">
+          <text class="block-title">客户评价</text>
+          <text class="muted">{{reviews.length}} 条</text>
+        </view>
+
+        <view class="review-item" wx:for="{{reviews}}" wx:key="id">
+          <view class="avatar avatar-sm"><text>{{item.initial}}</text></view>
+          <view class="review-body">
+            <view class="review-top">
+              <text class="review-name">{{item.customer_name || '匿名客户'}}</text>
+              <text class="review-stars">{{item.rating}} 星</text>
+            </view>
+            <text class="review-text">{{item.content}}</text>
+            <text class="review-time">{{item.timeText}}</text>
+            <view class="review-reply" wx:if="{{item.reply}}">
+              <text class="review-reply-label">服务者回复：</text>
+              <text class="review-reply-text">{{item.reply}}</text>
+            </view>
+          </view>
+        </view>
+
+        <view class="empty" wx:if="{{!reviews.length}}" style="padding: 50rpx 0;">
+          <text class="empty-text">还没有评价</text>
+          <text class="empty-hint">成为第一个下单的人吧</text>
+        </view>
+      </view>
+    </view>
+  </block>
+
+  <!-- 底部操作条 -->
+  <view class="action-bar" wx:if="{{!loading && service}}">
+    <view class="action-side">
+      <text class="action-side-title">¥{{service.priceText}}</text>
+      <text class="action-side-sub">{{service.delivery_days}} 天交付</text>
+    </view>
+    <button class="btn btn-primary action-btn" bindtap="onOrder">立即下单</button>
+  </view>
+</view>

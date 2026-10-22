@@ -1,0 +1,76 @@
+<view class="page">
+  <!-- 搜索 -->
+  <view class="search-bar">
+    <view class="search-box">
+      <text class="search-icon">🔍</text>
+      <input
+        class="search-input"
+        placeholder="搜索服务，如「婚礼微电影」"
+        placeholder-class="input-placeholder"
+        value="{{keyword}}"
+        bindinput="onSearchInput"
+        bindconfirm="onSearchConfirm"
+        confirm-type="search"
+      />
+    </view>
+  </view>
+
+  <!-- 分类筛选 -->
+  <scroll-view class="cat-scroll" scroll-x="{{true}}" show-scrollbar="{{false}}">
+    <view class="cat-row">
+      <view class="cat-chip {{activeCat === '' ? 'cat-chip-active' : ''}}" bindtap="onCatTap" data-slug="">
+        <text>全部</text>
+      </view>
+      <view
+        class="cat-chip {{activeCat === item.slug ? 'cat-chip-active' : ''}}"
+        wx:for="{{categories}}"
+        wx:key="id"
+        bindtap="onCatTap"
+        data-slug="{{item.slug}}"
+      >
+        <text>{{item.icon}} {{item.name}}</text>
+      </view>
+    </view>
+  </scroll-view>
+
+  <view class="container">
+    <view class="result-bar" wx:if="{{!loading}}">
+      <text class="result-count">共 {{total}} 项服务</text>
+    </view>
+
+    <view class="svc-list" wx:if="{{!loading && services.length}}">
+      <view class="svc-item card" wx:for="{{services}}" wx:key="id" bindtap="onServiceTap" data-id="{{item.id}}">
+        <view class="svc-cover {{item.coverClass}}">
+          <image wx:if="{{item.coverUrl}}" class="svc-cover-img" src="{{item.coverUrl}}" mode="aspectFill" />
+          <text wx:else class="svc-cover-mark">MG</text>
+        </view>
+        <view class="svc-body">
+          <text class="svc-title ellipsis">{{item.title}}</text>
+          <text class="svc-sub ellipsis">{{item.subtitle}}</text>
+          <view class="svc-meta">
+            <text class="svc-meta-item">★ {{item.rating}}</text>
+            <text class="svc-meta-dot">·</text>
+            <text class="svc-meta-item">已售 {{item.sales_count}}</text>
+            <text class="svc-meta-dot">·</text>
+            <text class="svc-meta-item">{{item.delivery_days}} 天交付</text>
+          </view>
+          <view class="svc-foot">
+            <view class="svc-price">
+              <text class="price"><text class="price-symbol">¥</text><text class="price-value">{{item.priceText}}</text></text>
+              <text class="price-old" wx:if="{{item.oldPriceText}}">¥{{item.oldPriceText}}</text>
+              <text class="price-unit">/{{item.unit}}</text>
+            </view>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <view class="empty" wx:if="{{!loading && !services.length}}">
+      <text class="empty-icon">🎬</text>
+      <text class="empty-text">没有找到匹配的服务</text>
+      <text class="empty-hint">换个关键词或分类试试</text>
+    </view>
+
+    <view class="loading-box" wx:if="{{loading}}">正在加载…</view>
+  </view>
+</view>
