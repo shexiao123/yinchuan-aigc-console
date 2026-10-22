@@ -4,7 +4,9 @@
  */
 window.APP_CONFIG = {
   publicConfig: {
-    endpoint: 'https://guangying-web.app.workbuddy.host',
+    // 主端点用 mp-api：这是平台的通用云服务端点，跨应用可用且稳定。
+    // 原先用的 guangying-web.app.workbuddy.host（应用自己的站点域名）已 DNS 解析失败。
+    endpoint: 'https://mp-api.app.workbuddy.host',
     oauthRelayBaseUrl: 'https://www.workbuddy.cn/v2/as/genie-baas/oauth',
     publishableKey: 'wbpk_ljDFUAeoNoNPMqrfAZpbEV_dw2NNFdJXAPww2ncGRAv3RvXicynHHtb'
   },
@@ -14,7 +16,7 @@ window.APP_CONFIG = {
    * 每个端点对应同一套 publishableKey；平台侧域名异常时用来兜底。
    */
   fallbackEndpoints: [
-    'https://guangying-web.app.workbuddy.host',
+    'https://mp-api.app.workbuddy.host',
     'https://guangying-web.app.workbuddy.host'
   ],
 
@@ -26,12 +28,53 @@ window.APP_CONFIG = {
     '服务暂时无法连接（域名解析失败）。这通常是平台侧临时故障，请稍后刷新重试；小程序端不受影响。'
 }
 
-// 客户端初始化：一次性创建，auth / database / storage / llm 共用
-window.cloud = window.WorkBuddyCloud.createWorkBuddyCloud({
-  endpoint: window.APP_CONFIG.publicConfig.endpoint,
-  oauthRelayBaseUrl: window.APP_CONFIG.publicConfig.oauthRelayBaseUrl,
-  publishableKey: window.APP_CONFIG.publicConfig.publishableKey
-})
+/**
+ * 创建云服务 client
+ *
+ * 注意：SDK 是异步加载的 CDN 脚本，config.js 与它同步执行时可能还没就绪
+ * （GitHub Pages 等外部环境更容易触发）。所以这里做两件事：
+ *   1. 若 SDK 未就绪，等它就绪后再创建
+ *   2. 创建完成的信号用 window.cloudReady 通知（Promise）
+ */
+window.cloudReady = (function () {
+  function create() {
+    window.cloud = window.WorkBuddyCloud.createWorkBuddyCloud({
+      endpoint: window.APP_CONFIG.publicConfig.endpoint,
+      oauthRelayBaseUrl: window.APP_CONFIG.publicConfig.oauthRelayBaseUrl,
+      publishableKey: window.APP_CONFIG.publicConfig.publishableKey
+    })
+    return window.cloud
+  }
+
+  // SDK 已就绪 —— 立即创建
+  if (window.WorkBuddyCloud && typeof window.WorkBuddyCloud.createWorkBuddyCloud === 'function') {
+    try {
+      create()
+      return Promise.resolve(window.cloud)
+    } catch (e) {
+      return Promise.reject(e)
+    }
+  }
+
+  // SDK 未就绪 —— 轮询等待（最多 10 秒）
+  return new Promise((resolve, reject) => {
+    let tries = 0
+    const timer = setInterval(() => {
+      tries += 1
+      if (window.WorkBuddyCloud && typeof window.WorkBuddyCloud.createWorkBuddyCloud === 'function') {
+        clearInterval(timer)
+        try {
+          resolve(create())
+        } catch (e) {
+          reject(e)
+        }
+      } else if (tries > 100) {
+        clearInterval(timer)
+        reject(new Error('云服务 SDK 加载超时，请检查网络后刷新重试'))
+      }
+    }, 100)
+  })
+})()
 
 /**
  * 端点故障转移
@@ -56,7 +99,8 @@ window.cloud = window.WorkBuddyCloud.createWorkBuddyCloud({
         method: 'GET',
         signal: ctrl.signal,
         headers: {
-          apikey: CFG.publicConfig.publishableKey,
+          // 鉴权头名必须是 x-wb-webapp-access-key（用 apikey 会 401）
+          'x-wb-webapp-access-key': CFG.publicConfig.publishableKey,
           'x-client-info': 'workbuddy-web-sdk'
         }
       })
