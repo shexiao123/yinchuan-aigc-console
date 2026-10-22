@@ -2828,7 +2828,8 @@
       } catch (e) {
         console.error('[boot] ensureEndpoint failed', e)
       }
-      endpointOk = window.APP_CONFIG && window.APP_CONFIG.publicConfig.endpoint === (window.APP_CONFIG.activeEndpoint || window.APP_CONFIG.publicConfig.endpoint)
+      // activeEndpoint 为 null 表示所有候选端点都不可达
+      endpointOk = !!(window.APP_CONFIG && window.APP_CONFIG.activeEndpoint)
     }
 
     // 微信授权回调优先处理，必须在路由守卫之前
@@ -2852,15 +2853,24 @@
       if (session) await onLogin(session)
     }
     updateUserChip()
-    render()
 
-    // 端点不可达时给出明确提示（平台侧域名故障，不是前端 bug）
-    if (!endpointOk && window.APP_CONFIG && window.APP_CONFIG.endpointFailureHint) {
+    // 端点不可达：直接显示明确的故障页，不做无谓的渲染
+    if (!endpointOk) {
+      const hint = (window.APP_CONFIG && window.APP_CONFIG.endpointFailureHint) || '服务暂时无法连接，请稍后刷新重试'
+      app.innerHTML = `<div class="empty" style="padding:80px 24px">
+        <div class="empty-icon">🔌</div>
+        <span class="empty-text">服务暂时无法连接</span>
+        <span class="empty-hint">${API.esc(hint)}</span>
+        <button class="btn btn-primary" style="margin-top:20px" onclick="location.reload()">重新加载</button>
+      </div>`
       const bar = document.createElement('div')
       bar.className = 'endpoint-warn'
-      bar.textContent = window.APP_CONFIG.endpointFailureHint
+      bar.textContent = hint
       document.body.appendChild(bar)
+      return
     }
+
+    render()
   }
 
   // 移动端菜单
