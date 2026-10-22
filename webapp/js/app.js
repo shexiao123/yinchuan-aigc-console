@@ -7,6 +7,23 @@
   const $ = (sel) => document.querySelector(sel)
   const app = $('#app')
 
+  // 全国服务者可选的城市（含「远程」——AE 动画、AI 生成等可完全远程交付）
+  const CITY_PRESETS = ['银川', '北京', '上海', '广州', '深圳', '杭州', '成都', '西安', '武汉', '远程']
+
+  // 专业方向预设：摄影师 / 剪辑师 / AE 动画师 / AI 生成师 等
+  const ROLE_PRESETS = [
+    { name: '摄影师', icon: '📷' },
+    { name: '剪辑师', icon: '✂️' },
+    { name: 'AE 动画师', icon: '✨' },
+    { name: 'AI 生成师', icon: '🤖' },
+    { name: '导演', icon: '🎬' },
+    { name: '调色师', icon: '🎨' },
+    { name: '特效师', icon: '💫' },
+    { name: '配音', icon: '🎙️' },
+    { name: '文案策划', icon: '📝' },
+    { name: '直播运营', icon: '📡' }
+  ]
+
   const S = {
     session: null,
     provider: null,
@@ -670,7 +687,7 @@
     return `
       <div class="page-head">
         <div class="page-title">全部服务</div>
-        <div class="page-sub">婚礼跟拍、婚礼微电影、品牌宣传片、短视频剪辑、商业摄影，认证服务者直约</div>
+        <div class="page-sub">摄影师 · 剪辑师 · AE 动画师 · AI 生成师，全国接单，认证服务者直约</div>
       </div>
 
       <div class="filter-bar">
@@ -1744,7 +1761,7 @@
     }
     const uid = session.user.id
     const TAG_PRESETS = ['婚礼跟拍', '婚礼微电影', '商业摄影', '产品短视频', 'MV拍摄', '人像写真', '活动记录', '亲子拍摄']
-    const CITIES = ['银川', '北京', '上海', '广州', '深圳', '成都', '杭州', '西安', '其他']
+    const CITIES = ['银川', '北京', '上海', '广州', '深圳', '杭州', '成都', '西安', '武汉', '南京', '重庆', '天津', '苏州', '郑州', '长沙', '青岛', '厦门', '济南', '福州', '合肥', '远程', '其他']
 
     API.getMyProfile(uid)
       .then(async (p) => {
@@ -2202,12 +2219,22 @@
             <div class="form-row">
               <div class="field">
                 <label class="field-label">所在城市</label>
-                <input class="input" id="pCity" maxlength="20" value="银川">
+                <input class="input" id="pCity" maxlength="20" value="银川" placeholder="如 银川 / 北京 / 成都；远程服务可填「远程」" />
+                <div class="preset-row">
+                  ${CITY_PRESETS.map((c) => `<span class="preset-chip" data-city="${API.esc(c)}">${API.esc(c)}</span>`).join('')}
+                </div>
               </div>
               <div class="field">
                 <label class="field-label">擅长方向</label>
-                <input class="input" id="pTags" maxlength="60" placeholder="婚礼跟拍、婚礼微电影">
+                <input class="input" id="pTags" maxlength="60" placeholder="补充细分技能，如 婚礼跟拍、航拍、字幕包装" />
               </div>
+            </div>
+            <div class="field">
+              <label class="field-label">专业方向（可多选）</label>
+              <div class="role-list">
+                ${ROLE_PRESETS.map((r) => `<span class="role-chip" data-role="${API.esc(r.name)}"><span class="role-chip-icon">${r.icon}</span>${API.esc(r.name)}</span>`).join('')}
+              </div>
+              <div class="field-hint">选了哪个方向，客户就能按这个方向找到你</div>
             </div>
             <div class="field">
               <label class="field-label">个人简介</label>
@@ -2518,6 +2545,28 @@
     // 开通身份
     const become = $('#becomeProvider')
     if (become) {
+      // 城市预设：点击填入
+      document.querySelectorAll('[data-city]').forEach((chip) => {
+        chip.addEventListener('click', () => {
+          const input = $('#pCity')
+          if (input) input.value = chip.dataset.city
+        })
+      })
+      // 专业方向：多选切换
+      const pickedRoles = new Set()
+      document.querySelectorAll('[data-role]').forEach((chip) => {
+        chip.addEventListener('click', () => {
+          const name = chip.dataset.role
+          if (pickedRoles.has(name)) {
+            pickedRoles.delete(name)
+            chip.classList.remove('role-chip-on')
+          } else {
+            pickedRoles.add(name)
+            chip.classList.add('role-chip-on')
+          }
+        })
+      })
+
       become.addEventListener('click', async () => {
         const nickname = $('#pNickname').value.trim()
         if (!nickname) {
@@ -2527,7 +2576,9 @@
         }
         become.disabled = true
         try {
-          const tags = $('#pTags').value.split(/[,，、\s]+/).filter(Boolean).slice(0, 6)
+          const manual = $('#pTags').value.split(/[,，、\s]+/).filter(Boolean)
+          // 专业方向 + 手动填的擅长方向合并去重
+          const tags = [...new Set([...pickedRoles, ...manual])].slice(0, 8)
           S.provider = await API.becomeProvider(
             { nickname, bio: $('#pBio').value.trim(), city: $('#pCity').value.trim() || '银川', tags },
             S.session.user.id,

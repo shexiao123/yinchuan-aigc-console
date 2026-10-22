@@ -143,3 +143,78 @@
   gap: 12rpx;
   margin-top: 14rpx;
 }
+
+/* ---------------- 专业方向 / 城市预设 ---------------- */
+.role-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14rpx;
+}
+
+.role-chip {
+  display: flex;
+  align-items: center;
+  gap: 6rpx;
+  background: #F7F2EC;
+  border: 1rpx solid var(--line);
+  border-radius: 999rpx;
+  padding: 10rpx 22rpx;
+}
+
+.role-chip-icon {
+  font-size: 24rpx;
+}
+
+.role-chip-text {
+  font-size: 25rpx;
+  color: var(--ink-2);
+}
+
+.role-chip-on {
+  background: var(--brand-soft);
+  border-color: rgba(180, 120, 60, 0.42);
+}
+
+.role-chip-on .role-chip-text {
+  color: var(--brand-deep);
+  font-weight: 600;
+}
+
+.role-preset-row {
+  margin-top: 12rpx;
+}
+
+.role-preset-label {
+  display: block;
+  font-size: 21rpx;
+  color: var(--ink-3);
+  margin-bottom: 10rpx;
+}
+
+.role-preset-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10rpx;
+}
+
+.role-preset {
+  font-size: 22rpx;
+  color: var(--ink-2);
+  background: #F5EFE8;
+  border-radius: 999rpx;
+  padding: 7rpx 20rpx;
+}
+
+.role-preset-on {
+  background: var(--brand-soft);
+  color: var(--brand-deep);
+  font-weight: 600;
+}
+
+.field-hint {
+  display: block;
+  font-size: 21rpx;
+  color: var(--ink-3);
+  margin-top: 10rpx;
+  line-height: 1.5;
+}

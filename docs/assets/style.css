@@ -1216,3 +1216,33 @@ img { max-width: 100%; display: block; }
   padding: 0 16px;
   text-align: center;
 }
+
+/* ---------------- 专业方向 / 城市预设 ---------------- */
+.preset-row {
+  display: flex; flex-wrap: wrap; gap: 6px; margin-top: 9px;
+}
+.preset-chip {
+  font-size: 12px; color: var(--ink-2);
+  background: #F5EFE8; border-radius: 999px;
+  padding: 4px 11px; cursor: pointer;
+  transition: background .15s, color .15s;
+}
+.preset-chip:hover { background: var(--brand-soft); color: var(--brand-deep); }
+
+.role-list {
+  display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px;
+}
+.role-chip {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 13px; color: var(--ink-2);
+  background: #F7F2EC; border: 1px solid var(--line);
+  border-radius: 999px; padding: 6px 14px; cursor: pointer;
+  transition: background .15s, border-color .15s, color .15s;
+}
+.role-chip:hover { border-color: var(--brand); }
+.role-chip-icon { font-size: 13px; }
+.role-chip-on {
+  background: var(--brand-soft); border-color: rgba(180, 120, 60, .42);
+  color: var(--brand-deep); font-weight: 600;
+}
+.field-hint { font-size: 12px; color: var(--ink-3); margin-top: 9px; line-height: 1.5; }

@@ -1,6 +1,23 @@
 const api = require('../../utils/api')
 const samples = require('../../utils/samples')
 
+// 全国服务者可选的城市（含「远程」——AI 生成、AE 动画等可以完全远程交付）
+const CITY_PRESETS = ['银川', '北京', '上海', '广州', '深圳', '杭州', '成都', '西安', '武汉', '远程']
+
+// 专业方向预设：覆盖舍先生说的摄影师 / 剪辑师 / AE 动画师 / AI 生成师
+const ROLE_PRESETS = [
+  { name: '摄影师', icon: '📷' },
+  { name: '剪辑师', icon: '✂️' },
+  { name: 'AE 动画师', icon: '✨' },
+  { name: 'AI 生成师', icon: '🤖' },
+  { name: '导演', icon: '🎬' },
+  { name: '调色师', icon: '🎨' },
+  { name: '特效师', icon: '💫' },
+  { name: '配音', icon: '🎙️' },
+  { name: '文案策划', icon: '📝' },
+  { name: '直播运营', icon: '📡' }
+]
+
 Page({
   data: {
     mode: 'service',
@@ -13,6 +30,8 @@ Page({
     nickname: '',
     bio: '',
     city: '银川',
+    cityPresets: CITY_PRESETS,
+    rolePresets: ROLE_PRESETS.map((r) => ({ ...r, selected: false })),
     tagsText: '',
 
     // 服务表单
@@ -54,6 +73,25 @@ Page({
   onBioInput(e) { this.setData({ bio: e.detail.value }) },
   onCityInput(e) { this.setData({ city: e.detail.value }) },
   onIdentityTagsInput(e) { this.setData({ tagsText: e.detail.value }) },
+
+  /** 快速选择城市 */
+  onPickCity(e) {
+    this.setData({ city: e.currentTarget.dataset.city })
+  },
+
+  /** 切换专业方向（多选） */
+  onToggleRole(e) {
+    const name = e.currentTarget.dataset.role
+    const list = this.data.rolePresets.map((r) => ({ ...r, selected: r.name === name ? !r.selected : r.selected }))
+    this.setData({ rolePresets: list })
+  },
+
+  /** 提交时把选中的专业方向并进 tags */
+  collectTags() {
+    const roles = this.data.rolePresets.filter((r) => r.selected).map((r) => r.name)
+    const manual = this.parseTags(this.data.tagsText)
+    return [...new Set([...roles, ...manual])].slice(0, 8)
+  },
 
   onTitleInput(e) { this.setData({ title: e.detail.value, formError: '' }) },
   /* ---------------- 服务封面 ---------------- */
@@ -147,7 +185,7 @@ Page({
           nickname,
           bio: this.data.bio.trim(),
           city: this.data.city.trim() || '银川',
-          tags: this.parseTags(this.data.tagsText)
+          tags: this.collectTags()
         },
         session.user.id,
         session.user.name || null

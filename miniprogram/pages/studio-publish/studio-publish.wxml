@@ -17,12 +17,29 @@
 
         <view class="field">
           <text class="field-label">所在城市</text>
-          <input class="input" placeholder="银川" placeholder-class="input-placeholder" value="{{city}}" bindinput="onCityInput" maxlength="20" />
+          <input class="input" placeholder="填你所在的城市，如 银川 / 北京 / 成都；远程服务可填「远程」" placeholder-class="input-placeholder" value="{{city}}" bindinput="onCityInput" maxlength="20" />
+          <view class="role-preset-row">
+            <text class="role-preset-label">快速选择</text>
+            <view class="role-preset-list">
+              <view class="role-preset {{city === c ? 'role-preset-on' : ''}}" wx:for="{{cityPresets}}" wx:for-item="c" wx:key="*this" data-city="{{c}}" bindtap="onPickCity">{{c}}</view>
+            </view>
+          </view>
+        </view>
+
+        <view class="field">
+          <text class="field-label">专业方向</text>
+          <view class="role-list">
+            <view class="role-chip {{item.selected ? 'role-chip-on' : ''}}" wx:for="{{rolePresets}}" wx:key="name" data-role="{{item.name}}" bindtap="onToggleRole">
+              <text class="role-chip-icon">{{item.icon}}</text>
+              <text class="role-chip-text">{{item.name}}</text>
+            </view>
+          </view>
+          <text class="field-hint">可多选。选了哪个方向，客户就能按这个方向找到你</text>
         </view>
 
         <view class="field">
           <text class="field-label">擅长方向</text>
-          <input class="input" placeholder="用顿号或空格分隔，最多 6 个，如 婚礼跟拍、婚礼微电影" placeholder-class="input-placeholder" value="{{tagsText}}" bindinput="onIdentityTagsInput" maxlength="60" />
+          <input class="input" placeholder="补充细分技能，用顿号分隔，如 婚礼跟拍、航拍、字幕包装" placeholder-class="input-placeholder" value="{{tagsText}}" bindinput="onIdentityTagsInput" maxlength="60" />
         </view>
 
         <view class="field">
