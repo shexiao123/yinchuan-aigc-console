@@ -1,10 +1,14 @@
 /**
  * 运行时配置
  * publicConfig 由 WorkBuddy 云服务在激活时下发，切勿手写或从别处推断。
+ *
+ * ⚠️ 端点覆盖：可在地址栏用 ?ep=https://xxx 临时切换云服务端点，
+ *    或在控制台执行 APP_CONFIG.setEndpoint('https://xxx')。
+ *    平台域名出故障时不用重新发布就能切走。
  */
 window.APP_CONFIG = {
   publicConfig: {
-    // 主端点用 mp-api：这是平台的通用云服务端点，跨应用可用且稳定。
+    // 主端点用 mp-api：这是平台的通用云服务端点，跨应用可用。
     // 原先用的 guangying-web.app.workbuddy.host（应用自己的站点域名）已 DNS 解析失败。
     endpoint: 'https://mp-api.app.workbuddy.host',
     oauthRelayBaseUrl: 'https://www.workbuddy.cn/v2/as/genie-baas/oauth',
@@ -17,6 +21,7 @@ window.APP_CONFIG = {
    */
   fallbackEndpoints: [
     'https://mp-api.app.workbuddy.host',
+    'https://meige-prototype.app.workbuddy.host',
     'https://guangying-web.app.workbuddy.host'
   ],
 
@@ -25,8 +30,20 @@ window.APP_CONFIG = {
    * 平台分配的域名解析失败时，前端无法自行修复，只能提示用户稍后重试。
    */
   endpointFailureHint:
-    '服务暂时无法连接（域名解析失败）。这通常是平台侧临时故障，请稍后刷新重试；小程序端不受影响。'
+    '服务暂时无法连接（平台域名解析失败）。这通常是平台侧临时故障，请稍后刷新重试；小程序端不受影响。',
+
+  /** 运行时切换端点（会重建 client） */
+  setEndpoint(endpoint) {
+    if (!endpoint) return this.publicConfig.endpoint
+    const url = String(endpoint).replace(/\/+$/, '')
+    if (url === this.publicConfig.endpoint) return url
+    // 插到候选列表最前面
+    this.fallbackEndpoints = [url, ...this.fallbackEndpoints.filter((x) => x !== url)]
+    this.publicConfig.endpoint = url
+    return url
+  }
 }
+
 
 /**
  * 创建云服务 client
@@ -49,6 +66,12 @@ window.cloudReady = (function () {
   // SDK 已就绪 —— 立即创建
   if (window.WorkBuddyCloud && typeof window.WorkBuddyCloud.createWorkBuddyCloud === 'function') {
     try {
+      // 支持 ?ep=https://xxx 临时覆盖端点（平台域名故障时不必重新发布）
+      const override = new URLSearchParams(window.location.search).get('ep')
+      if (override) {
+        window.APP_CONFIG.setEndpoint(override)
+        console.warn('[cloud] 端点已被 URL 参数覆盖：' + override)
+      }
       create()
       return Promise.resolve(window.cloud)
     } catch (e) {
@@ -135,7 +158,10 @@ window.cloudReady = (function () {
 
     // 当前端点先探一次
     const current = CFG.publicConfig.endpoint
-    if (await probe(current, 5000)) return current
+    if (await probe(current, 5000)) {
+      CFG.activeEndpoint = current
+      return current
+    }
 
     // 依次尝试备用
     switching = true
@@ -152,6 +178,10 @@ window.cloudReady = (function () {
     } finally {
       switching = false
     }
+
+    // 所有端点都不可用 —— 明确标记，页面据此提示用户
+    CFG.activeEndpoint = null
+    console.error('[cloud] 所有云服务端点均不可达')
     return current
   }
 })()
