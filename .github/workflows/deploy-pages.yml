@@ -5,16 +5,15 @@ on:
     branches: [main]
     paths:
       - 'webapp/**'
+      - 'tools/sync-pages.js'
       - '.github/workflows/deploy-pages.yml'
   workflow_dispatch:
 
-# 允许读写 Pages 权限
 permissions:
-  contents: read
+  contents: write
   pages: write
   id-token: write
 
-# 同分支并发推送时只跑最新一次
 concurrency:
   group: pages
   cancel-in-progress: true
@@ -29,13 +28,30 @@ jobs:
       - name: 检出代码
         uses: actions/checkout@v4
 
-      - name: 配置 Pages
+      - name: 配置 GitHub Pages
         uses: actions/configure-pages@v5
+
+      # GitHub Pages 的发布源是 docs/（legacy 模式只支持 / 或 /docs），
+      # 所以先把 webapp/ 的内容同步过去，再由 Pages 从 docs/ 构建。
+      - name: 同步 webapp 到 docs
+        run: node tools/sync-pages.js
+
+      - name: 提交同步结果
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs
+          if git diff --staged --quiet; then
+            echo "docs/ 无变化，跳过提交"
+          else
+            git commit -m "chore: 同步网页端到 docs（GitHub Pages 源目录）"
+            git push
+          fi
 
       - name: 上传网页端产物
         uses: actions/upload-pages-artifact@v3
         with:
-          path: './webapp'
+          path: './docs'
 
       - name: 部署到 GitHub Pages
         id: deployment

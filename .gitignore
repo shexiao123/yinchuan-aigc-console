@@ -41,3 +41,10 @@ assets/covers/hero/hero-sheet.jpg
 # 文档截图（体积大）
 docs/*.png
 docs/*.jpg
+
+# GitHub 操作临时产物
+ghlogs/
+deploy/
+art.zip
+artx/
+ghlogs.zip
