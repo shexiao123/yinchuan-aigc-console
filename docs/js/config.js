@@ -8,9 +8,9 @@
  */
 window.APP_CONFIG = {
   publicConfig: {
-    // 主端点用 mp-api：这是平台的通用云服务端点，跨应用可用。
-    // 原先用的 guangying-web.app.workbuddy.host（应用自己的站点域名）已 DNS 解析失败。
-    endpoint: 'https://mp-api.app.workbuddy.host',
+    // 主端点用应用自己的域名（最正规，CORS 白名单里肯定有）。
+    // mp-api 是通用端点，作为备用；平台域名批量故障时用它兜底。
+    endpoint: 'https://guangying-web.app.workbuddy.host',
     oauthRelayBaseUrl: 'https://www.workbuddy.cn/v2/as/genie-baas/oauth',
     publishableKey: 'wbpk_ljDFUAeoNoNPMqrfAZpbEV_dw2NNFdJXAPww2ncGRAv3RvXicynHHtb'
   },
@@ -20,9 +20,9 @@ window.APP_CONFIG = {
    * 每个端点对应同一套 publishableKey；平台侧域名异常时用来兜底。
    */
   fallbackEndpoints: [
+    'https://guangying-web.app.workbuddy.host',
     'https://mp-api.app.workbuddy.host',
-    'https://meige-prototype.app.workbuddy.host',
-    'https://guangying-web.app.workbuddy.host'
+    'https://meige-prototype.app.workbuddy.host'
   ],
 
   /**
@@ -97,7 +97,7 @@ window.cloudReady = (function () {
       }
     }, 100)
   })
-})()
+})();
 
 /**
  * 端点故障转移
@@ -109,7 +109,7 @@ window.cloudReady = (function () {
  * 做法：探测各端点可达性（用 database 的轻量查询），
  *      第一个通的即重建 client 并替换 window.cloud。
  */
-(function () {
+;(function () {
   const CFG = window.APP_CONFIG
   let switching = false
 
