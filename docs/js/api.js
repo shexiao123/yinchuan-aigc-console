@@ -3,7 +3,11 @@
  * 所有 cloud.database / cloud.auth 调用集中在这里，页面只负责渲染。
  */
 window.API = (function () {
-  const cloud = window.cloud
+  // 注意：不能用 const cloud = window.cloud —— 端点故障转移时会重建 window.cloud，
+  // 闭包常量会一直指向旧 client。这里改用 getter 动态取，调用方式完全不变。
+  const cloud = new Proxy({}, {
+    get(_t, prop) { return window.cloud[prop] }
+  })
 
   /* ---------------- 佣金规则 ---------------- */
   // 平台基准佣金率（起步价），与 miniprogram/utils/commission.js 保持一致
@@ -166,6 +170,10 @@ window.API = (function () {
       return '验证码无效或已过期，请重新获取'
     }
     if (/network|timeout|failed to fetch|load failed/i.test(msg)) {
+      // 端点整体不可达时，给出更明确的原因（平台侧域名故障）
+      if (window.APP_CONFIG && window.APP_CONFIG.endpointFailureHint && /failed to fetch|load failed/i.test(msg)) {
+        return window.APP_CONFIG.endpointFailureHint
+      }
       return '网络连接失败，请检查网络后重试'
     }
     if (/requires oauthRelayBaseUrl/i.test(msg)) {

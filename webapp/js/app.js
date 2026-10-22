@@ -2806,6 +2806,18 @@
   /* ---------------- 启动 ---------------- */
 
   async function boot() {
+    // 先确认云服务端点可达 —— 平台分配的域名可能临时解析失败，
+    // 端点不通时自动切到备用（见 config.js 的 ensureEndpoint）
+    let endpointOk = true
+    if (window.ensureEndpoint) {
+      try {
+        await window.ensureEndpoint()
+      } catch (e) {
+        console.error('[boot] ensureEndpoint failed', e)
+      }
+      endpointOk = window.APP_CONFIG && window.APP_CONFIG.publicConfig.endpoint === (window.APP_CONFIG.activeEndpoint || window.APP_CONFIG.publicConfig.endpoint)
+    }
+
     // 微信授权回调优先处理，必须在路由守卫之前
     const url = new URL(window.location.href)
     if (url.searchParams.has('code') && url.searchParams.get('provider') === 'wechat') {
@@ -2828,6 +2840,14 @@
     }
     updateUserChip()
     render()
+
+    // 端点不可达时给出明确提示（平台侧域名故障，不是前端 bug）
+    if (!endpointOk && window.APP_CONFIG && window.APP_CONFIG.endpointFailureHint) {
+      const bar = document.createElement('div')
+      bar.className = 'endpoint-warn'
+      bar.textContent = window.APP_CONFIG.endpointFailureHint
+      document.body.appendChild(bar)
+    }
   }
 
   // 移动端菜单
