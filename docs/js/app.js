@@ -2806,6 +2806,19 @@
   /* ---------------- 启动 ---------------- */
 
   async function boot() {
+    // 等云服务 SDK 加载完成（CDN 异步脚本，可能晚于本脚本执行）
+    if (window.cloudReady) {
+      try {
+        await window.cloudReady
+      } catch (e) {
+        console.error('[boot] cloud SDK not ready', e)
+        app.innerHTML = `<div class="empty"><div class="empty-icon">⚠️</div>
+          <span class="empty-text">云服务加载失败</span>
+          <span class="empty-hint">${API.esc(e.message || '请检查网络后刷新重试')}</span></div>`
+        return
+      }
+    }
+
     // 先确认云服务端点可达 —— 平台分配的域名可能临时解析失败，
     // 端点不通时自动切到备用（见 config.js 的 ensureEndpoint）
     let endpointOk = true
