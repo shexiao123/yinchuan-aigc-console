@@ -363,3 +363,136 @@ body.m-mode .empty-hint { font-size: 13px; line-height: 1.6; }
   body.m-mode .hero-banner { height: 40vw; min-height: 130px; }
   body.m-mode .detail-cover { height: 34vw; }
 }
+
+/* ============ 未来科技主题 · 移动端适配 ============ */
+
+/* 移动端注入顺序是 style.css → tech.css → mobile.css，
+   所以这里要补齐 mobile.css 覆盖掉的科技质感 */
+body.m-mode {
+  background-attachment: scroll;
+  background-size: 100% 100%, 100% 100%, 100% 100%, 44px 44px, 44px 44px, 100% 100%;
+}
+
+/* 底部标签栏：玻璃 + 顶部发光边 */
+body.m-mode .mobile-nav {
+  background: rgba(6, 10, 20, .88) !important;
+  border-top: 1px solid var(--line) !important;
+  backdrop-filter: blur(20px) saturate(150%);
+  -webkit-backdrop-filter: blur(20px) saturate(150%);
+  box-shadow: 0 -1px 0 rgba(34, 211, 238, .2), 0 -8px 32px rgba(0, 0, 0, .5);
+}
+body.m-mode .mobile-nav-item.active { color: var(--brand); }
+body.m-mode .mobile-nav-item.active .mi-icon {
+  filter: drop-shadow(0 0 8px rgba(34, 211, 238, .8));
+}
+
+/* 分类横滑卡：科技边框 + 悬停辉光 */
+body.m-mode .cat-item {
+  background: var(--card) !important;
+  border: 1px solid var(--line) !important;
+  box-shadow: var(--shadow) !important;
+  backdrop-filter: blur(16px);
+}
+body.m-mode .cat-item-has-img { border: 1px solid var(--line) !important; }
+body.m-mode .cat-item-has-img .cat-name { color: var(--ink); }
+body.m-mode .cat-item-has-img .cat-desc { color: var(--ink-3); }
+body.m-mode .cat-icon-wrap {
+  background: rgba(34, 211, 238, .1) !important;
+  border: 1px solid rgba(34, 211, 238, .3);
+}
+
+/* 服务卡：横排玻璃卡 */
+body.m-mode .svc-card {
+  background: var(--card) !important;
+  border: 1px solid var(--line) !important;
+  box-shadow: var(--shadow) !important;
+  backdrop-filter: blur(16px);
+}
+body.m-mode .svc-title { color: var(--ink); }
+body.m-mode .svc-sub { color: var(--ink-3); }
+body.m-mode .svc-price { color: var(--brand) !important; text-shadow: 0 0 16px rgba(34, 211, 238, .4); }
+
+/* 服务者卡 */
+body.m-mode .prov-card {
+  background: var(--card) !important;
+  border: 1px solid var(--line) !important;
+  box-shadow: var(--shadow) !important;
+}
+
+/* 列表行 */
+body.m-mode .list-row {
+  background: var(--card) !important;
+  border: 1px solid var(--line) !important;
+  box-shadow: var(--shadow) !important;
+}
+body.m-mode .list-row-title { color: var(--ink); }
+
+/* 顶栏 */
+body.m-mode .topbar-inner { background: transparent; }
+body.m-mode .topbar {
+  background: rgba(6, 10, 20, .84) !important;
+  border-bottom: 1px solid var(--line);
+}
+
+/* 主视觉：竖版时扫描光仍要跑 */
+body.m-mode .hero-banner { border-radius: 0 0 20px 20px; }
+
+/* 侧栏小卡 */
+body.m-mode .hero-mini {
+  background: var(--card) !important;
+  border: 1px solid var(--line) !important;
+  box-shadow: var(--shadow) !important;
+}
+body.m-mode .hero-mini-title { color: var(--ink); }
+body.m-mode .hero-mini-sub { color: var(--ink-2); }
+
+/* 表单：移动端也用深色 */
+body.m-mode .input,
+body.m-mode .textarea,
+body.mode select.input {
+  background: rgba(8, 14, 28, .7) !important;
+  border: 1px solid var(--line) !important;
+  color: var(--ink) !important;
+}
+body.m-mode .input:focus,
+body.m-mode .textarea:focus {
+  border-color: var(--brand) !important;
+  box-shadow: 0 0 0 3px rgba(34, 211, 238, .16) !important;
+}
+
+/* 专业方向 chip */
+body.m-mode .role-chip {
+  background: rgba(34, 211, 238, .08) !important;
+  border: 1px solid var(--line) !important;
+  color: var(--ink-2) !important;
+}
+body.m-mode .role-chip-on {
+  background: rgba(34, 211, 238, .2) !important;
+  border-color: rgba(34, 211, 238, .5) !important;
+  color: #A5F3FC !important;
+}
+body.m-mode .preset-chip {
+  background: rgba(34, 211, 238, .08) !important;
+  color: var(--ink-2) !important;
+}
+body.m-mode .preset-chip:hover {
+  background: rgba(34, 211, 238, .18) !important;
+  color: #A5F3FC !important;
+}
+body.m-mode .field-hint, body.m-mode .field-label { color: var(--ink-3) !important; }
+
+/* 弹层 */
+body.m-mode .modal {
+  background: rgba(12, 20, 36, .97) !important;
+  border: 1px solid var(--line-bright) !important;
+}
+
+/* 侧栏菜单（管理端在手机上） */
+body.m-mode .side-menu {
+  background: rgba(10, 16, 32, .82) !important;
+  border: 1px solid var(--line) !important;
+}
+body.m-mode .side-item.active {
+  color: var(--brand) !important;
+  background: rgba(34, 211, 238, .12) !important;
+}
