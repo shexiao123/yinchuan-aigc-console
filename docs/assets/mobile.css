@@ -375,7 +375,7 @@ body.m-mode {
 
 /* 底部标签栏：玻璃 + 顶部发光边 */
 body.m-mode .mobile-nav {
-  background: rgba(6, 10, 20, .88) !important;
+  background: rgba(20, 30, 50, .92) !important;
   border-top: 1px solid var(--line) !important;
   backdrop-filter: blur(20px) saturate(150%);
   -webkit-backdrop-filter: blur(20px) saturate(150%);
@@ -430,7 +430,7 @@ body.m-mode .list-row-title { color: var(--ink); }
 /* 顶栏 */
 body.m-mode .topbar-inner { background: transparent; }
 body.m-mode .topbar {
-  background: rgba(6, 10, 20, .84) !important;
+  background: rgba(20, 30, 50, .90) !important;
   border-bottom: 1px solid var(--line);
 }
 
@@ -450,7 +450,7 @@ body.m-mode .hero-mini-sub { color: var(--ink-2); }
 body.m-mode .input,
 body.m-mode .textarea,
 body.mode select.input {
-  background: rgba(8, 14, 28, .7) !important;
+  background: rgba(24, 36, 58, .8) !important;
   border: 1px solid var(--line) !important;
   color: var(--ink) !important;
 }
@@ -483,13 +483,13 @@ body.m-mode .field-hint, body.m-mode .field-label { color: var(--ink-3) !importa
 
 /* 弹层 */
 body.m-mode .modal {
-  background: rgba(12, 20, 36, .97) !important;
+  background: rgba(28, 42, 68, .97) !important;
   border: 1px solid var(--line-bright) !important;
 }
 
 /* 侧栏菜单（管理端在手机上） */
 body.m-mode .side-menu {
-  background: rgba(10, 16, 32, .82) !important;
+  background: rgba(24, 36, 58, .9) !important;
   border: 1px solid var(--line) !important;
 }
 body.m-mode .side-item.active {
