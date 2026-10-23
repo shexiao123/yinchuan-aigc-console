@@ -567,7 +567,7 @@
           ${minis
             .map(
               (b, i) => `
-            <div class="hero-mini hero-mini-${['amber', 'olive', 'rose', 'blue'][i % 4]}" data-go="${bannerHref(b)}">
+            <div class="hero-mini hero-mini-${['amber', 'olive', 'rose', 'blue'][i % 4]} ${b.imageUrl ? 'hero-mini-has-img' : ''}" data-go="${bannerHref(b)}" ${b.imageUrl ? `style="--hero-img:url('${API.esc(b.imageUrl)}')"` : ''}>
               <span class="hero-mini-title">${API.esc(b.title)}</span>
               <span class="hero-mini-sub">${API.esc(b.subtitle)}</span>
             </div>`
