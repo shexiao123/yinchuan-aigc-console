@@ -1,114 +1,109 @@
 /**
- * 未来科技主题层
+ * 东方科技主题层
  *
- * 加载在 style.css 之后，覆盖暖米色主题的变量与关键视觉元素。
- * 目标：深空底 + 霓虹青紫 + 玻璃拟态 + 网格光效。
+ * 定位：东方美学 × 科技。不是赛博朋克深色霓虹，
+ *       而是宣纸月白底 + 青瓷黛青 + 鎏金描边 + 水墨留白。
  *
- * 结构：
- *   1. 变量重映射（改一处，全站生效）
- *   2. 背景光效层（网格 + 辉光 + 扫描线）
- *   3. 组件质感（卡片玻璃化、按钮霓虹、边框发光）
- *   4. 主视觉与封面加科技化处理（叠加网格、角标、扫描光）
+ * 三条准则：
+ *   1. 底是纸，不是屏 —— 米白宣纸质感，暖而不黄
+ *   2. 光是渗，不是射 —— 柔和扩散，没有硬边光晕和扫描线
+ *   3. 形是器，不是线 —— 用青铜/青瓷/祥云/卷轴的形，不用网格和扫描光
+ *
+ * 加载在 style.css 之后。
  */
 
 /* ============ 1. 变量重映射 ============ */
 
 :root {
-  /* 主色：霓虹青 → 电光紫 */
-  --brand: #22D3EE;
-  --brand-deep: #06B6D4;
-  --brand-soft: rgba(34, 211, 238, .16);
+  /* 主色：青瓷黛青 */
+  --brand: #2E7D8A;
+  --brand-deep: #1F5F6B;
+  --brand-soft: rgba(46, 125, 138, .10);
 
-  /* 强调色 */
-  --accent: #A78BFA;
-  --accent-2: #F472B6;
+  /* 强调：鎏金 + 绛红（印章） */
+  --accent: #B58B3C;
+  --accent-2: #A8443C;
 
-  /* 文字：冷白 + 青蓝调（比纯黑底上的要更实一点） */
-  --ink: #F7FBFF;
-  --ink-2: #C2D4E6;
-  --ink-3: #93A9C0;
+  /* 文字：墨色系（不是纯黑，带一点青） */
+  --ink: #1C2A2E;
+  --ink-2: #4A5C63;
+  --ink-3: #7E8F96;
 
-  /* 线条：发光感的半透明 */
-  --line: rgba(130, 190, 230, .22);
-  --line-bright: rgba(34, 211, 238, .45);
+  /* 线条：淡墨 */
+  --line: rgba(46, 90, 100, .16);
+  --line-bright: rgba(46, 125, 138, .38);
 
-  /* 背景：深蓝灰（比纯黑亮一档，仍是深色但不闷） */
-  --bg: #141E33;
-  --bg-2: #1B2740;
-  --card: rgba(36, 52, 82, .62);
-  --card-solid: #243454;
+  /* 背景：宣纸月白 */
+  --bg: #F2EFE8;
+  --bg-2: #EAE6DC;
+  --card: rgba(255, 253, 248, .78);
+  --card-solid: #FFFDF8;
 
   /* 语义色 */
-  --olive: #34D399;
-  --rose: #F472B6;
-  --warn: #FBBF24;
-  --danger: #FB7185;
+  --olive: #6B8E5E;
+  --rose: #A8443C;
+  --warn: #B58B3C;
+  --danger: #A8443C;
 
-  /* 阴影：换成辉光 */
-  --shadow: 0 0 0 1px rgba(34, 211, 238, .14), 0 8px 32px rgba(4, 10, 22, .38);
-  --shadow-lg: 0 0 0 1px rgba(34, 211, 238, .32), 0 12px 48px rgba(4, 10, 22, .48),
-    0 0 44px rgba(34, 211, 238, .16);
-  --glow: 0 0 24px rgba(34, 211, 238, .32);
+  /* 阴影：宣纸浮起感（柔和，不用黑色硬阴影） */
+  --shadow: 0 1px 2px rgba(60, 50, 35, .05), 0 4px 16px rgba(60, 50, 35, .06);
+  --shadow-lg: 0 2px 4px rgba(60, 50, 35, .05), 0 12px 36px rgba(60, 50, 35, .10),
+    0 0 0 1px rgba(46, 125, 138, .10);
+  --glow: 0 0 24px rgba(46, 125, 138, .18);
 
-  --radius: 14px;
+  --radius: 12px;
   --max: 100%;
   --pad: 24px;
 }
 
-/* ============ 2. 背景光效 ============ */
+/* ============ 2. 宣纸底 ============ */
 
 body {
   background:
-    /* 三团辉光：加亮、加饱和，让底色不闷 */
-    radial-gradient(1200px 620px at 12% -8%, rgba(34, 211, 238, .32), transparent 64%),
-    radial-gradient(1050px 580px at 88% 2%, rgba(167, 139, 250, .30), transparent 66%),
-    radial-gradient(1000px 720px at 50% 108%, rgba(244, 114, 182, .20), transparent 64%),
-    /* 网格：清晰一档 */
-    linear-gradient(rgba(140, 195, 235, .10) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(140, 195, 235, .10) 1px, transparent 1px),
+    /* 极淡的水墨晕染：左上青瓷，右下赭石 */
+    radial-gradient(1100px 620px at 8% -6%, rgba(46, 125, 138, .10), transparent 62%),
+    radial-gradient(900px 540px at 92% 6%, rgba(181, 139, 60, .07), transparent 64%),
+    radial-gradient(820px 620px at 50% 106%, rgba(60, 80, 90, .05), transparent 62%),
     var(--bg);
-  background-size: 100% 100%, 100% 100%, 100% 100%, 56px 56px, 56px 56px, 100% 100%;
   background-attachment: fixed;
   color: var(--ink);
+  font-family: 'Songti SC', 'STSong', 'SimSun', 'Noto Serif SC', -apple-system, sans-serif;
 }
 
-/* 顶栏：玻璃 + 底部发光边 */
+/* 顶栏：半透明宣纸 */
 .topbar {
-  background: rgba(20, 30, 50, .84);
+  background: rgba(242, 239, 232, .88);
+  backdrop-filter: blur(16px) saturate(120%);
+  -webkit-backdrop-filter: blur(16px) saturate(120%);
   border-bottom: 1px solid var(--line);
-  box-shadow: 0 1px 0 rgba(34, 211, 238, .18), 0 8px 32px rgba(0, 0, 0, .45);
 }
 .topbar::after {
   content: '';
   position: absolute;
   left: 0; right: 0; bottom: -1px;
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(34, 211, 238, .55), rgba(167, 139, 250, .4), transparent);
+  background: linear-gradient(90deg, transparent, rgba(46, 125, 138, .38), rgba(181, 139, 60, .28), transparent);
 }
 
-/* 品牌 Logo：发光字 */
+/* 品牌：宋体加字距 */
 .brand-logo {
   color: var(--ink);
-  text-shadow: 0 0 18px rgba(34, 211, 238, .45);
+  font-family: 'Songti SC', 'STSong', 'SimSun', 'Noto Serif SC', serif;
+  letter-spacing: 2px;
 }
-.brand-slogan { color: var(--ink-3); }
+.brand-slogan { color: var(--ink-3); letter-spacing: 1px; }
 
-/* 导航：激活项带霓虹下划线 */
+/* 导航：激活项用鎏金下划线 */
 .nav-link { color: var(--ink-2); transition: color .18s; }
 .nav-link:hover { color: var(--ink); }
-.nav-link.active {
-  color: var(--brand);
-  text-shadow: 0 0 14px rgba(34, 211, 238, .5);
-}
+.nav-link.active { color: var(--brand-deep); font-weight: 600; }
 .nav-link.active::after {
   background: linear-gradient(90deg, var(--brand), var(--accent));
-  box-shadow: 0 0 12px rgba(34, 211, 238, .7);
   height: 2px;
 }
 
 /* ============ 3. 组件质感 ============ */
 
-/* 卡片：玻璃拟态 + 顶部高光边 */
 .card,
 .list-row,
 .svc-card,
@@ -122,13 +117,13 @@ body {
   background: var(--card) !important;
   border: 1px solid var(--line) !important;
   box-shadow: var(--shadow) !important;
-  backdrop-filter: blur(18px) saturate(140%);
-  -webkit-backdrop-filter: blur(18px) saturate(140%);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   position: relative;
   overflow: hidden;
 }
 
-/* 卡片顶部一条霓虹高光 */
+/* 卡片顶部一条淡青高光（像宣纸的纤维反光） */
 .card::before,
 .list-row::before,
 .svc-card::before,
@@ -140,50 +135,48 @@ body {
   position: absolute;
   top: 0; left: 0; right: 0;
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(34, 211, 238, .5), transparent);
-  opacity: .8;
+  background: linear-gradient(90deg, transparent, rgba(46, 125, 138, .30), transparent);
   pointer-events: none;
 }
 
-/* 悬停：辉光加强 */
 .cat-item:hover,
 .svc-card:hover,
 .prov-card:hover,
 .list-row:hover {
   box-shadow: var(--shadow-lg) !important;
   border-color: var(--line-bright) !important;
-  transform: translateY(-3px);
+  transform: translateY(-2px);
 }
 
-/* 按钮 */
+/* 按钮：黛青釉色 */
 .btn-primary {
-  background: linear-gradient(120deg, #22D3EE, #6366F1) !important;
-  color: #041018 !important;
-  font-weight: 600;
-  box-shadow: 0 0 20px rgba(34, 211, 238, .35);
+  background: linear-gradient(135deg, #3E8E9B, #24697A) !important;
+  color: #FFFDF8 !important;
+  font-weight: 500;
+  box-shadow: 0 2px 10px rgba(36, 105, 122, .22);
   transition: box-shadow .2s, transform .15s;
 }
 .btn-primary:hover:not(:disabled) {
-  box-shadow: 0 0 32px rgba(34, 211, 238, .6);
+  box-shadow: 0 4px 18px rgba(36, 105, 122, .32);
   transform: translateY(-1px);
 }
 .btn-soft {
-  background: rgba(34, 211, 238, .12) !important;
-  color: var(--brand) !important;
-  border: 1px solid rgba(34, 211, 238, .3);
+  background: rgba(46, 125, 138, .10) !important;
+  color: var(--brand-deep) !important;
+  border: 1px solid rgba(46, 125, 138, .24);
 }
-.btn-soft:hover:not(:disabled) { background: rgba(34, 211, 238, .2) !important; }
+.btn-soft:hover:not(:disabled) { background: rgba(46, 125, 138, .18) !important; }
 .btn-ghost {
-  color: var(--brand) !important;
-  border: 1.5px solid rgba(34, 211, 238, .4) !important;
+  color: var(--brand-deep) !important;
+  border: 1.5px solid rgba(46, 125, 138, .32) !important;
   background: transparent !important;
 }
-.btn-ghost:hover:not(:disabled) { background: rgba(34, 211, 238, .1) !important; }
-.btn-danger { background: linear-gradient(120deg, #FB7185, #E11D48) !important; color: #fff !important; }
+.btn-ghost:hover:not(:disabled) { background: rgba(46, 125, 138, .08) !important; }
+.btn-danger { background: linear-gradient(135deg, #B85A50, #A8443C) !important; color: #fff !important; }
 
 /* 表单 */
 .input, .textarea, select.input {
-  background: rgba(18, 28, 46, .75) !important;
+  background: rgba(255, 253, 248, .9) !important;
   border: 1px solid var(--line) !important;
   color: var(--ink) !important;
   transition: border-color .18s, box-shadow .18s;
@@ -191,15 +184,16 @@ body {
 .input:focus, .textarea:focus, select.input:focus {
   outline: none;
   border-color: var(--brand) !important;
-  box-shadow: 0 0 0 3px rgba(34, 211, 238, .16), 0 0 20px rgba(34, 211, 238, .2) !important;
+  box-shadow: 0 0 0 3px rgba(46, 125, 138, .12) !important;
 }
 .input::placeholder, .textarea::placeholder { color: var(--ink-3); }
 label, .field-label { color: var(--ink-2); }
 
-/* 区块标题：带发光标记 */
+/* 区块标题：竖线改为鎏金 */
 .section-title {
   color: var(--ink);
-  text-shadow: 0 0 20px rgba(34, 211, 238, .22);
+  font-family: 'Songti SC', 'STSong', 'SimSun', 'Noto Serif SC', serif;
+  letter-spacing: 1px;
 }
 .section-title::before {
   content: '';
@@ -209,36 +203,34 @@ label, .field-label { color: var(--ink-2); }
   margin-right: 9px;
   vertical-align: -2px;
   background: linear-gradient(180deg, var(--brand), var(--accent));
-  box-shadow: 0 0 10px rgba(34, 211, 238, .8);
   border-radius: 2px;
 }
-.section-more { color: var(--brand); }
+.section-more { color: var(--brand-deep); }
 
 /* 标签 / chip */
 .chip, .tag, .prov-tags span, .svc-tags span, .filter-chip {
-  background: rgba(34, 211, 238, .1) !important;
-  color: #7DD3FC !important;
-  border: 1px solid rgba(34, 211, 238, .22);
+  background: rgba(46, 125, 138, .08) !important;
+  color: var(--brand-deep) !important;
+  border: 1px solid rgba(46, 125, 138, .20);
 }
 .chip:hover, .filter-chip:hover, .chip.active, .filter-chip.active {
-  background: rgba(34, 211, 238, .22) !important;
-  color: #CFFAFE !important;
-  border-color: rgba(34, 211, 238, .5);
-  box-shadow: 0 0 14px rgba(34, 211, 238, .28);
+  background: rgba(46, 125, 138, .16) !important;
+  color: var(--brand-deep) !important;
+  border-color: rgba(46, 125, 138, .40);
 }
 
 /* 文字层级 */
-h1, h2, h3, .page-title, .detail-title, .svc-title { color: var(--ink); }
-.muted, .prov-meta, .list-row-sub, .svc-sub { color: var(--ink-3) !important; }
-.price, .svc-price, .detail-price {
-  color: var(--brand) !important;
-  text-shadow: 0 0 18px rgba(34, 211, 238, .4);
+h1, h2, h3, .page-title, .detail-title, .svc-title {
+  color: var(--ink);
+  font-family: 'Songti SC', 'STSong', 'SimSun', 'Noto Serif SC', serif;
 }
+.muted, .prov-meta, .list-row-sub, .svc-sub { color: var(--ink-3) !important; }
+.price, .svc-price, .detail-price { color: var(--brand-deep) !important; }
 .star, .rating { color: var(--warn) !important; }
 
-/* ============ 4. 画面科技化 ============ */
+/* ============ 4. 画面东方化 ============ */
 
-/* 主视觉：深色 + 网格叠加 + 扫描光 */
+/* 主视觉 */
 .hero-banner {
   border-radius: var(--radius);
   border: 1px solid var(--line);
@@ -246,65 +238,56 @@ h1, h2, h3, .page-title, .detail-title, .svc-title { color: var(--ink); }
   overflow: hidden;
   position: relative;
 }
-/* 有封面图时：保留背景图，只叠一层科技色调（不用 background 简写，会重置 background-image） */
 .hero-banner-has-img {
-  background-color: #0C1524;
-  background-blend-mode: normal;
+  background-color: #EAE6DC;
+  background-position: 78% 50% !important;
+  background-size: cover !important;
 }
+/* 有图时：宣纸蒙层（左侧几乎纯白，让文字立得住；右侧留白透出画面） */
 .hero-banner-has-img::before {
-  /* 科技网格 + 左侧蒙层（蒙层别太重，否则图看不清） */
   content: '';
   position: absolute;
   inset: 0;
-  background-image:
-    linear-gradient(100deg, rgba(8, 14, 26, .70) 0%, rgba(8, 14, 26, .26) 48%, rgba(8, 14, 26, .04) 100%),
-    linear-gradient(rgba(34, 211, 238, .10) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(34, 211, 238, .10) 1px, transparent 1px);
-  background-size: 100% 100%, 34px 34px, 34px 34px;
+  background-image: linear-gradient(100deg,
+    rgba(244, 242, 236, .97) 0%,
+    rgba(244, 242, 236, .90) 32%,
+    rgba(244, 242, 236, .55) 52%,
+    rgba(244, 242, 236, .06) 78%,
+    transparent 100%);
   z-index: 1;
   pointer-events: none;
 }
+/* 无图时：宣纸 + 淡墨晕染 */
 .hero-banner::after {
-  /* 斜向扫描光 */
   content: '';
   position: absolute;
-  top: -60%;
-  left: -30%;
-  width: 45%;
-  height: 220%;
-  background: linear-gradient(90deg, transparent, rgba(34, 211, 238, .16), transparent);
-  transform: rotate(18deg);
-  animation: sweep 7s ease-in-out infinite;
+  inset: 0;
+  background:
+    radial-gradient(60% 90% at 15% 110%, rgba(46, 125, 138, .12), transparent 60%),
+    radial-gradient(50% 70% at 95% -10%, rgba(181, 139, 60, .10), transparent 62%);
   pointer-events: none;
   z-index: 1;
 }
-@keyframes sweep {
-  0%, 62% { left: -35%; }
-  100% { left: 115%; }
-}
+/* 无图 banner 的渐变：宣纸底 */
+.banner-amber { background-color: #F0EDE4; background-image: linear-gradient(125deg, #F5F2EA, #E2E6E2); }
+.banner-olive { background-color: #EFF0E6; background-image: linear-gradient(125deg, #F3F2E9, #E3E8DE); }
+.banner-rose  { background-color: #F4EEE9; background-image: linear-gradient(125deg, #F7F1EC, #EDE0DC); }
+.banner-blue { background-color: #ECEFF0; background-image: linear-gradient(125deg, #F0F2F2, #DFE6E7); }
 .banner-text { position: relative; z-index: 3; }
 .banner-title {
-  color: #fff;
-  text-shadow: 0 0 24px rgba(34, 211, 238, .6), 0 2px 8px rgba(0, 0, 0, .6);
-  letter-spacing: 2px;
+  color: var(--ink);
+  font-family: 'Songti SC', 'STSong', 'SimSun', 'Noto Serif SC', serif;
+  letter-spacing: 3px;
+  text-shadow: 0 1px 2px rgba(255, 253, 248, .8);
 }
-.banner-sub { color: rgba(226, 244, 255, .9); text-shadow: 0 1px 6px rgba(0, 0, 0, .7); }
-
-/* 无图时的渐变：换成霓虹色。
-   注意用 background-color + background-image 双写，
-   不能用 background 简写 —— 简写会重置掉 inline style 的 background-image（有图时）。
-   而且这里不能用 !important —— inline style 优先级高于它，
-   有背景图时 inline 的 url() 会自动胜出，正好是我们要的。 */
-.banner-amber { background-color: #0E7490; background-image: linear-gradient(120deg, #0E7490, #4C1D95); }
-.banner-olive { background-color: #065F46; background-image: linear-gradient(120deg, #065F46, #0E7490); }
-.banner-rose  { background-color: #831843; background-image: linear-gradient(120deg, #831843, #5B21B6); }
-.banner-blue { background-color: #1E3A8A; background-image: linear-gradient(120deg, #1E3A8A, #0E7490); }
+.banner-sub { color: var(--ink-2); text-shadow: 0 1px 3px rgba(255, 253, 248, .9); }
+.hero-banner-has-img .banner-title { color: var(--ink); }
 
 /* 侧栏小卡 */
 .hero-mini {
   background: var(--card) !important;
   border: 1px solid var(--line) !important;
-  backdrop-filter: blur(16px);
+  backdrop-filter: blur(10px);
   box-shadow: var(--shadow) !important;
   position: relative;
   overflow: hidden;
@@ -313,9 +296,8 @@ h1, h2, h3, .page-title, .detail-title, .svc-title { color: var(--ink); }
   flex-direction: column;
   justify-content: center;
 }
-/* 有背景图时：叠科技网格 + 底部暗角，保证文字可读 */
 .hero-mini-has-img {
-  background-color: #0C1524 !important;
+  background-color: #EAE6DC !important;
   background-image: var(--hero-img, none) !important;
   background-size: cover !important;
   background-position: center !important;
@@ -325,20 +307,17 @@ h1, h2, h3, .page-title, .detail-title, .svc-title { color: var(--ink); }
   content: '';
   position: absolute;
   inset: 0;
-  background:
-    linear-gradient(180deg, rgba(8, 14, 26, .48) 0%, rgba(8, 14, 26, .82) 100%),
-    linear-gradient(rgba(34, 211, 238, .10) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(34, 211, 238, .10) 1px, transparent 1px);
-  background-size: 100% 100%, 22px 22px, 22px 22px;
+  background: linear-gradient(180deg, rgba(242, 239, 232, .55) 0%, rgba(242, 239, 232, .90) 100%);
   pointer-events: none;
   z-index: 0;
 }
 .hero-mini-has-img .hero-mini-title,
 .hero-mini-has-img .hero-mini-sub { position: relative; z-index: 1; }
+/* 左侧竖线换成东方色系 */
 .hero-mini-amber { border-left: 2px solid var(--brand) !important; }
 .hero-mini-olive { border-left: 2px solid var(--olive) !important; }
 .hero-mini-rose  { border-left: 2px solid var(--accent-2) !important; }
-.hero-mini-blue  { border-left: 2px solid var(--accent) !important; }
+.hero-mini-blue  { border-left: 2px solid var(--brand-deep) !important; }
 .hero-mini:hover {
   border-color: var(--line-bright) !important;
   box-shadow: var(--shadow-lg) !important;
@@ -346,52 +325,40 @@ h1, h2, h3, .page-title, .detail-title, .svc-title { color: var(--ink); }
 .hero-mini-title { color: var(--ink); }
 .hero-mini-sub { color: var(--ink-2); }
 
-/* 分类卡：图片上叠网格 + 悬停光扫 */
+/* 分类卡：图片加宣纸渐变叠层，底部淡墨 */
 .cat-item-has-img { border: 1px solid var(--line) !important; }
 .cat-img-wrap { position: relative; }
 .cat-img-wrap::after {
   content: '';
   position: absolute;
   inset: 0;
-  background:
-    linear-gradient(180deg, transparent 38%, rgba(10, 17, 30, .78) 100%),
-    linear-gradient(rgba(34, 211, 238, .07) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(34, 211, 238, .07) 1px, transparent 1px);
-  background-size: 100% 100%, 22px 22px, 22px 22px;
+  background: linear-gradient(180deg, transparent 42%, rgba(242, 239, 232, .92) 100%);
   pointer-events: none;
 }
-.cat-item-has-img:hover .cat-img { filter: saturate(1.2) contrast(1.05); }
-
-/* 分类图标：发光圆环 */
 .cat-icon-wrap {
-  background: rgba(34, 211, 238, .10) !important;
-  border: 1px solid rgba(34, 211, 238, .3);
-  box-shadow: inset 0 0 18px rgba(34, 211, 238, .16), 0 0 18px rgba(34, 211, 238, .16);
+  background: rgba(46, 125, 138, .08) !important;
+  border: 1px solid rgba(46, 125, 138, .22);
+  box-shadow: inset 0 0 14px rgba(46, 125, 138, .08);
 }
 .cat-name { color: var(--ink); }
 .cat-desc { color: var(--ink-3); }
 
-/* 服务封面：叠网格 + 四角标记 */
+/* 服务封面 */
 .svc-cover-wrap { position: relative; overflow: hidden; }
 .svc-cover-wrap::after {
   content: '';
   position: absolute;
   inset: 0;
-  background:
-    linear-gradient(180deg, transparent 52%, rgba(10, 17, 30, .74) 100%),
-    linear-gradient(rgba(34, 211, 238, .06) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(34, 211, 238, .06) 1px, transparent 1px);
-  background-size: 100% 100%, 18px 18px, 18px 18px;
+  background: linear-gradient(180deg, transparent 55%, rgba(242, 239, 232, .88) 100%);
   pointer-events: none;
 }
-.svc-card:hover .svc-cover-img { filter: saturate(1.15) brightness(1.05); }
 
-/* 头像：霓虹环 */
+/* 头像：青瓷釉色 */
 .prov-avatar {
-  border: 1px solid rgba(34, 211, 238, .4) !important;
-  box-shadow: 0 0 16px rgba(34, 211, 238, .25);
-  background: linear-gradient(135deg, rgba(34, 211, 238, .18), rgba(167, 139, 250, .18)) !important;
-  color: #A5F3FC !important;
+  border: 1px solid rgba(46, 125, 138, .24) !important;
+  box-shadow: 0 2px 8px rgba(60, 50, 35, .08);
+  background: linear-gradient(135deg, rgba(46, 125, 138, .14), rgba(181, 139, 60, .12)) !important;
+  color: var(--brand-deep) !important;
 }
 
 /* 详情页大图 */
@@ -406,69 +373,66 @@ h1, h2, h3, .page-title, .detail-title, .svc-title { color: var(--ink); }
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, transparent 48%, rgba(10, 17, 30, .74) 100%);
+  background: linear-gradient(180deg, transparent 52%, rgba(242, 239, 232, .86) 100%);
   pointer-events: none;
 }
 
 /* 状态徽标 */
 .badge, .status {
-  background: rgba(34, 211, 238, .14) !important;
-  color: #7DD3FC !important;
-  border: 1px solid rgba(34, 211, 238, .28);
+  background: rgba(46, 125, 138, .10) !important;
+  color: var(--brand-deep) !important;
+  border: 1px solid rgba(46, 125, 138, .22);
 }
 
 /* 页脚 */
 .footer {
   border-top: 1px solid var(--line);
-  background: rgba(20, 30, 50, .6);
-  backdrop-filter: blur(12px);
+  background: rgba(234, 230, 220, .5);
+  backdrop-filter: blur(10px);
 }
 .footer-text, .footer-link { color: var(--ink-3); }
 .footer-title { color: var(--ink-2); }
-.footer-logo { color: var(--brand); text-shadow: 0 0 16px rgba(34, 211, 238, .35); }
+.footer-logo {
+  color: var(--brand-deep);
+  font-family: 'Songti SC', 'STSong', 'SimSun', 'Noto Serif SC', serif;
+  letter-spacing: 2px;
+}
 
 /* 弹层 */
 .modal {
-  background: rgba(22, 34, 56, .96) !important;
+  background: rgba(255, 253, 248, .98) !important;
   border: 1px solid var(--line-bright) !important;
-  box-shadow: 0 0 0 1px rgba(34, 211, 238, .2), 0 24px 80px rgba(0, 0, 0, .7) !important;
+  box-shadow: 0 2px 4px rgba(60, 50, 35, .05), 0 24px 64px rgba(60, 50, 35, .16) !important;
 }
 .modal-title { color: var(--ink); }
 
 /* 侧边菜单 */
 .side-menu {
-  background: rgba(18, 28, 46, .78) !important;
+  background: rgba(255, 253, 248, .82) !important;
   border: 1px solid var(--line) !important;
 }
 .side-item { color: var(--ink-2); }
 .side-item.active {
-  color: var(--brand) !important;
-  background: rgba(34, 211, 238, .12) !important;
-  border-color: rgba(34, 211, 238, .3);
-  box-shadow: inset 0 0 18px rgba(34, 211, 238, .1);
+  color: var(--brand-deep) !important;
+  background: rgba(46, 125, 138, .10) !important;
+  border-color: rgba(46, 125, 138, .24);
 }
 
-/* 登录/注册按钮（顶栏） */
+/* 顶栏登录/注册 */
 .btn-outline, .topbar .btn {
-  border: 1px solid rgba(34, 211, 238, .4) !important;
-  color: var(--brand) !important;
-  background: rgba(34, 211, 238, .08) !important;
+  border: 1px solid rgba(46, 125, 138, .32) !important;
+  color: var(--brand-deep) !important;
+  background: rgba(46, 125, 138, .06) !important;
 }
-.topbar .btn:hover { background: rgba(34, 211, 238, .18) !important; }
-
-/* 空态图标 */
-.empty-icon {
-  filter: drop-shadow(0 0 18px rgba(34, 211, 238, .5));
-}
+.topbar .btn:hover { background: rgba(46, 125, 138, .14) !important; }
 
 /* 滚动条 */
 ::-webkit-scrollbar { width: 8px; height: 8px; }
-::-webkit-scrollbar-track { background: rgba(16, 26, 44, .7); }
+::-webkit-scrollbar-track { background: rgba(234, 230, 220, .7); }
 ::-webkit-scrollbar-thumb {
   background: linear-gradient(180deg, var(--brand), var(--accent));
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover { background: var(--brand); }
 
-/* 选中态 */
-::selection { background: rgba(34, 211, 238, .3); color: #fff; }
+::selection { background: rgba(46, 125, 138, .2); color: var(--ink); }
