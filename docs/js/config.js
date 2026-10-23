@@ -123,8 +123,9 @@ window.cloudReady = (function () {
         signal: ctrl.signal,
         headers: {
           // 鉴权头名必须是 x-wb-webapp-access-key（用 apikey 会 401）
-          'x-wb-webapp-access-key': CFG.publicConfig.publishableKey,
-          'x-client-info': 'workbuddy-web-sdk'
+          // 注意：不要加 x-client-info —— 平台的 CORS 预检允许头白名单里
+          // 没有它，带上会被浏览器直接拒绝（预检 204 但实际请求 ERR_FAILED）
+          'x-wb-webapp-access-key': CFG.publicConfig.publishableKey
         }
       })
       // 401 说明端点活着只是鉴权没过；能拿到任何 HTTP 响应就说明网络通
