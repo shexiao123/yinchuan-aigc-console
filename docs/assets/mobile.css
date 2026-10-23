@@ -370,16 +370,16 @@ body.m-mode .empty-hint { font-size: 13px; line-height: 1.6; }
    所以这里要补齐 mobile.css 覆盖掉的科技质感 */
 body.m-mode {
   background-attachment: scroll;
-  background-size: 100% 100%, 100% 100%, 100% 100%, 28px 28px, 28px 28px, 140px 140px, 140px 140px, 100% 100%;
+  background-size: 100% 100%, 100% 100%, 100% 100%, 44px 44px, 44px 44px, 100% 100%;
 }
 
 /* 底部标签栏：玻璃 + 顶部发光边 */
 body.m-mode .mobile-nav {
-  background: rgba(16, 27, 48, .90) !important;
+  background: rgba(14, 23, 40, .90) !important;
   border-top: 1px solid var(--line) !important;
   backdrop-filter: blur(20px) saturate(150%);
   -webkit-backdrop-filter: blur(20px) saturate(150%);
-  box-shadow: 0 -1px 0 rgba(34, 211, 238, .22), 0 -8px 30px rgba(2, 8, 20, .55);
+  box-shadow: 0 -1px 0 rgba(34, 211, 238, .2), 0 -8px 32px rgba(0, 0, 0, .5);
 }
 body.m-mode .mobile-nav-item.active { color: var(--brand); }
 body.m-mode .mobile-nav-item.active .mi-icon {
@@ -397,8 +397,8 @@ body.m-mode .cat-item-has-img { border: 1px solid var(--line) !important; }
 body.m-mode .cat-item-has-img .cat-name { color: var(--ink); }
 body.m-mode .cat-item-has-img .cat-desc { color: var(--ink-3); }
 body.m-mode .cat-icon-wrap {
-  background: rgba(34, 211, 238, .08) !important;
-  border: 1px solid rgba(46, 125, 138, .22);
+  background: rgba(34, 211, 238, .1) !important;
+  border: 1px solid rgba(34, 211, 238, .3);
 }
 
 /* 服务卡：横排玻璃卡 */
@@ -410,7 +410,7 @@ body.m-mode .svc-card {
 }
 body.m-mode .svc-title { color: var(--ink); }
 body.m-mode .svc-sub { color: var(--ink-3); }
-body.m-mode .svc-price { color: var(--brand-deep) !important; }
+body.m-mode .svc-price { color: var(--brand) !important; text-shadow: 0 0 16px rgba(34, 211, 238, .4); }
 
 /* 服务者卡 */
 body.m-mode .prov-card {
@@ -430,7 +430,7 @@ body.m-mode .list-row-title { color: var(--ink); }
 /* 顶栏 */
 body.m-mode .topbar-inner { background: transparent; }
 body.m-mode .topbar {
-  background: rgba(16, 27, 48, .88) !important;
+  background: rgba(14, 23, 40, .88) !important;
   border-bottom: 1px solid var(--line);
 }
 
@@ -450,7 +450,7 @@ body.m-mode .hero-mini-sub { color: var(--ink-2); }
 body.m-mode .input,
 body.m-mode .textarea,
 body.mode select.input {
-  background: rgba(12, 22, 40, .72) !important;
+  background: rgba(14, 22, 38, .74) !important;
   border: 1px solid var(--line) !important;
   color: var(--ink) !important;
 }
@@ -463,34 +463,33 @@ body.m-mode .textarea:focus {
 /* 专业方向 chip */
 body.m-mode .role-chip {
   background: rgba(34, 211, 238, .08) !important;
-  border: 1px solid rgba(34, 211, 238, .24) !important;
+  border: 1px solid var(--line) !important;
   color: var(--ink-2) !important;
 }
 body.m-mode .role-chip-on {
-  background: rgba(34, 211, 238, .20) !important;
-  border-color: rgba(34, 211, 238, .50) !important;
-  color: #7DD3FC !important;
+  background: rgba(34, 211, 238, .2) !important;
+  border-color: rgba(34, 211, 238, .5) !important;
+  color: #A5F3FC !important;
 }
 body.m-mode .preset-chip {
   background: rgba(34, 211, 238, .08) !important;
   color: var(--ink-2) !important;
 }
 body.m-mode .preset-chip:hover {
-  background: rgba(34, 211, 238, .20) !important;
-  color: var(--brand) !important;
-  text-shadow: 0 0 16px rgba(34, 211, 238, .45);
+  background: rgba(34, 211, 238, .18) !important;
+  color: #A5F3FC !important;
 }
 body.m-mode .field-hint, body.m-mode .field-label { color: var(--ink-3) !important; }
 
 /* 弹层 */
 body.m-mode .modal {
-  background: rgba(20, 34, 58, .97) !important;
+  background: rgba(12, 20, 36, .97) !important;
   border: 1px solid var(--line-bright) !important;
 }
 
 /* 侧栏菜单（管理端在手机上） */
 body.m-mode .side-menu {
-  background: rgba(20, 34, 58, .88) !important;
+  background: rgba(16, 25, 42, .86) !important;
   border: 1px solid var(--line) !important;
 }
 body.m-mode .side-item.active {
