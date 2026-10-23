@@ -1,0 +1,365 @@
+/**
+ * 移动端独立样式
+ *
+ * 原则：手机不是「缩小的桌面版」，而是另一套信息架构。
+ *   桌面端 —— 顶栏导航 + 多列栅格，信息横向铺开
+ *   移动端 —— 底部标签栏 + 纵向信息流，卡片横排滑动
+ *
+ * 加载方式：只在小屏时通过 JS 注入 <link>，桌面端零开销、零影响。
+ */
+
+/* ============ 基础 ============ */
+
+body.m-mode {
+  /* 底部标签栏高度 + 安全区 */
+  padding-bottom: calc(58px + env(safe-area-inset-bottom, 0px));
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior-y: contain;
+  /* 兜底：任何横向溢出都不该让整页横向滚动 */
+  overflow-x: hidden;
+}
+
+/* 顶部：品牌 + 通知 + 登录，不再有汉堡菜单 */
+body.m-mode .mobile-menu-btn { display: none !important; }
+body.m-mode .nav { display: none !important; }
+body.m-mode .topbar-inner {
+  height: 54px;
+  padding: 0 14px;
+  gap: 10px;
+}
+body.m-mode .brand-logo {
+  font-size: 15px;
+  letter-spacing: .2px;
+  max-width: none;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+body.m-mode .brand-slogan { display: none; }
+body.m-mode .user-name { display: none; }
+
+/* 内容区：贴边通栏，不用大边距 */
+body.m-mode .app {
+  padding: 0 0 24px;
+  /* 裁掉横向溢出（分类横滑条的负边距），
+     clip 不会创建滚动容器，比 hidden 安全 */
+  overflow-x: clip;
+}
+
+/* ============ 主视觉：竖版，标题压在上方 ============ */
+
+body.m-mode .hero { margin-top: 0; }
+body.m-mode .hero-banner {
+  height: 46vw;
+  max-height: 260px;
+  min-height: 168px;
+  border-radius: 0 0 20px 20px;
+  padding: 0 18px;
+  align-items: flex-end;
+  padding-bottom: 20px;
+}
+body.m-mode .banner-title { font-size: 22px; line-height: 1.3; }
+body.m-mode .banner-sub {
+  font-size: 12.5px;
+  line-height: 1.55;
+  margin-top: 8px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* 两个侧栏小卡：手机端改成一行两列并排，不再各占一行 */
+body.m-mode .hero-side {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  padding: 12px 14px 0;
+}
+body.m-mode .hero-mini {
+  padding: 14px 14px;
+  border-radius: 14px;
+}
+body.m-mode .hero-mini-title { font-size: 14px; line-height: 1.35; }
+body.m-mode .hero-mini-desc { font-size: 11.5px; line-height: 1.5; margin-top: 4px; }
+
+/* ============ 区块标题 ============ */
+
+body.m-mode .section { margin-top: 26px; }
+body.m-mode .section-head {
+  padding: 0 14px;
+  margin-bottom: 12px;
+}
+body.m-mode .section-title { font-size: 17px; }
+body.m-mode .section-more { font-size: 12.5px; }
+
+/* ============ 分类：横向滑动卡片（不是网格） ============ */
+
+body.m-mode .cat-grid {
+  display: flex !important;
+  grid-template-columns: none !important;
+  gap: 10px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  /* 左右负边距让卡片贴边滑；.app 的 overflow-x:clip 负责裁掉溢出，
+     横向滚动只发生在分类条内部 */
+  padding: 2px 14px 12px;
+  margin: 0 -14px;
+  scrollbar-width: none;
+}
+body.m-mode .cat-grid::-webkit-scrollbar { display: none; }
+
+body.m-mode .cat-item {
+  flex: 0 0 138px;
+  width: 138px;
+  padding: 0 0 12px;
+  border-radius: 14px;
+  scroll-snap-align: start;
+  overflow: hidden;
+}
+body.m-mode .cat-img-wrap {
+  width: 100%;
+  aspect-ratio: 3 / 2;
+  border-radius: 0;
+}
+body.m-mode .cat-item-has-img .cat-name {
+  padding: 10px 10px 0;
+  font-size: 13.5px;
+  text-align: left;
+}
+body.m-mode .cat-item-has-img .cat-desc {
+  padding: 3px 10px 0;
+  font-size: 11px;
+  line-height: 1.45;
+  text-align: left;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+/* 无图时（图标版）保持紧凑 */
+body.m-mode .cat-icon-wrap {
+  width: 44px; height: 44px; font-size: 22px; margin: 14px auto 10px;
+}
+body.m-mode .cat-item:not(.cat-item-has-img) { padding: 0 0 12px; }
+body.m-mode .cat-item:not(.cat-item-has-img) .cat-name { text-align: center; font-size: 13px; }
+
+/* ============ 服务卡：横排紧凑卡（信息流） ============ */
+
+body.m-mode .svc-grid {
+  display: flex !important;
+  grid-template-columns: none !important;
+  flex-direction: column;
+  gap: 10px;
+  padding: 0 14px;
+}
+body.m-mode .svc-card {
+  display: grid;
+  grid-template-columns: 108px 1fr;
+  gap: 12px;
+  padding: 10px;
+  border-radius: 14px;
+  align-items: start;
+}
+body.m-mode .svc-cover-wrap {
+  width: 108px !important;
+  height: 82px !important;
+  border-radius: 10px;
+  overflow: hidden;
+}
+body.m-mode .svc-cover-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 10px;
+}
+body.m-mode .svc-body { min-width: 0; }
+body.m-mode .svc-title {
+  font-size: 15px;
+  line-height: 1.35;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+body.m-mode .svc-sub {
+  font-size: 12px;
+  line-height: 1.5;
+  margin-top: 3px;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+body.m-mode .svc-tags { display: none; }
+body.m-mode .svc-price { font-size: 19px; margin-top: 6px; }
+body.m-mode .svc-orig { font-size: 11.5px; }
+body.m-mode .svc-meta { font-size: 11.5px; margin-top: 3px; }
+
+/* ============ 服务者卡：两列紧凑 ============ */
+
+body.m-mode .prov-grid {
+  grid-template-columns: 1fr 1fr !important;
+  gap: 10px;
+  padding: 0 14px;
+}
+body.m-mode .prov-card { padding: 12px; border-radius: 14px; }
+body.m-mode .prov-avatar { width: 40px; height: 40px; font-size: 17px; }
+body.m-mode .prov-name { font-size: 13.5px; }
+body.m-mode .prov-meta { font-size: 11px; }
+body.m-mode .prov-tags { display: none; }
+
+/* ============ 通用列表：横向信息行 ============ */
+
+body.m-mode .list-row {
+  padding: 13px 14px;
+  gap: 11px;
+  border-radius: 12px;
+  margin: 0 14px 8px;
+}
+body.m-mode .list-row-cover {
+  width: 62px;
+  height: 48px;
+  border-radius: 8px;
+}
+body.m-mode .list-row-title { font-size: 14.5px; line-height: 1.4; }
+body.m-mode .list-row-sub { font-size: 11.5px; }
+
+/* ============ 表单：单列 + 大点击区 ============ */
+
+body.m-mode .form-row { grid-template-columns: 1fr !important; gap: 14px; }
+body.m-mode .field { margin-bottom: 14px; }
+body.m-mode .input,
+body.m-mode .textarea,
+body.mode select.input {
+  font-size: 16px; /* 16px 以下 iOS 会自动放大页面 */
+  padding: 12px 13px;
+  min-height: 44px;
+}
+body.m-mode .btn { min-height: 44px; font-size: 15px; }
+body.m-mode .btn-block { width: 100%; }
+
+/* 专业方向 chip：横向可点，触摸友好 */
+body.m-mode .role-list { gap: 8px; }
+body.m-mode .role-chip {
+  padding: 9px 14px;
+  font-size: 13px;
+  min-height: 38px;
+}
+body.m-mode .preset-chip { padding: 6px 13px; font-size: 12.5px; }
+
+/* ============ 详情页：标题与价格分离排布 ============ */
+
+body.m-mode .detail-cover {
+  height: 46vw;
+  max-height: 240px;
+  border-radius: 0;
+}
+body.m-mode .detail-body { padding: 0 14px; }
+body.m-mode .detail-title { font-size: 19px; line-height: 1.4; }
+body.m-mode .detail-price { font-size: 25px; }
+body.m-mode .page-head { padding: 20px 14px 16px; }
+body.m-mode .page-title { font-size: 22px; }
+body.m-mode .page-sub { font-size: 12.5px; line-height: 1.55; }
+
+/* ============ 底部标签栏（手机主导航） ============ */
+
+body.m-mode .mobile-nav {
+  display: flex;
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  height: calc(56px + env(safe-area-inset-bottom, 0px));
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  background: rgba(255, 255, 255, .96);
+  backdrop-filter: blur(14px);
+  border-top: 1px solid var(--line);
+  z-index: 200;
+}
+body.m-mode .mobile-nav-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  font-size: 10.5px;
+  color: var(--ink-3);
+  /* 触摸友好 */
+  min-height: 56px;
+  -webkit-tap-highlight-color: transparent;
+}
+body.m-mode .mobile-nav-item .mi-icon {
+  width: 22px;
+  height: 22px;
+  line-height: 0;
+  opacity: .5;
+  display: block;
+}
+body.m-mode .mobile-nav-item.active { color: var(--brand); font-weight: 600; }
+body.m-mode .mobile-nav-item.active .mi-icon { opacity: 1; }
+
+/* 点击时有反馈 */
+body.m-mode .mobile-nav-item:active { background: rgba(180, 120, 60, .08); }
+
+/* ============ 页脚：折叠成单列紧凑 ============ */
+
+body.m-mode .footer { margin-top: 28px; }
+body.m-mode .footer-inner {
+  grid-template-columns: 1fr 1fr;
+  gap: 18px 12px;
+  padding: 24px 14px 20px;
+}
+body.m-mode .footer-text { font-size: 12px; line-height: 1.65; }
+body.m-mode .footer-col:first-child { grid-column: 1 / -1; }
+body.m-mode .footer-title { font-size: 13px; }
+body.m-mode .footer-link { font-size: 12.5px; padding: 3px 0; }
+
+/* ============ 提示条 / 弹层 ============ */
+
+body.m-mode .toast {
+  bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+  left: 14px; right: 14px;
+  max-width: none;
+  font-size: 13.5px;
+}
+body.m-mode .modal {
+  width: calc(100% - 28px);
+  max-width: none;
+  border-radius: 16px;
+  max-height: 84vh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+body.m-mode .modal-body { padding: 16px 14px; }
+body.m-mode .side-menu {
+  position: sticky; top: 0; z-index: 10;
+  display: flex; overflow-x: auto; gap: 6px;
+  padding: 8px 14px;
+  background: var(--bg);
+  border-bottom: 1px solid var(--line);
+}
+body.m-mode .side-item { white-space: nowrap; flex-shrink: 0; }
+
+/* ============ 空态 ============ */
+
+body.m-mode .empty { padding: 56px 20px; }
+body.m-mode .empty-text { font-size: 16px; }
+body.m-mode .empty-hint { font-size: 13px; line-height: 1.6; }
+
+/* ============ 大屏手机（Pro Max 等）：保持手机版式，别变桌面 ============ */
+
+@media (min-width: 561px) and (max-width: 899px) {
+  body.m-mode .cat-item { flex-basis: 150px; width: 150px; }
+  body.m-mode .svc-card { grid-template-columns: 120px 1fr; }
+  body.m-mode .svc-cover-wrap { width: 120px !important; height: 90px !important; }
+}
+
+/* 横屏手机：内容别太高，限制可视区 */
+@media (orientation: landscape) and (max-height: 500px) {
+  body.m-mode .hero-banner { height: 40vw; min-height: 130px; }
+  body.m-mode .detail-cover { height: 34vw; }
+}
