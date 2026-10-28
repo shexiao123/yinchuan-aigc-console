@@ -312,6 +312,52 @@
     const handler = BINDS[S.page]
     if (typeof handler === 'function') handler()
     else if (Array.isArray(handler)) handler.forEach((fn) => fn())
+
+    // 可视化数据版（Remotion）：概览页挂载实时数据大屏
+    if (S.page === 'dashboard' && S.stats && window.WBDataViz) {
+      mountDataViz(S.stats)
+    }
+  }
+
+  /**
+   * 把 adminStats 的数据喂给 Remotion Player
+   * 字段名与 video/src/tokens.ts 的 DashboardData 一一对应
+   */
+  function mountDataViz(stats) {
+    const stage = document.getElementById('datavizStage')
+    if (!stage) return
+    try {
+      window.WBDataViz.mount(
+        stage,
+        {
+          total: stats.total,
+          open: stats.open,
+          taken: stats.taken,
+          producing: stats.producing,
+          delivered: stats.delivered,
+          completed: stats.completed,
+          cancelled: stats.cancelled,
+          gmv: stats.gmv,
+          commission: stats.commission,
+          providers: stats.providers,
+          verifiedProviders: stats.verifiedProviders,
+          services: stats.services,
+          onShelf: stats.onShelf,
+          categories: stats.categories,
+          reviews: stats.reviews,
+          avgRating: stats.avgRating,
+          pendingApplications: stats.pendingApplications,
+          pendingSettlements: stats.pendingSettlements,
+          trend: stats.trend || [],
+          topServices: stats.topServices || [],
+          byCategory: stats.byCategory || []
+        },
+        {loop: true}
+      )
+    } catch (e) {
+      console.error('dataviz mount failed', e)
+      stage.innerHTML = '<div class="dataviz-fallback">可视化数据版加载失败，下方为静态明细</div>'
+    }
   }
 
   const BINDS = {}
@@ -327,6 +373,10 @@
     const distColors = ['#C4703F', '#6E7F5C', '#5B7186', '#B5707A', '#9C8449']
 
     return `
+      <div class="dataviz-stage" id="datavizStage">
+        <div class="dataviz-fallback">可视化数据版加载中…</div>
+      </div>
+
       <div class="kpi-grid">
         <div class="kpi kpi-1">
           <span class="kpi-accent"></span>
