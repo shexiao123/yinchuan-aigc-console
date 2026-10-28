@@ -467,3 +467,31 @@ h1, h2, h3, .page-title, .detail-title, .svc-title { color: var(--ink); }
 
 /* 选中态 */
 ::selection { background: rgba(34, 211, 238, .3); color: #fff; }
+
+/* ============ 图片加载失败兜底 ============ */
+/* 浏览器默认的裂图图标很难看，换成科技风占位块 */
+
+.img-missing {
+  background: linear-gradient(135deg, rgba(46, 125, 138, .12), rgba(167, 139, 250, .10)) !important;
+  background-image:
+    linear-gradient(rgba(34, 211, 238, .10) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(34, 211, 238, .10) 1px, transparent 1px) !important;
+  background-size: 18px 18px !important;
+  position: relative;
+}
+.img-missing::after {
+  content: '▦';
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(34, 211, 238, .45);
+  font-size: 26px;
+  background: transparent;
+}
+/* 兜底时父容器不能塌陷 */
+.cat-img-wrap:has(.img-missing),
+.svc-cover-wrap:has(.img-missing) {
+  min-height: 60px;
+}
