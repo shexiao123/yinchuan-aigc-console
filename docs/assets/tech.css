@@ -1,114 +1,192 @@
 /**
- * 未来科技主题层
+ * 商业科技主题层
  *
- * 加载在 style.css 之后，覆盖暖米色主题的变量与关键视觉元素。
- * 目标：深空底 + 霓虹青紫 + 玻璃拟态 + 网格光效。
+ * 定位：商业科技感 —— Linear / Stripe / Vercel 那一挂的 SaaS 官网气质。
+ * 干净、精密、专业、克制。不是赛博朋克（不玩霓虹），不是文艺杂志（不玩宋体留白）。
  *
- * 结构：
- *   1. 变量重映射（改一处，全站生效）
- *   2. 背景光效层（网格 + 辉光 + 扫描线）
- *   3. 组件质感（卡片玻璃化、按钮霓虹、边框发光）
- *   4. 主视觉与封面加科技化处理（叠加网格、角标、扫描光）
+ * 六条准则：
+ *   1. 字是几何的 —— 全站无衬线，标题 600-700 字重，字距收紧
+ *   2. 底是深墨蓝 —— 不是纯黑（廉价），是带蓝调的深墨
+ *   3. 光是渐变描边 —— 卡片用 1px 渐变边 + 内发光，不是整块霓虹
+ *   4. 网格是精密的 —— 双层细网格做背景参照，不用粒子/扫描线
+ *   5. 层级是明确的 —— 字号字重对比拉开，不靠留白撑
+ *   6. 密度是合理的 —— 信息紧凑但不挤，商业产品该有的效率感
+ *
+ * 加载在 style.css 之后。
  */
 
-/* ============ 1. 变量重映射 ============ */
+/* ============ 1. 色板（Slate 色阶 + 青靛品牌渐变） ============ */
 
 :root {
-  /* 主色：霓虹青 → 电光紫 */
-  --brand: #22D3EE;
-  --brand-deep: #06B6D4;
-  --brand-soft: rgba(34, 211, 238, .14);
+  /* 主色：天蓝 */
+  --brand: #38BDF8;
+  --brand-deep: #0EA5E9;
+  --brand-soft: rgba(56, 189, 248, .12);
 
-  /* 强调色 */
-  --accent: #A78BFA;
+  /* 品牌渐变：青 → 靛（商业科技的标准渐变） */
+  --grad-brand: linear-gradient(135deg, #22D3EE 0%, #4F7DF3 52%, #7C5CF0 100%);
+
+  --accent: #818CF8;
   --accent-2: #F472B6;
 
-  /* 文字：冷白 + 青蓝调 */
-  --ink: #EFF7FF;
-  --ink-2: #ADC2D6;
-  --ink-3: #7B91A8;
+  /* 文字：Slate 色阶 */
+  --ink: #F1F5F9;
+  --ink-2: #94A3B8;
+  --ink-3: #64748B;
 
-  /* 线条：发光感的半透明 */
-  --line: rgba(120, 180, 220, .16);
-  --line-bright: rgba(34, 211, 238, .38);
+  /* 线条 */
+  --line: rgba(148, 163, 184, .14);
+  --line-bright: rgba(56, 189, 248, .38);
 
-  /* 背景：深空 */
-  --bg: #0E1728;
-  --bg-2: #14203A;
-  --card: rgba(26, 38, 64, .68);
-  --card-solid: #1A2740;
+  /* 背景：深墨蓝 */
+  --bg: #080C16;
+  --bg-2: #0C1322;
+  --card: rgba(255, 255, 255, .028);
+  --card-solid: #101827;
 
   /* 语义色 */
   --olive: #34D399;
   --rose: #F472B6;
   --warn: #FBBF24;
-  --danger: #FB7185;
+  --danger: #F87171;
 
-  /* 阴影：换成辉光 */
-  --shadow: 0 0 0 1px rgba(34, 211, 238, .10), 0 8px 32px rgba(0, 0, 0, .5);
-  --shadow-lg: 0 0 0 1px rgba(34, 211, 238, .26), 0 12px 48px rgba(0, 0, 0, .65),
-    0 0 40px rgba(34, 211, 238, .12);
-  --glow: 0 0 24px rgba(34, 211, 238, .32);
+  /* 阴影：深色下用辉光而不是黑影 */
+  --shadow: 0 1px 2px rgba(0, 0, 0, .30);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, .45), 0 0 0 1px rgba(56, 189, 248, .10);
+  --glow: 0 0 28px rgba(56, 189, 248, .22);
 
-  --radius: 14px;
+  --radius: 10px;
   --max: 100%;
   --pad: 24px;
 }
 
-/* ============ 2. 背景光效 ============ */
+/* ============ 2. 底：深墨蓝 + 精密网格 ============ */
 
 body {
-  background:
-    /* 两团辉光 */
-    radial-gradient(1200px 600px at 12% -8%, rgba(34, 211, 238, .22), transparent 62%),
-    radial-gradient(1000px 560px at 88% 4%, rgba(167, 139, 250, .20), transparent 64%),
-    radial-gradient(900px 700px at 50% 110%, rgba(244, 114, 182, .12), transparent 62%),
-    /* 网格 */
-    linear-gradient(rgba(120, 180, 220, .065) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(120, 180, 220, .065) 1px, transparent 1px),
-    var(--bg);
-  background-size: 100% 100%, 100% 100%, 100% 100%, 56px 56px, 56px 56px, 100% 100%;
+  background-color: var(--bg);
+  /* 双层精密网格：近层细，远层粗 */
+  background-image:
+    linear-gradient(rgba(148, 163, 184, .045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(148, 163, 184, .045) 1px, transparent 1px),
+    linear-gradient(rgba(148, 163, 184, .022) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(148, 163, 184, .022) 1px, transparent 1px);
+  background-size: 32px 32px, 32px 32px, 160px 160px, 160px 160px;
   background-attachment: fixed;
   color: var(--ink);
+  /* 全站无衬线 —— 商业科技的字面 */
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC',
+    'Microsoft YaHei', 'Helvetica Neue', sans-serif;
+  letter-spacing: -.005em;
 }
 
-/* 顶栏：玻璃 + 底部发光边 */
+/* ============ 3. 顶栏 ============ */
+
 .topbar {
-  background: rgba(6, 10, 20, .78);
+  background: rgba(8, 12, 22, .78);
+  backdrop-filter: blur(20px) saturate(160%);
+  -webkit-backdrop-filter: blur(20px) saturate(160%);
   border-bottom: 1px solid var(--line);
-  box-shadow: 0 1px 0 rgba(34, 211, 238, .18), 0 8px 32px rgba(0, 0, 0, .45);
 }
 .topbar::after {
   content: '';
   position: absolute;
   left: 0; right: 0; bottom: -1px;
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(34, 211, 238, .55), rgba(167, 139, 250, .4), transparent);
+  background: linear-gradient(90deg, transparent, rgba(56, 189, 248, .45), rgba(124, 92, 240, .35), transparent);
 }
 
-/* 品牌 Logo：发光字 */
 .brand-logo {
   color: var(--ink);
-  text-shadow: 0 0 18px rgba(34, 211, 238, .45);
+  font-size: 16px;
+  font-weight: 650;
+  letter-spacing: -.015em;
+  background: var(--grad-brand);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
-.brand-slogan { color: var(--ink-3); }
+.brand-slogan {
+  color: var(--ink-3);
+  font-size: 10px;
+  letter-spacing: .06em;
+  font-weight: 500;
+}
 
-/* 导航：激活项带霓虹下划线 */
-.nav-link { color: var(--ink-2); transition: color .18s; }
-.nav-link:hover { color: var(--ink); }
-.nav-link.active {
-  color: var(--brand);
-  text-shadow: 0 0 14px rgba(34, 211, 238, .5);
+.nav-link {
+  color: var(--ink-2);
+  font-size: 14px;
+  font-weight: 500;
+  transition: color .18s;
 }
+.nav-link:hover { color: var(--ink); }
+.nav-link.active { color: var(--ink); font-weight: 600; }
 .nav-link.active::after {
-  background: linear-gradient(90deg, var(--brand), var(--accent));
-  box-shadow: 0 0 12px rgba(34, 211, 238, .7);
+  background: var(--grad-brand);
+  box-shadow: 0 0 10px rgba(56, 189, 248, .55);
   height: 2px;
 }
 
-/* ============ 3. 组件质感 ============ */
+/* ============ 4. 排版：清晰层级 ============ */
 
-/* 卡片：玻璃拟态 + 顶部高光边 */
+.page-head { padding: 52px 0 32px; }
+.page-title {
+  font-size: 34px;
+  font-weight: 700;
+  letter-spacing: -.025em;
+  line-height: 1.25;
+  color: var(--ink);
+}
+.page-sub {
+  color: var(--ink-2);
+  font-size: 14.5px;
+  line-height: 1.8;
+  max-width: 640px;
+}
+
+.section { margin-top: 64px; }
+.section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 22px;
+}
+.section-title {
+  font-size: 19px;
+  font-weight: 650;
+  letter-spacing: -.015em;
+  color: var(--ink);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+/* 标题前的小方块：科技 SaaS 常见的图标位 */
+.section-title::before {
+  content: '';
+  width: 4px;
+  height: 16px;
+  border-radius: 2px;
+  background: var(--grad-brand);
+  box-shadow: 0 0 10px rgba(56, 189, 248, .55);
+}
+.section-title .count {
+  color: var(--ink-3);
+  font-size: 12px;
+  font-weight: 500;
+  margin-left: 4px;
+}
+.section-more {
+  color: var(--ink-2);
+  font-size: 13px;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: color .18s;
+}
+.section-more:hover { color: var(--brand); }
+
+/* ============ 5. 卡片：渐变描边 + 内发光 ============ */
+
 .card,
 .list-row,
 .svc-card,
@@ -122,13 +200,14 @@ body {
   background: var(--card) !important;
   border: 1px solid var(--line) !important;
   box-shadow: var(--shadow) !important;
-  backdrop-filter: blur(18px) saturate(140%);
-  -webkit-backdrop-filter: blur(18px) saturate(140%);
+  backdrop-filter: blur(16px) saturate(140%);
+  -webkit-backdrop-filter: blur(16px) saturate(140%);
+  border-radius: var(--radius);
   position: relative;
   overflow: hidden;
 }
 
-/* 卡片顶部一条霓虹高光 */
+/* 顶部渐变高光：商业科技感的标志性细节 */
 .card::before,
 .list-row::before,
 .svc-card::before,
@@ -140,105 +219,99 @@ body {
   position: absolute;
   top: 0; left: 0; right: 0;
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(34, 211, 238, .5), transparent);
-  opacity: .8;
+  background: linear-gradient(90deg, transparent, rgba(56, 189, 248, .50), rgba(124, 92, 240, .32), transparent);
   pointer-events: none;
 }
 
-/* 悬停：辉光加强 */
 .cat-item:hover,
 .svc-card:hover,
 .prov-card:hover,
 .list-row:hover {
+  border-color: rgba(56, 189, 248, .30) !important;
   box-shadow: var(--shadow-lg) !important;
-  border-color: var(--line-bright) !important;
-  transform: translateY(-3px);
+  transform: translateY(-2px);
 }
 
-/* 按钮 */
+.cat-img, .svc-cover-img, .detail-cover-img {
+  transition: transform .6s cubic-bezier(.16, 1, .3, 1), filter .3s;
+}
+.cat-item:hover .cat-img,
+.svc-card:hover .svc-cover-img { transform: scale(1.05); filter: brightness(1.08); }
+
+/* ============ 6. 按钮：品牌渐变 ============ */
+
 .btn-primary {
-  background: linear-gradient(120deg, #22D3EE, #6366F1) !important;
-  color: #041018 !important;
-  font-weight: 600;
-  box-shadow: 0 0 20px rgba(34, 211, 238, .35);
-  transition: box-shadow .2s, transform .15s;
+  background: var(--grad-brand) !important;
+  color: #04121F !important;
+  font-weight: 650;
+  letter-spacing: -.01em;
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(56, 189, 248, .22);
+  transition: box-shadow .2s, transform .15s, filter .2s;
 }
 .btn-primary:hover:not(:disabled) {
-  box-shadow: 0 0 32px rgba(34, 211, 238, .6);
+  box-shadow: 0 6px 26px rgba(56, 189, 248, .34);
   transform: translateY(-1px);
+  filter: brightness(1.06);
 }
 .btn-soft {
-  background: rgba(34, 211, 238, .12) !important;
+  background: rgba(56, 189, 248, .12) !important;
   color: var(--brand) !important;
-  border: 1px solid rgba(34, 211, 238, .3);
+  border: 1px solid rgba(56, 189, 248, .26);
+  border-radius: 8px;
+  font-weight: 500;
 }
-.btn-soft:hover:not(:disabled) { background: rgba(34, 211, 238, .2) !important; }
+.btn-soft:hover:not(:disabled) { background: rgba(56, 189, 248, .20) !important; }
 .btn-ghost {
-  color: var(--brand) !important;
-  border: 1.5px solid rgba(34, 211, 238, .4) !important;
-  background: transparent !important;
+  color: var(--ink-2) !important;
+  border: 1px solid var(--line) !important;
+  background: rgba(255, 255, 255, .02) !important;
+  border-radius: 8px;
+  font-weight: 500;
 }
-.btn-ghost:hover:not(:disabled) { background: rgba(34, 211, 238, .1) !important; }
-.btn-danger { background: linear-gradient(120deg, #FB7185, #E11D48) !important; color: #fff !important; }
+.btn-ghost:hover:not(:disabled) {
+  color: var(--ink) !important;
+  border-color: rgba(56, 189, 248, .30) !important;
+  background: rgba(56, 189, 248, .08) !important;
+}
+.btn-danger { background: #EF4444 !important; color: #fff !important; border-radius: 8px; }
 
-/* 表单 */
+/* ============ 7. 表单 ============ */
+
 .input, .textarea, select.input {
-  background: rgba(8, 14, 28, .7) !important;
+  background: rgba(255, 255, 255, .035) !important;
   border: 1px solid var(--line) !important;
   color: var(--ink) !important;
-  transition: border-color .18s, box-shadow .18s;
+  border-radius: 8px;
+  transition: border-color .18s, box-shadow .18s, background .18s;
 }
 .input:focus, .textarea:focus, select.input:focus {
   outline: none;
-  border-color: var(--brand) !important;
-  box-shadow: 0 0 0 3px rgba(34, 211, 238, .16), 0 0 20px rgba(34, 211, 238, .2) !important;
+  border-color: rgba(56, 189, 248, .55) !important;
+  background: rgba(255, 255, 255, .05) !important;
+  box-shadow: 0 0 0 3px rgba(56, 189, 248, .12) !important;
 }
 .input::placeholder, .textarea::placeholder { color: var(--ink-3); }
-label, .field-label { color: var(--ink-2); }
+label, .field-label { color: var(--ink-2); font-weight: 500; }
 
-/* 区块标题：带发光标记 */
-.section-title {
-  color: var(--ink);
-  text-shadow: 0 0 20px rgba(34, 211, 238, .22);
-}
-.section-title::before {
-  content: '';
-  display: inline-block;
-  width: 3px;
-  height: 15px;
-  margin-right: 9px;
-  vertical-align: -2px;
-  background: linear-gradient(180deg, var(--brand), var(--accent));
-  box-shadow: 0 0 10px rgba(34, 211, 238, .8);
-  border-radius: 2px;
-}
-.section-more { color: var(--brand); }
+/* ============ 8. 标签 ============ */
 
-/* 标签 / chip */
 .chip, .tag, .prov-tags span, .svc-tags span, .filter-chip {
-  background: rgba(34, 211, 238, .1) !important;
+  background: rgba(56, 189, 248, .10) !important;
   color: #7DD3FC !important;
-  border: 1px solid rgba(34, 211, 238, .22);
+  border: 1px solid rgba(56, 189, 248, .20);
+  border-radius: 6px;
+  font-weight: 500;
 }
 .chip:hover, .filter-chip:hover, .chip.active, .filter-chip.active {
-  background: rgba(34, 211, 238, .22) !important;
-  color: #CFFAFE !important;
-  border-color: rgba(34, 211, 238, .5);
-  box-shadow: 0 0 14px rgba(34, 211, 238, .28);
+  background: rgba(56, 189, 248, .18) !important;
+  color: #BAE6FD !important;
+  border-color: rgba(56, 189, 248, .42);
 }
 
-/* 文字层级 */
-h1, h2, h3, .page-title, .detail-title, .svc-title { color: var(--ink); }
-.muted, .prov-meta, .list-row-sub, .svc-sub { color: var(--ink-3) !important; }
-.price, .svc-price, .detail-price {
-  color: var(--brand) !important;
-  text-shadow: 0 0 18px rgba(34, 211, 238, .4);
-}
-.star, .rating { color: var(--warn) !important; }
+/* ============ 9. 主视觉 ============ */
 
-/* ============ 4. 画面科技化 ============ */
-
-/* 主视觉：深色 + 网格叠加 + 扫描光 */
+.hero { margin-top: 0; }
 .hero-banner {
   border-radius: var(--radius);
   border: 1px solid var(--line);
@@ -246,63 +319,65 @@ h1, h2, h3, .page-title, .detail-title, .svc-title { color: var(--ink); }
   overflow: hidden;
   position: relative;
 }
-.hero-banner::before {
-  /* 科技网格 */
+.hero-banner-has-img {
+  background-color: var(--bg-2);
+  background-size: cover !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+}
+/* 左侧暗角保证文字可读，右侧透出画面 */
+.hero-banner-has-img::before {
   content: '';
   position: absolute;
   inset: 0;
-  background-image:
-    linear-gradient(rgba(34, 211, 238, .10) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(34, 211, 238, .10) 1px, transparent 1px);
-  background-size: 34px 34px;
-  opacity: .55;
+  background-image: linear-gradient(100deg,
+    rgba(8, 12, 22, .96) 0%,
+    rgba(8, 12, 22, .90) 30%,
+    rgba(8, 12, 22, .62) 46%,
+    rgba(8, 12, 22, .16) 66%,
+    rgba(8, 12, 22, .02) 84%);
   z-index: 1;
   pointer-events: none;
 }
+/* 无图时的辉光 */
 .hero-banner::after {
-  /* 斜向扫描光 */
   content: '';
   position: absolute;
-  top: -60%;
-  left: -30%;
-  width: 45%;
-  height: 220%;
-  background: linear-gradient(90deg, transparent, rgba(34, 211, 238, .16), transparent);
-  transform: rotate(18deg);
-  animation: sweep 7s ease-in-out infinite;
+  inset: 0;
+  background:
+    radial-gradient(60% 100% at 10% 110%, rgba(56, 189, 248, .16), transparent 62%),
+    radial-gradient(50% 90% at 96% -10%, rgba(124, 92, 240, .14), transparent 64%);
   pointer-events: none;
   z-index: 1;
-}
-@keyframes sweep {
-  0%, 62% { left: -35%; }
-  100% { left: 115%; }
-}
-.hero-banner-has-img::before {
-  /* 有封面图时网格更淡，避免盖住画面 */
-  opacity: .28;
-  background-image:
-    linear-gradient(rgba(34, 211, 238, .08) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(34, 211, 238, .08) 1px, transparent 1px);
 }
 .banner-text { position: relative; z-index: 3; }
 .banner-title {
   color: #fff;
-  text-shadow: 0 0 24px rgba(34, 211, 238, .6), 0 2px 8px rgba(0, 0, 0, .6);
-  letter-spacing: 2px;
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: -.025em;
+  line-height: 1.3;
+  text-shadow: 0 2px 20px rgba(0, 0, 0, .6);
 }
-.banner-sub { color: rgba(226, 244, 255, .9); text-shadow: 0 1px 6px rgba(0, 0, 0, .7); }
+.banner-sub {
+  color: #CBD5E1;
+  font-size: 14px;
+  line-height: 1.8;
+  max-width: 440px;
+  text-shadow: 0 1px 10px rgba(0, 0, 0, .55);
+}
 
-/* 无图时的渐变：换成霓虹色 */
-.banner-amber { background-color: #0E7490; background-image: linear-gradient(120deg, #0E7490, #4C1D95); }
-.banner-olive { background-color: #065F46; background-image: linear-gradient(120deg, #065F46, #0E7490); }
-.banner-rose  { background-color: #831843; background-image: linear-gradient(120deg, #831843, #5B21B6); }
-.banner-blue { background-color: #1E3A8A; background-image: linear-gradient(120deg, #1E3A8A, #0E7490); }
+/* 无图时的底色 */
+.banner-amber { background-color: #0C1A2E; background-image: var(--grad-brand); }
+.banner-olive { background-color: #0A1C22; background-image: linear-gradient(135deg, #0E7490, #1E3A8A); }
+.banner-rose  { background-color: #1A0E22; background-image: linear-gradient(135deg, #831843, #4C1D95); }
+.banner-blue { background-color: #0B1428; background-image: linear-gradient(135deg, #1E3A8A, #0E7490); }
 
 /* 侧栏小卡 */
 .hero-mini {
   background: var(--card) !important;
   border: 1px solid var(--line) !important;
-  backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px) saturate(140%);
   box-shadow: var(--shadow) !important;
   position: relative;
   overflow: hidden;
@@ -311,9 +386,8 @@ h1, h2, h3, .page-title, .detail-title, .svc-title { color: var(--ink); }
   flex-direction: column;
   justify-content: center;
 }
-/* 有背景图时：叠网格 + 暗角，保证文字可读 */
 .hero-mini-has-img {
-  background-color: #0A1424 !important;
+  background-color: var(--bg-2) !important;
   background-image: var(--hero-img, none) !important;
   background-size: cover !important;
   background-position: center !important;
@@ -321,12 +395,11 @@ h1, h2, h3, .page-title, .detail-title, .svc-title { color: var(--ink); }
 }
 .hero-mini-has-img::after {
   content: '';
-  position: absolute; inset: 0;
-  background:/n    linear-gradient(180deg, rgba(8, 14, 26, .45) 0%, rgba(8, 14, 26, .86) 100%),
-    linear-gradient(rgba(34, 211, 238, .10) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(34, 211, 238, .10) 1px, transparent 1px);
-  background-size: 100% 100%, 22px 22px, 22px 22px;
-  pointer-events: none; z-index: 0;
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(8, 12, 22, .62) 0%, rgba(8, 12, 22, .92) 100%);
+  pointer-events: none;
+  z-index: 0;
 }
 .hero-mini-has-img .hero-mini-title,
 .hero-mini-has-img .hero-mini-sub { position: relative; z-index: 1; }
@@ -335,61 +408,76 @@ h1, h2, h3, .page-title, .detail-title, .svc-title { color: var(--ink); }
 .hero-mini-rose  { border-left: 2px solid var(--accent-2) !important; }
 .hero-mini-blue  { border-left: 2px solid var(--accent) !important; }
 .hero-mini:hover {
-  border-color: var(--line-bright) !important;
+  border-color: rgba(56, 189, 248, .30) !important;
   box-shadow: var(--shadow-lg) !important;
 }
-.hero-mini-title { color: var(--ink); }
-.hero-mini-sub { color: var(--ink-2); }
+.hero-mini-title {
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -.01em;
+  color: var(--ink);
+}
+.hero-mini-sub { color: var(--ink-2); font-size: 12.5px; line-height: 1.7; }
 
-/* 分类卡：图片上叠网格 + 悬停光扫 */
+/* ============ 10. 分类卡 ============ */
+
 .cat-item-has-img { border: 1px solid var(--line) !important; }
 .cat-img-wrap { position: relative; }
 .cat-img-wrap::after {
   content: '';
   position: absolute;
   inset: 0;
-  background:
-    linear-gradient(180deg, transparent 40%, rgba(6, 10, 20, .85) 100%),
-    linear-gradient(rgba(34, 211, 238, .07) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(34, 211, 238, .07) 1px, transparent 1px);
-  background-size: 100% 100%, 22px 22px, 22px 22px;
+  background: linear-gradient(180deg, transparent 52%, rgba(8, 12, 22, .92) 100%);
   pointer-events: none;
 }
-.cat-item-has-img:hover .cat-img { filter: saturate(1.2) contrast(1.05); }
-
-/* 分类图标：发光圆环 */
 .cat-icon-wrap {
-  background: rgba(34, 211, 238, .10) !important;
-  border: 1px solid rgba(34, 211, 238, .3);
-  box-shadow: inset 0 0 18px rgba(34, 211, 238, .16), 0 0 18px rgba(34, 211, 238, .16);
+  background: rgba(56, 189, 248, .10) !important;
+  border: 1px solid rgba(56, 189, 248, .24);
+  box-shadow: 0 0 20px rgba(56, 189, 248, .12);
 }
-.cat-name { color: var(--ink); }
-.cat-desc { color: var(--ink-3); }
+.cat-name {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -.01em;
+  color: var(--ink);
+}
+.cat-desc { color: var(--ink-2); font-size: 12.5px; line-height: 1.7; }
 
-/* 服务封面：叠网格 + 四角标记 */
-.svc-cover-wrap { position: relative; overflow: hidden; }
+/* ============ 11. 服务卡 ============ */
+
+.svc-cover-wrap { position: relative; overflow: hidden; border-radius: 8px; }
 .svc-cover-wrap::after {
   content: '';
   position: absolute;
   inset: 0;
-  background:
-    linear-gradient(180deg, transparent 55%, rgba(6, 10, 20, .8) 100%),
-    linear-gradient(rgba(34, 211, 238, .06) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(34, 211, 238, .06) 1px, transparent 1px);
-  background-size: 100% 100%, 18px 18px, 18px 18px;
+  background: linear-gradient(180deg, transparent 58%, rgba(8, 12, 22, .90) 100%);
   pointer-events: none;
 }
-.svc-card:hover .svc-cover-img { filter: saturate(1.15) brightness(1.05); }
+.svc-title {
+  font-size: 15.5px;
+  font-weight: 600;
+  letter-spacing: -.012em;
+  color: var(--ink);
+}
+.svc-sub { color: var(--ink-2); }
+.price, .svc-price, .detail-price {
+  color: var(--brand) !important;
+  font-weight: 650;
+  letter-spacing: -.015em;
+}
+.star, .rating { color: var(--warn) !important; }
 
-/* 头像：霓虹环 */
+/* ============ 12. 头像 ============ */
+
 .prov-avatar {
-  border: 1px solid rgba(34, 211, 238, .4) !important;
-  box-shadow: 0 0 16px rgba(34, 211, 238, .25);
-  background: linear-gradient(135deg, rgba(34, 211, 238, .18), rgba(167, 139, 250, .18)) !important;
-  color: #A5F3FC !important;
+  border: 1px solid rgba(56, 189, 248, .26) !important;
+  box-shadow: 0 0 14px rgba(56, 189, 248, .14);
+  background: linear-gradient(135deg, rgba(56, 189, 248, .16), rgba(124, 92, 240, .16)) !important;
+  color: #7DD3FC !important;
 }
 
-/* 详情页大图 */
+/* ============ 13. 详情大图 ============ */
+
 .detail-cover {
   border-radius: var(--radius);
   border: 1px solid var(--line);
@@ -401,97 +489,179 @@ h1, h2, h3, .page-title, .detail-title, .svc-title { color: var(--ink); }
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, transparent 50%, rgba(6, 10, 20, .8) 100%);
+  background: linear-gradient(180deg, transparent 55%, rgba(8, 12, 22, .88) 100%);
   pointer-events: none;
 }
 
-/* 状态徽标 */
-.badge, .status {
-  background: rgba(34, 211, 238, .14) !important;
-  color: #7DD3FC !important;
-  border: 1px solid rgba(34, 211, 238, .28);
-}
+/* ============ 14. 页脚 ============ */
 
-/* 页脚 */
 .footer {
+  margin-top: 96px;
   border-top: 1px solid var(--line);
-  background: rgba(6, 10, 20, .5);
-  backdrop-filter: blur(12px);
+  background: rgba(8, 12, 22, .6);
 }
-.footer-text, .footer-link { color: var(--ink-3); }
-.footer-title { color: var(--ink-2); }
-.footer-logo { color: var(--brand); text-shadow: 0 0 16px rgba(34, 211, 238, .35); }
+.footer-text, .footer-link { color: var(--ink-3); font-size: 13px; line-height: 1.9; }
+.footer-link:hover { color: var(--brand); }
+.footer-title {
+  color: var(--ink-2);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+.footer-logo {
+  color: var(--ink);
+  font-size: 16px;
+  font-weight: 650;
+  letter-spacing: -.015em;
+}
 
-/* 弹层 */
+/* ============ 15. 弹层与菜单 ============ */
+
 .modal {
-  background: rgba(12, 20, 36, .96) !important;
-  border: 1px solid var(--line-bright) !important;
-  box-shadow: 0 0 0 1px rgba(34, 211, 238, .2), 0 24px 80px rgba(0, 0, 0, .7) !important;
+  background: rgba(12, 18, 32, .97) !important;
+  border: 1px solid rgba(56, 189, 248, .22) !important;
+  box-shadow: 0 24px 72px rgba(0, 0, 0, .6), 0 0 0 1px rgba(56, 189, 248, .08) !important;
+  border-radius: 12px;
+  backdrop-filter: blur(24px);
 }
-.modal-title { color: var(--ink); }
+.modal-title { font-size: 18px; font-weight: 650; letter-spacing: -.015em; }
 
-/* 侧边菜单 */
 .side-menu {
-  background: rgba(10, 16, 32, .7) !important;
+  background: rgba(16, 24, 39, .72) !important;
   border: 1px solid var(--line) !important;
+  border-radius: 10px;
 }
-.side-item { color: var(--ink-2); }
+.side-item { color: var(--ink-2); font-weight: 500; }
 .side-item.active {
   color: var(--brand) !important;
-  background: rgba(34, 211, 238, .12) !important;
-  border-color: rgba(34, 211, 238, .3);
-  box-shadow: inset 0 0 18px rgba(34, 211, 238, .1);
+  background: rgba(56, 189, 248, .10) !important;
+  border-color: rgba(56, 189, 248, .26);
 }
 
-/* 登录/注册按钮（顶栏） */
 .btn-outline, .topbar .btn {
-  border: 1px solid rgba(34, 211, 238, .4) !important;
+  border: 1px solid rgba(56, 189, 248, .32) !important;
   color: var(--brand) !important;
-  background: rgba(34, 211, 238, .08) !important;
+  background: rgba(56, 189, 248, .07) !important;
+  border-radius: 8px;
+  font-weight: 500;
 }
-.topbar .btn:hover { background: rgba(34, 211, 238, .18) !important; }
+.topbar .btn:hover { background: rgba(56, 189, 248, .14) !important; }
 
-/* 空态图标 */
-.empty-icon {
-  filter: drop-shadow(0 0 18px rgba(34, 211, 238, .5));
+.badge, .status {
+  background: rgba(56, 189, 248, .12) !important;
+  color: #7DD3FC !important;
+  border: 1px solid rgba(56, 189, 248, .24);
+  font-weight: 500;
 }
 
-/* 滚动条 */
-::-webkit-scrollbar { width: 8px; height: 8px; }
-::-webkit-scrollbar-track { background: rgba(10, 16, 32, .6); }
+.empty-icon { filter: none; opacity: .55; }
+
+/* ============ 16. 滚动条与选中 ============ */
+
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: rgba(8, 12, 22, .6); }
 ::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, var(--brand), var(--accent));
-  border-radius: 4px;
+  background: rgba(148, 163, 184, .26);
+  border-radius: 5px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
 }
-::-webkit-scrollbar-thumb:hover { background: var(--brand); }
+::-webkit-scrollbar-thumb:hover { background: rgba(56, 189, 248, .42); background-clip: padding-box; }
 
-/* 选中态 */
-::selection { background: rgba(34, 211, 238, .3); color: #fff; }
+::selection { background: rgba(56, 189, 248, .28); color: #fff; }
 
-/* ============ 图片加载失败兜底 ============ */
-/* 浏览器默认的裂图图标很难看，换成科技风占位块 */
+/* ============ 17. 图片兜底 ============ */
 
 .img-missing {
-  background: linear-gradient(135deg, rgba(46, 125, 138, .12), rgba(167, 139, 250, .10)) !important;
-  background-image:
-    linear-gradient(rgba(34, 211, 238, .10) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(34, 211, 238, .10) 1px, transparent 1px) !important;
-  background-size: 18px 18px !important;
+  background:
+    linear-gradient(rgba(56, 189, 248, .10) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(56, 189, 248, .10) 1px, transparent 1px),
+    linear-gradient(135deg, rgba(56, 189, 248, .05), rgba(124, 92, 240, .05)) !important;
+  background-size: 20px 20px, 20px 20px, 100% 100% !important;
   position: relative;
 }
 .img-missing::after {
-  content: '▦';
+  content: '·';
   position: absolute;
   inset: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: rgba(34, 211, 238, .45);
-  font-size: 26px;
+  color: rgba(56, 189, 248, .40);
+  font-size: 30px;
   background: transparent;
 }
-/* 兜底时父容器不能塌陷 */
 .cat-img-wrap:has(.img-missing),
-.svc-cover-wrap:has(.img-missing) {
-  min-height: 60px;
+.svc-cover-wrap:has(.img-missing) { min-height: 60px; }
+
+/* ============ 18. 细节 ============ */
+
+/* 分类卡图片比例：4:3 更饱满 */
+body .cat-img-wrap { aspect-ratio: 4 / 3; }
+
+/* 服务卡：紧凑留白 */
+.svc-card { padding: 14px 16px 16px; }
+
+/* 品牌左侧的渐变方块 */
+.brand { position: relative; padding-left: 13px; }
+.brand::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 20px;
+  border-radius: 2px;
+  background: var(--grad-brand);
+}
+
+/* 页脚顶部一道渐变线 */
+.footer { position: relative; }
+.footer::before {
+  content: '';
+  position: absolute;
+  top: -1px; left: 0;
+  width: 180px;
+  height: 1px;
+  background: var(--grad-brand);
+}
+
+/* 区块标题下方极淡的渐变线 */
+.section-head { position: relative; }
+.section-head::after {
+  content: '';
+  position: absolute;
+  left: 0; bottom: -10px;
+  width: 56px;
+  height: 1px;
+  background: var(--grad-brand);
+  opacity: .55;
+}
+
+/* 原价压淡 */
+.svc-orig { opacity: .45; }
+
+/* 详情页标题 */
+.detail-title { font-weight: 650; letter-spacing: -.02em; line-height: 1.4; }
+.detail-cover { aspect-ratio: 16 / 9; height: auto !important; }
+
+/* 列表行圆角收紧 */
+.list-row { border-radius: 8px; }
+
+/* 主视觉：加高，让抽象画面舒展（商业科技风常见的大幅 banner） */
+.hero-banner { height: 320px; }
+.hero-banner .banner-title { font-size: 36px; }
+
+/* 侧栏卡与主视觉等高对齐 */
+.hero-mini { min-height: 0; }
+
+/* 分类卡：图占比更大，文字区更紧凑 —— 商业产品该有的信息密度 */
+body .cat-img-wrap { aspect-ratio: 16 / 10; }
+.cat-item-has-img { padding-bottom: 14px; }
+.cat-item-has-img .cat-name { font-size: 14.5px; padding-top: 0; }
+.cat-item-has-img .cat-desc {
+  font-size: 12px;
+  line-height: 1.65;
+  margin-top: 4px;
 }
