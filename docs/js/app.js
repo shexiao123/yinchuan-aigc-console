@@ -586,7 +586,7 @@
             .map(
               (c) => `
             <a class="cat-item ${c.imageUrl ? 'cat-item-has-img' : ''}" href="#/services?category=${c.slug}">
-              ${c.imageUrl ? `<span class="cat-img-wrap"><img class="cat-img" src="${API.esc(c.imageUrl)}" alt="${API.esc(c.name || '')}" loading="lazy" /></span>` : `<span class="cat-icon-wrap">${c.icon || '🎬'}</span>`}
+              ${c.imageUrl ? `<span class="cat-img-wrap"><img ${API.imgAttrs(c.imageUrl, 'cat-img')} alt="${API.esc(c.name || '')}" loading="lazy" /></span>` : `<span class="cat-icon-wrap">${c.icon || '🎬'}</span>`}
               <span class="cat-name">${API.esc(c.name)}</span>
               <span class="cat-desc">${API.esc(c.description)}</span>
             </a>`
@@ -627,7 +627,7 @@
     return `
       <a class="card svc-card" href="#/service/${s.id}">
         <div class="svc-cover" style="background:${cover}">
-          ${s.coverUrl ? `<img class="svc-cover-img" src="${API.esc(s.coverUrl)}" alt="${API.esc(s.title || '')}" loading="lazy" />` : '<span class="svc-cover-mark">MG</span>'}
+          ${s.coverUrl ? `<img ${API.imgAttrs(s.coverUrl, 'svc-cover-img')} alt="${API.esc(s.title || '')}" loading="lazy" />` : '<span class="svc-cover-mark">MG</span>'}
           ${s.original_price ? '<span class="svc-cover-badge">限时优惠</span>' : ''}
         </div>
         <div class="svc-body">
@@ -716,7 +716,7 @@
                 return `
             <a class="card svc-card" href="#/service/${s.id}">
               <div class="svc-cover" style="background:${API.coverTheme(s.id)}">
-                ${s.coverUrl ? `<img class="svc-cover-img" src="${API.esc(s.coverUrl)}" alt="${API.esc(s.title || '')}" loading="lazy" />` : '<span class="svc-cover-mark">MG</span>'}
+                ${s.coverUrl ? `<img ${API.imgAttrs(s.coverUrl, 'svc-cover-img')} alt="${API.esc(s.title || '')}" loading="lazy" />` : '<span class="svc-cover-mark">MG</span>'}
               </div>
               <div class="svc-body">
                 <span class="svc-title ellipsis">${API.esc(s.title)}</span>
@@ -797,7 +797,7 @@
     return `
       <div class="detail-hero">
         <div class="detail-cover ${service.coverUrl ? 'detail-cover-has-img' : ''}" style="background:${service.coverUrl ? 'transparent' : API.coverTheme(service.id)}">
-          ${service.coverUrl ? `<img class="detail-cover-img" src="${API.esc(service.coverUrl)}" alt="${API.esc(service.title || '')}" />` : '<span class="detail-cover-mark">MG</span>'}
+          ${service.coverUrl ? `<img ${API.imgAttrs(service.coverUrl, 'detail-cover-img')} alt="${API.esc(service.title || '')}" />` : '<span class="detail-cover-mark">MG</span>'}
         </div>
         <div class="detail-info">
           <div class="detail-title">${API.esc(service.title)}</div>
