@@ -192,6 +192,17 @@ window.API = (function () {
       '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
     }[c]))
 
+  /**
+   * 图片标签：加载失败时自动换成占位块，不显示浏览器默认的裂图图标
+   *
+   * 用法：<img ${API.imgAttrs(url, 'cat-img')} />
+   * onerror 里给父级加 .img-fallback 类，CSS 负责画兜底底色。
+   */
+  function imgAttrs(url, className) {
+    if (!url) return `class="${className} img-missing"`
+    return `class="${className}" src="${esc(url)}" onerror="this.classList.add('img-missing');this.removeAttribute('src')"`
+  }
+
   /* ---------------- 会话 ---------------- */
 
   async function getSession() {
@@ -255,6 +266,32 @@ window.API = (function () {
   }
 
   /**
+   * 本站静态资源 URL → 相对路径
+   *
+   * 为什么：数据库里存的是绝对地址（小程序端要用），但网页端用绝对地址会有两个坑：
+   *   1. 站点静态资源要鉴权，绝对地址不带 sharecode 会 403（图片裂掉）
+   *   2. CDN 缓存了旧版 HTML 时，绝对地址跟着旧版走
+   * 转成相对路径后由浏览器按当前页面解析，永远同源、永远带对参数。
+   *
+   * 云存储地址（不是本站域名的）保持原样，走签名流程。
+   */
+  function toRelativeAsset(url) {
+    if (!url) return ''
+    const s = String(url)
+    if (!/^https?:\/\//i.test(s)) return s
+    // 保留 query（sharecode 等）
+    const q = s.indexOf('?')
+    const query = q >= 0 ? s.slice(q) : ''
+    const pathname = q >= 0 ? s.slice(0, q) : s
+    // 本站域名 → 相对路径
+    if (/^https?:\/\/(guangying-web|meige-prototype)\.app\.workbuddy\.host/i.test(pathname)) {
+      return pathname.replace(/^https?:\/\/[^/]+/i, '') + query
+    }
+    // 其它域名（云存储等）保持原样
+    return s
+  }
+
+  /**
    * 解析分类配图。
    * image_url 可能是完整 http 地址（站点静态资源），也可能是云存储路径（需签名）。
    */
@@ -264,7 +301,9 @@ window.API = (function () {
     return Promise.all(
       list.map(async (c) => {
         if (!c.image_url) return { ...c, imageUrl: '' }
-        if (String(c.image_url).startsWith('http')) return { ...c, imageUrl: c.image_url }
+        if (String(c.image_url).startsWith('http')) {
+          return { ...c, imageUrl: toRelativeAsset(c.image_url) }
+        }
         try {
           if (!window.SAMPLES) return { ...c, imageUrl: '' }
           return { ...c, imageUrl: await window.SAMPLES.signedUrl(c.image_url, 7200) }
@@ -294,7 +333,7 @@ window.API = (function () {
     return Promise.all(
       list.map(async (b) => {
         if (!b.image_url) return { ...b, imageUrl: '' }
-        if (String(b.image_url).startsWith('http')) return { ...b, imageUrl: b.image_url }
+        if (String(b.image_url).startsWith('http')) return { ...b, imageUrl: toRelativeAsset(b.image_url) }
         try {
           if (!window.SAMPLES) return { ...b, imageUrl: '' }
           return { ...b, imageUrl: await window.SAMPLES.signedUrl(b.image_url, 7200) }
@@ -343,7 +382,7 @@ window.API = (function () {
     return Promise.all(
       list.map(async (s) => {
         if (!s.cover_url) return { ...s, coverUrl: '' }
-        if (String(s.cover_url).startsWith('http')) return { ...s, coverUrl: s.cover_url }
+        if (String(s.cover_url).startsWith('http')) return { ...s, coverUrl: toRelativeAsset(s.cover_url) }
         try {
           // SAMPLES 在 samples.js 里定义，比 api.js 晚加载；这里是运行时调用，应该已就绪
           if (!window.SAMPLES) return { ...s, coverUrl: '' }
@@ -1896,6 +1935,7 @@ window.API = (function () {
     getSession, sendPhoneCode, verifyPhoneCode, wechatLoginUrl, handleWechatCallback, signOut,
     // 业务
     listCategories, listBanners, getSettings,
+    imgAttrs, toRelativeAsset,
     listServices, getService, getProvider, listProviders,
     getMyProvider, becomeProvider, claimProvider, publishService, updateService, listMyServices,
     createOrder, listOrders, listOpenOrders, getOrder, advanceOrder, takeOrder,
