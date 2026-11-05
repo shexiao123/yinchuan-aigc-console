@@ -75,7 +75,7 @@
 .modal-mask {
   position: fixed; inset: 0; z-index: 300;
   display: flex; align-items: center; justify-content: center;
-  padding: 40rpx; background: rgba(11,31,51,.45);
+  padding: 40rpx; background: #112137;
 }
 .modal {
   width: 100%; max-width: 620rpx;

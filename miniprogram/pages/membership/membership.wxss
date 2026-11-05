@@ -70,7 +70,7 @@
 
 .mem-perk {
   flex: 1;
-  background: rgba(255, 255, 255, 0.08);
+  background: #29354A;
   border-radius: 14rpx;
   padding: 16rpx 12rpx;
   text-align: center;
@@ -265,7 +265,7 @@
   right: 0;
   top: 0;
   bottom: 0;
-  background: rgba(40, 30, 24, 0.45);
+  background: #1E212B;
   z-index: 200;
   display: flex;
   align-items: flex-end;

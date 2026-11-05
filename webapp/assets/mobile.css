@@ -303,7 +303,7 @@ body.m-mode .mobile-nav-item.active { color: var(--brand); font-weight: 600; }
 body.m-mode .mobile-nav-item.active .mi-icon { opacity: 1; }
 
 /* 点击时有反馈 */
-body.m-mode .mobile-nav-item:active { background: rgba(180, 120, 60, .08); }
+body.m-mode .mobile-nav-item:active { background: #F9F4EF; }
 
 /* ============ 页脚：折叠成单列紧凑 ============ */
 
@@ -392,7 +392,7 @@ body.m-mode .cat-item-has-img .cat-name {
 }
 body.m-mode .cat-item-has-img .cat-desc { color: var(--ink-2); }
 body.m-mode .cat-icon-wrap {
-  background: rgba(14, 165, 233, .08) !important;
+  background: #ECF8FD !important;
   border: 1px solid rgba(14, 165, 233, .20);
   box-shadow: 0 2px 12px rgba(14, 165, 233, .10);
 }
@@ -433,7 +433,7 @@ body.m-mode .list-row-title {
 }
 
 /* 顶栏 */
-body.m-mode .topbar-inner { background: transparent; }
+body.m-mode .topbar-inner { background: #FFFFFF; }
 body.m-mode .topbar {
   background: #FFFFFF !important;
   border-bottom: 1px solid var(--line);
@@ -473,23 +473,23 @@ body.m-mode .textarea:focus {
 
 /* 专业方向 chip */
 body.m-mode .role-chip {
-  background: rgba(14, 165, 233, .08) !important;
+  background: #ECF8FD !important;
   border: 1px solid rgba(14, 165, 233, .18) !important;
   color: var(--ink-2) !important;
   border-radius: 6px;
 }
 body.m-mode .role-chip-on {
-  background: rgba(14, 165, 233, .15) !important;
+  background: #DBF2FC !important;
   border-color: rgba(14, 165, 233, .38) !important;
   color: var(--brand-deep) !important;
 }
 body.m-mode .preset-chip {
-  background: rgba(14, 165, 233, .08) !important;
+  background: #ECF8FD !important;
   color: var(--ink-2) !important;
   border-radius: 6px;
 }
 body.m-mode .preset-chip:hover {
-  background: rgba(14, 165, 233, .15) !important;
+  background: #DBF2FC !important;
   color: var(--brand-deep) !important;
 }
 body.m-mode .field-hint, body.m-mode .field-label { color: var(--ink-3) !important; }
@@ -508,5 +508,5 @@ body.m-mode .side-menu {
 }
 body.m-mode .side-item.active {
   color: var(--brand-deep) !important;
-  background: rgba(14, 165, 233, .09) !important;
+  background: #E9F7FD !important;
 }

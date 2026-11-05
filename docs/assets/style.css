@@ -154,7 +154,7 @@ img { max-width: 100%; display: block; }
 .btn-primary:hover:not(:disabled) { background: var(--brand-deep); }
 .btn-soft { background: var(--brand-soft); color: var(--brand-deep); }
 .btn-soft:hover:not(:disabled) { background: #F0DAC8; }
-.btn-ghost { background: transparent; color: var(--brand); border: 1.5px solid var(--brand-soft); }
+.btn-ghost { background: #FFFFFF; color: var(--brand); border: 1.5px solid var(--brand-soft); }
 .btn-ghost:hover:not(:disabled) { background: #FDF6F1; }
 .btn-danger { background: #C0574A; color: #fff; }
 .btn-sm { height: 34px; font-size: 13px; padding: 0 15px; border-radius: 17px; }
@@ -320,7 +320,7 @@ img { max-width: 100%; display: block; }
 
 .svc-cover { height: 172px; display: flex; align-items: center; justify-content: center; position: relative; }
 .svc-cover-mark { font-size: 40px; font-weight: 800; color: rgba(255, 255, 255, .3); letter-spacing: 3px; }
-.svc-cover-badge { position: absolute; top: 12px; left: 12px; background: rgba(255, 255, 255, .9); color: var(--brand-deep); font-size: 11.5px; padding: 3px 10px; border-radius: 11px; font-weight: 500; }
+.svc-cover-badge { position: absolute; top: 12px; left: 12px; background: #FFFFFF; color: var(--brand-deep); font-size: 11.5px; padding: 3px 10px; border-radius: 11px; font-weight: 500; }
 
 .svc-body { padding: 16px 18px 18px; display: flex; flex-direction: column; flex: 1; }
 .svc-title { font-size: 16px; font-weight: 600; }
@@ -499,12 +499,12 @@ img { max-width: 100%; display: block; }
   align-items: center;
   justify-content: center;
   gap: 8px;
-  background: rgba(28, 24, 21, 0.42);
+  background: #191E2A;
   cursor: pointer;
   transition: background .18s;
 }
 
-.sample-locked:hover .sample-lock { background: rgba(28, 24, 21, 0.58); }
+.sample-locked:hover .sample-lock { background: #191D25; }
 .sample-lock-icon {
   width: 30px;
   height: 30px;
@@ -516,7 +516,7 @@ img { max-width: 100%; display: block; }
   font-size: 11.5px;
   color: #fff;
   font-weight: 500;
-  background: rgba(28, 24, 21, 0.55);
+  background: #191D26;
   padding: 3px 10px;
   border-radius: 10px;
 }
@@ -525,7 +525,7 @@ img { max-width: 100%; display: block; }
 .video-layer {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.88);
+  background: #030407;
   z-index: 400;
   display: flex;
   align-items: center;
@@ -616,7 +616,7 @@ img { max-width: 100%; display: block; }
 
 .modal-mask {
   position: fixed; inset: 0; z-index: 200;
-  background: rgba(44, 38, 34, .5);
+  background: #21242E;
   backdrop-filter: blur(3px);
   display: none; align-items: center; justify-content: center; padding: 20px;
 }
@@ -648,7 +648,7 @@ img { max-width: 100%; display: block; }
 /* ---------------- 评价弹层 ---------------- */
 .review-star-picker { display: flex; align-items: center; gap: 3px; }
 .review-star {
-  border: none; background: transparent; cursor: pointer; padding: 0 2px;
+  border: none; background: #FFFFFF; cursor: pointer; padding: 0 2px;
   font-size: 30px; line-height: 1; color: #E0D6CC; transition: color .15s;
   font-family: inherit;
 }
@@ -678,12 +678,12 @@ img { max-width: 100%; display: block; }
 .review-img img { width: 100%; height: 100%; border-radius: 10px; object-fit: cover; background: #F3EDE6; display: block; }
 .review-img-remove {
   position: absolute; top: -6px; right: -6px; width: 22px; height: 22px;
-  border-radius: 50%; border: none; background: rgba(28,24,21,.78); color: #fff;
+  border-radius: 50%; border: none; background: #1B1A1D; color: #fff;
   font-size: 14px; line-height: 22px; cursor: pointer; padding: 0;
 }
 .review-img-add {
   width: 84px; height: 84px; border: 1px dashed #D8CEC3; border-radius: 10px;
-  background: transparent; color: #B5AAA0; font-size: 22px; cursor: pointer;
+  background: #FFFFFF; color: #B5AAA0; font-size: 22px; cursor: pointer;
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   gap: 2px; font-family: inherit;
 }
@@ -702,7 +702,7 @@ img { max-width: 100%; display: block; }
 
 .toast {
   position: fixed; left: 50%; bottom: 40px; transform: translate(-50%, 16px);
-  background: rgba(44, 38, 34, .94); color: #fff;
+  background: #2B2623; color: #fff;
   font-size: 13.5px; padding: 12px 22px; border-radius: 10px;
   z-index: 300; opacity: 0; pointer-events: none;
   transition: opacity .22s, transform .22s; max-width: 420px; text-align: center; line-height: 1.6;
@@ -965,14 +965,14 @@ img { max-width: 100%; display: block; }
   box-shadow: 0 1px 4px rgba(60,44,32,.06); box-sizing: border-box;
 }
 .msg-bubble-mine { background: var(--brand); color: #fff; border-radius: 14px 14px 4px 14px; }
-.msg-bubble-hint { background: rgba(255,255,255,.7); box-shadow: none; color: var(--ink-3); }
+.msg-bubble-hint { background: #FFFFFF; box-shadow: none; color: var(--ink-3); }
 .msg-sender { font-size: 11.5px; color: var(--ink-3); margin-bottom: 4px; }
 .msg-bubble-mine .msg-sender { color: rgba(255,255,255,.75); }
 .msg-text { font-size: 14px; line-height: 1.65; word-break: break-word; }
 .msg-time { font-size: 11.5px; color: var(--ink-3); margin-top: 5px; padding: 0 3px; }
 .msg-welcome {
   text-align: center; font-size: 12.5px; color: var(--ink-3);
-  background: rgba(255,255,255,.75); padding: 10px 16px; border-radius: 12px;
+  background: #FFFFFF; padding: 10px 16px; border-radius: 12px;
   margin-bottom: 18px; line-height: 1.6;
 }
 
@@ -992,7 +992,7 @@ img { max-width: 100%; display: block; }
 
 .mem-perks { display: flex; gap: 12px; margin-top: 22px; }
 .mem-perk {
-  flex: 1; background: rgba(255,255,255,.08); border-radius: 12px;
+  flex: 1; background: #29354A; border-radius: 12px;
   padding: 14px 10px; text-align: center;
 }
 .mem-perk-label { display: block; font-size: 11.5px; color: rgba(255,255,255,.55); }
@@ -1180,7 +1180,7 @@ img { max-width: 100%; display: block; }
   top: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(100deg, rgba(24, 18, 13, 0.82) 0%, rgba(24, 18, 13, 0.58) 42%, rgba(24, 18, 13, 0.22) 100%);
+  background: linear-gradient(100deg, #181515 0%, #171920 42%, #161F30 100%);
   z-index: 1;
 }
 .hero-banner-has-img .banner-text { z-index: 2; }

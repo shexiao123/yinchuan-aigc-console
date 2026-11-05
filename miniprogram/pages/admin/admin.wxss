@@ -234,7 +234,7 @@
 /* ---------------- 可视化数据版（与网页端同源 tokens） ---------------- */
 
 .viz-panel {
-  background: rgba(28, 46, 76, .62);
+  background: #1A2A45;
   border: 1rpx solid rgba(120, 190, 230, .20);
   border-radius: 24rpx;
   padding: 26rpx 24rpx 20rpx;
@@ -248,7 +248,7 @@
   position: absolute;
   top: 0; left: 0; right: 0;
   height: 1rpx;
-  background: linear-gradient(90deg, transparent, #22D3EE, transparent);
+  background: linear-gradient(90deg, #FFFFFF, #22D3EE, #FFFFFF);
 }
 
 .viz-head {

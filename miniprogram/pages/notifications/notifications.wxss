@@ -18,7 +18,7 @@
   color: var(--brand-deep);
   padding: 6rpx 20rpx;
   border-radius: 999rpx;
-  background: rgba(196, 112, 63, 0.14);
+  background: #F7EBE4;
 }
 
 /* 消息列表 */

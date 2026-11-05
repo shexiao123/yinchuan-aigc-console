@@ -130,7 +130,7 @@
 .msg-welcome-text {
   font-size: 23rpx;
   color: var(--ink-3);
-  background: rgba(255, 255, 255, 0.7);
+  background: #FFFFFF;
   padding: 12rpx 22rpx;
   border-radius: 16rpx;
   text-align: center;
@@ -163,7 +163,7 @@
   box-shadow: 0 2rpx 10rpx rgba(196, 112, 63, 0.25);
 }
 .msg-bubble-hint {
-  background: rgba(255, 255, 255, 0.6);
+  background: #FFFFFF;
   box-shadow: none;
   color: var(--ink-3);
 }

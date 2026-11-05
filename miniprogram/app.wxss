@@ -123,7 +123,7 @@ view, text, button, input, textarea, scroll-view, swiper, image {
 }
 
 .btn-ghost {
-  background: transparent;
+  background: #FFFFFF;
   color: var(--brand);
   border: 2rpx solid var(--brand-soft);
 }

@@ -14,7 +14,7 @@
   font-size: 21rpx;
   font-weight: 700;
   color: #4F46E5;
-  background: rgba(124, 92, 240, .10);
+  background: #F2EFFE;
 }
 .mc-hero-title { display: block; font-size: 42rpx; font-weight: 800; color: #0F172A; margin: 22rpx 0 12rpx; line-height: 1.35; }
 .mc-hero-sub { display: block; font-size: 25rpx; color: #475569; line-height: 1.7; }

@@ -326,7 +326,7 @@
   top: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(100deg, rgba(24, 18, 13, 0.82) 0%, rgba(24, 18, 13, 0.58) 42%, rgba(24, 18, 13, 0.22) 100%);
+  background: linear-gradient(100deg, #181515 0%, #171920 42%, #161F30 100%);
   z-index: 1;
 }
 .banner-has-img .banner-inner { position: relative; z-index: 2; }
@@ -367,7 +367,7 @@
   gap: 12rpx;
   margin: 20rpx 0 4rpx;
   padding: 14rpx 20rpx;
-  background: rgba(34, 184, 166, .10);
+  background: #E9F8F6;
   border: 1rpx solid rgba(34, 184, 166, .22);
   border-radius: 999rpx;
 }
@@ -463,17 +463,17 @@
   font-size: 19rpx;
   font-weight: 700;
   color: #0369A1;
-  background: rgba(14, 165, 233, .11);
+  background: #E4F5FD;
   border: 1rpx solid rgba(14, 165, 233, .18);
 }
 .notice-tag.nt-activity {
   color: #6D28D9;
-  background: rgba(124, 92, 240, .10);
+  background: #F2EFFE;
   border-color: rgba(124, 92, 240, .20);
 }
 .notice-tag.nt-important {
   color: #B91C1C;
-  background: rgba(219, 39, 119, .09);
+  background: #FCECF3;
   border-color: rgba(219, 39, 119, .20);
 }
 .notice-title {

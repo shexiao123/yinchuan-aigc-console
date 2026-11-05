@@ -9,7 +9,7 @@
 }
 
 .profile-avatar {
-  background: rgba(255, 255, 255, 0.24);
+  background: #4E5869;
   color: #fff;
   border: 2rpx solid rgba(255, 255, 255, 0.4);
   overflow: hidden;
@@ -41,7 +41,7 @@
 }
 
 .profile-btn {
-  background: rgba(255, 255, 255, 0.92);
+  background: #FFFFFF;
   color: var(--brand-deep);
   flex-shrink: 0;
 }
@@ -56,10 +56,10 @@
 .profile-stats {
   display: flex;
   margin-top: 30rpx;
-  background: rgba(255, 255, 255, 0.16);
+  background: #3B465A;
   border-radius: 20rpx;
   padding: 22rpx 0;
-  backdrop-filter: blur(8rpx);
+  backdrop-filter: none;
 }
 
 .profile-stat {

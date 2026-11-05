@@ -5,11 +5,11 @@
 :root {
   --brand: #0EA5E9;
   --brand-deep: #0284C7;
-  --brand-soft: rgba(14, 165, 233, .10);
+  --brand-soft: #E7F6FD;
   --ink: #0F172A;
   --ink-2: #475569;
   --ink-3: #94A3B8;
-  --line: rgba(15, 23, 42, .085);
+  --line: #EBEEF3;
   --bg: #F7F8FA;
   --card: #FFFFFF;
   --olive: #059669;
@@ -91,7 +91,7 @@ img { max-width: 100%; display: block; }
   margin-top: 12px;
   padding: 3px 10px;
   border-radius: 11px;
-  background: rgba(14, 165, 233, .16);
+  background: #D8F1FB;
   color: #7DD3FC;
   font-size: 11px;
 }
@@ -119,7 +119,7 @@ img { max-width: 100%; display: block; }
   margin-bottom: 2px;
 }
 
-.side-item:hover { background: rgba(255, 255, 255, 0.06); color: #fff; }
+.side-item:hover { background: #243046; color: #fff; }
 .side-item.active { background: var(--brand); color: #fff; font-weight: 500; }
 .side-icon { font-size: 15px; width: 19px; text-align: center; }
 .side-badge {
@@ -131,7 +131,7 @@ img { max-width: 100%; display: block; }
   border-radius: 9px;
   font-weight: 600;
 }
-.side-item.active .side-badge { background: rgba(255, 255, 255, 0.25); }
+.side-item.active .side-badge { background: #505A6B; }
 
 .sidebar-foot {
   padding: 14px 18px 18px;
@@ -196,9 +196,9 @@ img { max-width: 100%; display: block; }
 .btn-primary { background: var(--brand); color: #fff; }
 .btn-primary:hover:not(:disabled) { background: var(--brand-deep); }
 .btn-soft { background: var(--brand-soft); color: var(--brand-deep); }
-.btn-soft:hover:not(:disabled) { background: rgba(14, 165, 233, .15); }
-.btn-ghost { background: transparent; color: var(--ink-2); border: 1.5px solid var(--line); }
-.btn-ghost:hover:not(:disabled) { background: rgba(14, 165, 233, .07); }
+.btn-soft:hover:not(:disabled) { background: #DBF2FC; }
+.btn-ghost { background: #FFFFFF; color: var(--ink-2); border: 1.5px solid var(--line); }
+.btn-ghost:hover:not(:disabled) { background: #EEF9FD; }
 .btn-danger { background: #C0574A; color: #fff; }
 .btn-danger:hover:not(:disabled) { background: #A8463A; }
 .btn-success { background: var(--olive); color: #fff; }
@@ -209,7 +209,7 @@ img { max-width: 100%; display: block; }
 
 .input, .textarea, .select {
   width: 100%;
-  background: rgba(255, 255, 255, .92);
+  background: #FFFFFF;
   border: 1.5px solid transparent;
   border-radius: 9px;
   padding: 9px 12px;
@@ -327,7 +327,7 @@ img { max-width: 100%; display: block; }
 table.data { width: 100%; border-collapse: collapse; font-size: 13px; }
 table.data th {
   text-align: left; font-weight: 600; font-size: 12px; color: var(--ink-3);
-  padding: 11px 14px; background: rgba(255, 255, 255, .92); white-space: nowrap;
+  padding: 11px 14px; background: #FFFFFF; white-space: nowrap;
   border-bottom: 1px solid var(--line);
 }
 table.data td { padding: 12px 14px; border-bottom: 1px solid var(--line); vertical-align: middle; }
@@ -374,7 +374,7 @@ table.data tbody tr:hover { background: #FEFAF6; }
 
 .modal-mask {
   position: fixed; inset: 0; z-index: 200;
-  background: rgba(44, 38, 34, .5);
+  background: #21242E;
   backdrop-filter: blur(3px);
   display: none; align-items: center; justify-content: center; padding: 20px;
 }
@@ -391,7 +391,7 @@ table.data tbody tr:hover { background: #FEFAF6; }
 
 .toast {
   position: fixed; left: 50%; bottom: 34px; transform: translate(-50%, 14px);
-  background: rgba(44, 38, 34, .94); color: #fff; font-size: 13px;
+  background: #2B2623; color: #fff; font-size: 13px;
   padding: 11px 20px; border-radius: 8px; z-index: 300; opacity: 0;
   pointer-events: none; transition: opacity .2s, transform .2s; max-width: 420px; text-align: center;
 }
@@ -427,7 +427,7 @@ table.data tbody tr:hover { background: #FEFAF6; }
   :root { --sidebar-w: 0px; }
   .sidebar { transform: translateX(-100%); transition: transform .22s; width: 230px; }
   .sidebar.open { transform: none; }
-  .drawer-mask { display: block; position: fixed; inset: 0; background: rgba(0,0,0,.4); z-index: 55; opacity: 0; pointer-events: none; transition: opacity .2s; }
+  .drawer-mask { display: block; position: fixed; inset: 0; background: #0D1523; z-index: 55; opacity: 0; pointer-events: none; transition: opacity .2s; }
   .drawer-mask.show { opacity: 1; pointer-events: auto; }
   .drawer-toggle { display: flex; align-items: center; gap: 8px; font-size: 15px; }
   .admin-main { margin-left: 0; }

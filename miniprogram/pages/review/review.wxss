@@ -126,7 +126,7 @@
   width: 36rpx;
   height: 36rpx;
   border-radius: 50%;
-  background: rgba(28, 24, 21, 0.78);
+  background: #1B1A1D;
   color: #fff;
   font-size: 24rpx;
   line-height: 34rpx;

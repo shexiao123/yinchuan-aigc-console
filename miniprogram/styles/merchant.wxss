@@ -58,7 +58,7 @@
   font-size: 20rpx;
   font-weight: 600;
   color: #0369A1;
-  background: rgba(14, 165, 233, .10);
+  background: #E7F6FD;
 }
 .task-card {
   padding: 26rpx;
@@ -74,8 +74,8 @@
   font-size: 21rpx;
   font-weight: 600;
 }
-.task-badge { color: #047857; background: rgba(5, 150, 105, .10); }
-.task-video { color: #6D28D9; background: rgba(124, 92, 240, .10); }
+.task-badge { color: #047857; background: #E6F4F0; }
+.task-video { color: #6D28D9; background: #F2EFFE; }
 .task-budget { margin-left: auto; font-size: 30rpx; font-weight: 800; color: #DB2777; }
 .task-title { font-size: 29rpx; font-weight: 700; color: var(--ink); line-height: 1.5; margin-top: 14rpx; }
 .task-desc { font-size: 24rpx; color: var(--ink-2); line-height: 1.6; margin-top: 8rpx; }

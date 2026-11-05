@@ -64,7 +64,7 @@
   right: 0;
   bottom: 0;
   height: 46rpx;
-  background: rgba(40, 30, 24, 0.42);
+  background: #1E212C;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -80,7 +80,7 @@
   right: 0;
   top: 0;
   bottom: 0;
-  background: rgba(40, 30, 24, 0.5);
+  background: #1F2029;
   color: #fff;
   font-size: 20rpx;
   display: flex;
