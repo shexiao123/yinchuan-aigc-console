@@ -1,0 +1,28 @@
+{
+  "name": "yc-aigc-dataviz",
+  "version": "1.0.0",
+  "private": true,
+  "description": "银川AIGC数字文化产业基地 · 可视化数据组件（Remotion）",
+  "scripts": {
+    "dev": "remotion studio",
+    "build:web": "vite build --config vite.web.config.ts",
+    "render:dashboard": "remotion render src/index.ts AdminDashboard out/admin-dashboard.mp4",
+    "render:share": "remotion render src/index.ts MobileShareCard out/mobile-share-card.mp4",
+    "render:all": "npm run render:dashboard && npm run render:share",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@remotion/player": "4.0.300",
+    "react": "18.3.1",
+    "react-dom": "18.3.1",
+    "remotion": "4.0.300"
+  },
+  "devDependencies": {
+    "@remotion/cli": "4.0.300",
+    "@types/react": "18.3.12",
+    "@types/react-dom": "18.3.1",
+    "@vitejs/plugin-react": "4.3.4",
+    "typescript": "5.7.2",
+    "vite": "6.0.5"
+  }
+}

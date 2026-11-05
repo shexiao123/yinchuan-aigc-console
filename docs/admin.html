@@ -7,6 +7,7 @@
 <meta name="robots" content="noindex">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="assets/admin.css">
+<link rel="stylesheet" href="assets/tech.css">
 </head>
 <body>
 
@@ -34,9 +35,12 @@
 
       <div class="nav-group-label">运营</div>
       <div class="side-item" data-page="content"><span class="side-icon">▣</span>首页与内容</div>
+      <div class="side-item" data-page="merchants"><span class="side-icon">🏬</span>商家管理</div>
+      <div class="side-item" data-page="notice"><span class="side-icon">📢</span>公告管理</div>
       <div class="side-item" data-page="settings"><span class="side-icon">⚙</span>平台设置</div>
       <div class="side-item" data-page="members"><span class="side-icon">👑</span>会员管理<span class="side-badge" id="badgeMember" hidden>0</span></div>
       <div class="side-item" data-page="support"><span class="side-icon">💬</span>客服会话</div>
+      <div class="side-item" data-page="chat"><span class="side-icon">👥</span>群聊管理</div>
       <div class="side-item" data-page="logs"><span class="side-icon">◷</span>操作日志</div>
     </nav>
 
@@ -61,6 +65,9 @@
         <span class="admin-page-title" id="pageTitle">运营概览</span>
       </div>
       <div class="admin-topbar-right">
+        <span class="online-chip" id="onlineChip" title="近 2 分钟内访问平台的会话数">
+          <i class="online-dot"></i><span class="online-label">在线</span><b data-online-count>–</b><span class="online-label">人</span>
+        </span>
         <span class="muted" id="todayLabel"></span>
         <span class="admin-user">
           <span class="admin-avatar" id="adminAvatar">管</span>
@@ -127,12 +134,16 @@
 
 <div class="toast" id="toast"></div>
 
-<script src="https://cdn.jsdelivr.net/npm/@tencent-ai/workbuddy-cloud-sdk@dev/lib/index.global.js"></script>
+<!-- 云存储上传的 CORS 兜底：必须在云 SDK 之前 -->
+<script src="js/fetch-patch.js"></script>
+<!-- 云服务 SDK：本地优先（CDN 被网关拦截时页面照样能开），失败再回退 CDN -->
+<script src="js/vendor/workbuddy-cloud-sdk.js" onerror="var s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/@tencent-ai/workbuddy-cloud-sdk@dev/lib/index.global.js';document.head.appendChild(s)"></script>
 <script src="js/config.js"></script>
 <script src="js/api.js"></script>
 <script src="js/platform-rules.js"></script>
 <script src="js/adaptive-grid.js"></script>
 <script src="js/dataviz.js"></script>
 <script src="js/admin.js"></script>
+<script src="js/online.js"></script>
 </body>
 </html>

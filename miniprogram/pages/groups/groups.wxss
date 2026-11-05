@@ -1,0 +1,95 @@
+.groups-page {
+  min-height: 100vh;
+  background: #F5F9FD;
+  padding: 24rpx 24rpx 60rpx;
+  box-sizing: border-box;
+}
+
+.groups-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16rpx;
+  padding: 120rpx 40rpx;
+}
+.groups-loading-text,
+.groups-empty-text { font-size: 26rpx; color: #7A8BA0; }
+.groups-empty-icon { font-size: 76rpx; line-height: 1; }
+
+.groups-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16rpx;
+  padding: 12rpx 8rpx 28rpx;
+}
+.groups-head-left { display: flex; flex-direction: column; gap: 6rpx; }
+.groups-head-title { font-size: 40rpx; font-weight: 700; color: #0B1F33; }
+.groups-head-sub { font-size: 24rpx; color: #61738A; }
+.groups-create {
+  margin: 0;
+  padding: 0 26rpx;
+  height: 64rpx;
+  line-height: 64rpx;
+  font-size: 26rpx;
+  color: #fff;
+  background: #4F7DF3;
+  border-radius: 32rpx;
+}
+
+.groups-list { display: flex; flex-direction: column; gap: 20rpx; }
+.group-item {
+  background: #fff;
+  border: 1rpx solid #E7EEF6;
+  border-top: 6rpx solid #0EA5E9;
+  border-radius: 20rpx;
+  padding: 24rpx;
+  box-shadow: 0 12rpx 30rpx -24rpx rgba(20,60,120,.6);
+}
+.group-item-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18rpx; }
+.group-item-icon {
+  width: 76rpx; height: 76rpx;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 20rpx; font-size: 38rpx;
+}
+.group-item-count { font-size: 22rpx; color: #61738A; background: #F4F7FB; border-radius: 24rpx; padding: 6rpx 16rpx; }
+.group-item-name { font-size: 32rpx; font-weight: 700; color: #0B1F33; margin-bottom: 8rpx; }
+.group-item-desc { font-size: 25rpx; line-height: 1.6; color: #61738A; }
+.group-item-last {
+  margin-top: 18rpx; padding-top: 18rpx;
+  border-top: 1rpx solid #EEF2F7;
+  font-size: 25rpx; color: #4A5B6E;
+  overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
+}
+.group-item-foot { display: flex; justify-content: space-between; margin-top: 16rpx; font-size: 22rpx; color: #8A9AAE; }
+.group-item-go { font-weight: 700; }
+
+.groups-login {
+  display: flex; align-items: center; justify-content: space-between; gap: 16rpx;
+  margin-top: 30rpx; padding: 24rpx;
+  background: #fff; border: 1rpx solid #E7EEF6; border-radius: 18rpx;
+  font-size: 24rpx; color: #61738A;
+}
+
+.modal-mask {
+  position: fixed; inset: 0; z-index: 300;
+  display: flex; align-items: center; justify-content: center;
+  padding: 40rpx; background: rgba(11,31,51,.45);
+}
+.modal {
+  width: 100%; max-width: 620rpx;
+  background: #fff; border-radius: 24rpx; padding: 36rpx;
+  box-sizing: border-box;
+}
+.modal-title { font-size: 34rpx; font-weight: 700; color: #0B1F33; }
+.modal-sub { font-size: 24rpx; color: #7A8BA0; margin: 8rpx 0 24rpx; }
+.modal-label { font-size: 25rpx; font-weight: 600; color: #4A5B6E; margin: 20rpx 0 10rpx; }
+.modal-input {
+  width: 100%; box-sizing: border-box;
+  background: #F6F9FD; border: 1rpx solid #E3EBF4; border-radius: 14rpx;
+  padding: 18rpx 20rpx; font-size: 27rpx; color: #0B1F33;
+}
+.modal-textarea { height: 150rpx; line-height: 1.6; }
+.modal-actions { display: flex; justify-content: flex-end; gap: 16rpx; margin-top: 36rpx; }
+.modal-actions .btn { margin: 0; }

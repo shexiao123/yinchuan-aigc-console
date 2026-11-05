@@ -1,0 +1,108 @@
+<view class="page">
+  <!-- 未登录 -->
+  <view wx:if="{{!loading && !logged}}" class="card center">
+    <view class="big-icon">🔐</view>
+    <view class="card-title">请先登录，再开通企业店铺</view>
+    <view class="card-text">一个账号对应一家店铺，登录后即可发布任务、上传参考视频</view>
+    <button class="btn-primary" bindtap="onLogin">去登录</button>
+  </view>
+
+  <!-- 未开通：开店表单 -->
+  <block wx:if="{{logged && !shop}}">
+    <view class="card">
+      <view class="card-title">开通企业店铺</view>
+      <view class="card-text">开通后拥有独立店铺页，可发布制作任务与参考视频</view>
+      <view class="field">
+        <text class="label">店铺名称 *</text>
+        <input class="input" placeholder="例：贺兰山品牌视觉" value="{{form.shopName}}" data-field="shopName" bindinput="onInput" />
+      </view>
+      <view class="field">
+        <text class="label">主营分类</text>
+        <picker mode="selector" range="{{categories}}" range-key="name" value="{{catIndex}}" bindchange="onCat">
+          <view class="picker">{{categories.length ? categories[catIndex].name : '不限分类'}}</view>
+        </picker>
+      </view>
+      <view class="field">
+        <text class="label">所在城市</text>
+        <input class="input" value="{{form.city}}" data-field="city" bindinput="onInput" />
+      </view>
+      <view class="field">
+        <text class="label">店铺简介</text>
+        <textarea class="textarea" placeholder="介绍团队、擅长领域与交付方式" value="{{form.intro}}" data-field="intro" bindinput="onInput" />
+      </view>
+      <view class="field">
+        <text class="label">联系人 / 电话</text>
+        <view class="row">
+          <input class="input" placeholder="联系人" value="{{form.contact}}" data-field="contact" bindinput="onInput" />
+          <input class="input" placeholder="联系电话" value="{{form.phone}}" data-field="phone" bindinput="onInput" />
+        </view>
+      </view>
+      <button class="btn-primary" bindtap="onOpenShop" disabled="{{submitting}}">开通店铺</button>
+    </view>
+  </block>
+
+  <!-- 已开通：店铺 + 发布任务 -->
+  <block wx:if="{{logged && shop}}">
+    <view class="shop-banner" bindtap="onShopPage">
+      <view class="shop-logo">{{shop.name[0]}}</view>
+      <view>
+        <view class="shop-name">{{shop.name}}</view>
+        <view class="shop-meta">{{shop.city || '银川'}} · {{tasks.length}} 条任务 · 查看店铺页 ›</view>
+      </view>
+    </view>
+
+    <view class="card">
+      <view class="card-title">发布制作任务</view>
+      <view class="field">
+        <text class="label">任务标题 *</text>
+        <input class="input" placeholder="例：连锁餐饮品牌 30 秒开业宣传片" value="{{form.title}}" data-field="title" bindinput="onInput" />
+      </view>
+      <view class="field">
+        <text class="label">任务分类</text>
+        <picker mode="selector" range="{{categories}}" range-key="name" value="{{catIndex}}" bindchange="onCat">
+          <view class="picker">{{categories.length ? categories[catIndex].name : '不限分类'}}</view>
+        </picker>
+      </view>
+      <view class="row">
+        <view class="field half">
+          <text class="label">预算（元，0 为面议）</text>
+          <input class="input" type="digit" placeholder="8000" value="{{form.budget}}" data-field="budget" bindinput="onInput" />
+        </view>
+        <view class="field half">
+          <text class="label">截止日期</text>
+          <picker mode="date" value="{{form.deadline}}" bindchange="onDate">
+            <view class="picker">{{form.deadline || '选择日期'}}</view>
+          </picker>
+        </view>
+      </view>
+      <view class="field">
+        <text class="label">需求说明</text>
+        <textarea class="textarea" placeholder="交付物、规格、风格与时间节点写清楚" value="{{form.desc}}" data-field="desc" bindinput="onInput" />
+      </view>
+      <view class="field">
+        <text class="label">上传参考视频（≤100MB）</text>
+        <view class="video-pick" bindtap="onChooseVideo">
+          <text wx:if="{{videoName}}">▶ {{videoName}}</text>
+          <text wx:else>＋ 选择本地视频</text>
+        </view>
+        <view class="video-clear" wx:if="{{videoName}}" bindtap="clearVideo">移除已选视频</view>
+      </view>
+      <view class="field">
+        <text class="label">或粘贴视频链接</text>
+        <input class="input" placeholder="https://.../reference.mp4" value="{{form.videoUrl}}" data-field="videoUrl" bindinput="onInput" />
+      </view>
+      <button class="btn-primary" bindtap="onPublish" disabled="{{submitting}}">发布任务</button>
+    </view>
+
+    <view class="section-head"><text class="section-title">我发布的任务</text></view>
+    <view class="task-card" wx:for="{{tasks}}" wx:key="id" bindtap="onTask" data-id="{{item.id}}">
+      <view class="task-top">
+        <text class="task-badge">{{item.status === 'open' ? '招募中' : '已结束'}}</text>
+        <text class="task-video" wx:if="{{item.hasVideo}}">▶ 参考视频</text>
+        <text class="task-budget">{{item.budgetText}}</text>
+      </view>
+      <view class="task-title ellipsis-2">{{item.title}}</view>
+    </view>
+    <view class="empty" wx:if="{{!tasks.length}}">还没有发布任务</view>
+  </block>
+</view>

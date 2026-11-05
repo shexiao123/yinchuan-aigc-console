@@ -364,20 +364,18 @@ body.m-mode .empty-hint { font-size: 13px; line-height: 1.6; }
   body.m-mode .detail-cover { height: 34vw; }
 }
 
-/* ============ 商业科技 · 移动端适配 ============ */
+/* ============ 商业科技（浅色） · 移动端适配 ============ */
 
-/* 底部标签栏：深墨玻璃 + 顶部发光边 */
+/* 底部标签栏：白玻璃 + 顶部细线 */
 body.m-mode .mobile-nav {
-  background: rgba(8, 12, 22, .92) !important;
+  background: rgba(255, 255, 255, .92) !important;
   border-top: 1px solid var(--line) !important;
-  backdrop-filter: blur(22px) saturate(160%);
-  -webkit-backdrop-filter: blur(22px) saturate(160%);
-  box-shadow: 0 -1px 0 rgba(56, 189, 248, .16), 0 -8px 28px rgba(0, 0, 0, .45);
+  backdrop-filter: blur(22px) saturate(180%);
+  -webkit-backdrop-filter: blur(22px) saturate(180%);
+  box-shadow: 0 -1px 0 var(--line), 0 -6px 24px rgba(15, 23, 42, .06);
 }
-body.m-mode .mobile-nav-item.active { color: var(--brand); }
-body.m-mode .mobile-nav-item.active .mi-icon {
-  filter: drop-shadow(0 0 7px rgba(56, 189, 248, .65));
-}
+body.m-mode .mobile-nav-item.active { color: var(--brand-deep); }
+body.m-mode .mobile-nav-item.active .mi-icon { filter: none; }
 
 /* 分类横滑卡 */
 body.m-mode .cat-item {
@@ -394,9 +392,9 @@ body.m-mode .cat-item-has-img .cat-name {
 }
 body.m-mode .cat-item-has-img .cat-desc { color: var(--ink-2); }
 body.m-mode .cat-icon-wrap {
-  background: rgba(56, 189, 248, .10) !important;
-  border: 1px solid rgba(56, 189, 248, .24);
-  box-shadow: 0 0 18px rgba(56, 189, 248, .12);
+  background: rgba(14, 165, 233, .08) !important;
+  border: 1px solid rgba(14, 165, 233, .20);
+  box-shadow: 0 2px 12px rgba(14, 165, 233, .10);
 }
 
 /* 服务卡 */
@@ -412,7 +410,7 @@ body.m-mode .svc-title {
   color: var(--ink);
 }
 body.m-mode .svc-sub { color: var(--ink-2); }
-body.m-mode .svc-price { color: var(--brand) !important; text-shadow: none; font-weight: 650; }
+body.m-mode .svc-price { color: var(--brand-deep) !important; text-shadow: none; font-weight: 650; }
 
 /* 服务者卡 */
 body.m-mode .prov-card {
@@ -437,7 +435,7 @@ body.m-mode .list-row-title {
 /* 顶栏 */
 body.m-mode .topbar-inner { background: transparent; }
 body.m-mode .topbar {
-  background: rgba(8, 12, 22, .88) !important;
+  background: rgba(255, 255, 255, .90) !important;
   border-bottom: 1px solid var(--line);
 }
 
@@ -462,53 +460,53 @@ body.m-mode .hero-mini-sub { color: var(--ink-2); }
 body.m-mode .input,
 body.m-mode .textarea,
 body.mode select.input {
-  background: rgba(255, 255, 255, .035) !important;
+  background: rgba(255, 255, 255, .94) !important;
   border: 1px solid var(--line) !important;
   color: var(--ink) !important;
   border-radius: 8px;
 }
 body.m-mode .input:focus,
 body.m-mode .textarea:focus {
-  border-color: rgba(56, 189, 248, .55) !important;
-  box-shadow: 0 0 0 3px rgba(56, 189, 248, .12) !important;
+  border-color: rgba(14, 165, 233, .55) !important;
+  box-shadow: 0 0 0 3px rgba(14, 165, 233, .12) !important;
 }
 
 /* 专业方向 chip */
 body.m-mode .role-chip {
-  background: rgba(56, 189, 248, .08) !important;
-  border: 1px solid rgba(56, 189, 248, .20) !important;
+  background: rgba(14, 165, 233, .08) !important;
+  border: 1px solid rgba(14, 165, 233, .18) !important;
   color: var(--ink-2) !important;
   border-radius: 6px;
 }
 body.m-mode .role-chip-on {
-  background: rgba(56, 189, 248, .18) !important;
-  border-color: rgba(56, 189, 248, .42) !important;
-  color: #7DD3FC !important;
+  background: rgba(14, 165, 233, .15) !important;
+  border-color: rgba(14, 165, 233, .38) !important;
+  color: var(--brand-deep) !important;
 }
 body.m-mode .preset-chip {
-  background: rgba(56, 189, 248, .08) !important;
+  background: rgba(14, 165, 233, .08) !important;
   color: var(--ink-2) !important;
   border-radius: 6px;
 }
 body.m-mode .preset-chip:hover {
-  background: rgba(56, 189, 248, .16) !important;
-  color: #7DD3FC !important;
+  background: rgba(14, 165, 233, .15) !important;
+  color: var(--brand-deep) !important;
 }
 body.m-mode .field-hint, body.m-mode .field-label { color: var(--ink-3) !important; }
 
 /* 弹层 */
 body.m-mode .modal {
-  background: rgba(12, 18, 32, .97) !important;
-  border: 1px solid rgba(56, 189, 248, .22) !important;
+  background: rgba(255, 255, 255, .98) !important;
+  border: 1px solid rgba(14, 165, 233, .20) !important;
   border-radius: 12px;
 }
 
 /* 侧栏菜单（管理端在手机上） */
 body.m-mode .side-menu {
-  background: rgba(16, 24, 39, .78) !important;
+  background: rgba(255, 255, 255, .92) !important;
   border: 1px solid var(--line) !important;
 }
 body.m-mode .side-item.active {
-  color: var(--brand) !important;
-  background: rgba(56, 189, 248, .10) !important;
+  color: var(--brand-deep) !important;
+  background: rgba(14, 165, 233, .09) !important;
 }

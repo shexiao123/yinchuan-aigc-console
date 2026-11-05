@@ -1,0 +1,68 @@
+<view class="group-page">
+  <view class="group-center" wx:if="{{loading}}">
+    <text class="group-loading-text">正在进入群聊…</text>
+  </view>
+
+  <block wx:if="{{!loading && group}}">
+    <view class="group-head">
+      <view class="group-head-left">
+        <text class="group-head-name">{{group.icon || '💬'}} {{group.name}}</text>
+        <text class="group-head-sub">{{memberCount}} 位成员 · {{group.description || '欢迎交流'}}</text>
+      </view>
+      <view class="group-live"><text class="group-live-dot"></text>实时</view>
+    </view>
+
+    <scroll-view class="msg-list" scroll-y scroll-into-view="{{scrollTo}}" scroll-with-animation>
+      <view class="msg-tip"><text>群规：文明交流，禁止广告与无关链接</text></view>
+
+      <view
+        class="msg-row {{item.mine ? 'msg-row-mine' : ''}}"
+        wx:for="{{messages}}"
+        wx:key="id"
+        id="msg-{{item.id}}"
+      >
+        <view class="msg-sys" wx:if="{{item.isSystem}}">
+          <text>{{item.content}}</text>
+        </view>
+        <block wx:else>
+          <view class="msg-avatar" wx:if="{{!item.mine}}">{{item.initial}}</view>
+          <view class="msg-body">
+            <text class="msg-sender" wx:if="{{!item.mine}}">{{item.sender_name || '群成员'}}{{item.hidden ? ' · 已隐藏' : ''}}</text>
+            <view class="msg-bubble {{item.mine ? 'msg-bubble-mine' : ''}} {{item.hidden ? 'msg-hidden' : ''}}">
+              <text class="msg-text">{{item.content}}</text>
+            </view>
+            <text class="msg-time">{{item.timeText}}</text>
+          </view>
+        </block>
+      </view>
+
+      <view class="msg-tip" wx:if="{{messages.length === 0}}"><text>还没有消息，来说第一句吧</text></view>
+      <view class="msg-bottom"></view>
+    </scroll-view>
+
+    <view class="input-bar" wx:if="{{loggedIn}}">
+      <input
+        class="input-bar-field"
+        placeholder="说点什么…"
+        placeholder-class="input-placeholder"
+        value="{{input}}"
+        bindinput="onInput"
+        confirm-type="send"
+        bindconfirm="onSend"
+        maxlength="1000"
+      />
+      <button class="input-bar-send" bindtap="onSend" loading="{{sending}}" disabled="{{sending || !input}}">发送</button>
+    </view>
+    <view class="input-bar input-bar-login" wx:else>
+      <text>登录后即可在群里发言</text>
+      <button class="input-bar-send" bindtap="onGoLogin">去登录</button>
+    </view>
+
+    <view class="group-foot-tip">{{tip}}</view>
+  </block>
+
+  <view class="group-center" wx:if="{{!loading && !group}}">
+    <text class="group-empty-icon">💬</text>
+    <text class="group-loading-text">群聊不存在或已停用</text>
+  </view>
+</view>

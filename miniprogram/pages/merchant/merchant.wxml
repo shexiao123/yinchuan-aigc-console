@@ -1,0 +1,39 @@
+<view class="page" wx:if="{{shop}}">
+  <view class="shop-hero">
+    <view class="shop-hero-logo">{{shop.initial}}</view>
+    <view class="shop-hero-txt">
+      <view class="shop-hero-name">{{shop.name}}<text class="verified" wx:if="{{shop.is_verified}}">✓ 认证</text></view>
+      <view class="shop-hero-meta">{{shop.city || '银川'}} · {{tasks.length}} 个在招任务</view>
+    </view>
+  </view>
+
+  <view class="card">
+    <view class="card-title">店铺简介</view>
+    <view class="card-text">{{shop.intro || '这家商家还没有填写简介。'}}</view>
+    <view class="info-row">联系人：{{shop.contact_name || '未填写'}}</view>
+    <view class="info-row">联系电话：{{shop.contact_phone || '未填写'}}</view>
+  </view>
+
+  <view class="section-head">
+    <text class="section-title">在招任务</text>
+    <text class="section-more" bindtap="onAllTasks">任务广场 ›</text>
+  </view>
+
+  <view class="list">
+    <view class="task-card" wx:for="{{tasks}}" wx:key="id" bindtap="onTask" data-id="{{item.id}}">
+      <view class="task-top">
+        <text class="task-badge">招募中</text>
+        <text class="task-video" wx:if="{{item.hasVideo}}">▶ 参考视频</text>
+        <text class="task-budget">{{item.budgetText}}</text>
+      </view>
+      <view class="task-title ellipsis-2">{{item.title}}</view>
+      <view class="task-desc ellipsis-2">{{item.description || '商家暂未填写详细说明'}}</view>
+      <view class="task-foot">{{item.deadline || '长期有效'}}</view>
+    </view>
+    <view class="empty" wx:if="{{!tasks.length && !loading}}">这家店铺暂时没有在招任务</view>
+  </view>
+</view>
+
+<view class="page" wx:elif="{{!loading}}">
+  <view class="empty">店铺不存在或已停用</view>
+</view>

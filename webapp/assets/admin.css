@@ -3,20 +3,20 @@
    断点：1080px（侧栏收窄）、860px（侧栏改抽屉） */
 
 :root {
-  --brand: #C4703F;
-  --brand-deep: #A85A2D;
-  --brand-soft: #F6E7DA;
-  --ink: #2C2622;
-  --ink-2: #6B6058;
-  --ink-3: #9A8E85;
-  --line: #EDE4DA;
-  --bg: #FBF7F2;
+  --brand: #0EA5E9;
+  --brand-deep: #0284C7;
+  --brand-soft: rgba(14, 165, 233, .10);
+  --ink: #0F172A;
+  --ink-2: #475569;
+  --ink-3: #94A3B8;
+  --line: rgba(15, 23, 42, .085);
+  --bg: #F7F8FA;
   --card: #FFFFFF;
-  --olive: #6E7F5C;
-  --rose: #B5707A;
-  --blue: #5B7186;
-  --shadow: 0 2px 16px rgba(120, 90, 60, 0.07);
-  --shadow-lg: 0 8px 32px rgba(120, 90, 60, 0.12);
+  --olive: #059669;
+  --rose: #DB2777;
+  --blue: #4F7DF3;
+  --shadow: 0 1px 2px rgba(15, 23, 42, .04), 0 4px 14px rgba(15, 23, 42, .05);
+  --shadow-lg: 0 2px 4px rgba(15, 23, 42, .03), 0 16px 40px rgba(15, 23, 42, .09);
   --radius: 14px;
   --sidebar-w: 216px;
 }
@@ -45,8 +45,8 @@ img { max-width: 100%; display: block; }
 .sidebar {
   width: var(--sidebar-w);
   flex-shrink: 0;
-  background: #2C2622;
-  color: #E8DFD6;
+  background: linear-gradient(180deg, #0F172A, #1E293B);
+  color: #CBD5E1;
   display: flex;
   flex-direction: column;
   position: fixed;
@@ -91,8 +91,8 @@ img { max-width: 100%; display: block; }
   margin-top: 12px;
   padding: 3px 10px;
   border-radius: 11px;
-  background: rgba(196, 112, 63, 0.22);
-  color: #E8B27A;
+  background: rgba(14, 165, 233, .16);
+  color: #7DD3FC;
   font-size: 11px;
 }
 
@@ -150,7 +150,7 @@ img { max-width: 100%; display: block; }
 
 .admin-topbar {
   height: 60px;
-  background: rgba(251, 247, 242, 0.94);
+  background: rgba(255, 255, 255, .88);
   backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--line);
   display: flex;
@@ -194,9 +194,9 @@ img { max-width: 100%; display: block; }
 .btn-primary { background: var(--brand); color: #fff; }
 .btn-primary:hover:not(:disabled) { background: var(--brand-deep); }
 .btn-soft { background: var(--brand-soft); color: var(--brand-deep); }
-.btn-soft:hover:not(:disabled) { background: #F0DAC8; }
+.btn-soft:hover:not(:disabled) { background: rgba(14, 165, 233, .15); }
 .btn-ghost { background: transparent; color: var(--ink-2); border: 1.5px solid var(--line); }
-.btn-ghost:hover:not(:disabled) { background: #F7F2EC; }
+.btn-ghost:hover:not(:disabled) { background: rgba(14, 165, 233, .07); }
 .btn-danger { background: #C0574A; color: #fff; }
 .btn-danger:hover:not(:disabled) { background: #A8463A; }
 .btn-success { background: var(--olive); color: #fff; }
@@ -207,7 +207,7 @@ img { max-width: 100%; display: block; }
 
 .input, .textarea, .select {
   width: 100%;
-  background: #FAF6F1;
+  background: rgba(255, 255, 255, .92);
   border: 1.5px solid transparent;
   border-radius: 9px;
   padding: 9px 12px;
@@ -217,7 +217,7 @@ img { max-width: 100%; display: block; }
   transition: border-color .16s, background .16s;
 }
 .input:focus, .textarea:focus, .select:focus { border-color: var(--brand-soft); background: #fff; }
-.input::placeholder, .textarea::placeholder { color: #BFB4AA; }
+.input::placeholder, .textarea::placeholder { color: #94A3B8; }
 .textarea { height: 80px; resize: vertical; line-height: 1.6; }
 .select { cursor: pointer; }
 .field { margin-bottom: 16px; }
@@ -325,7 +325,7 @@ img { max-width: 100%; display: block; }
 table.data { width: 100%; border-collapse: collapse; font-size: 13px; }
 table.data th {
   text-align: left; font-weight: 600; font-size: 12px; color: var(--ink-3);
-  padding: 11px 14px; background: #FAF6F1; white-space: nowrap;
+  padding: 11px 14px; background: rgba(255, 255, 255, .92); white-space: nowrap;
   border-bottom: 1px solid var(--line);
 }
 table.data td { padding: 12px 14px; border-bottom: 1px solid var(--line); vertical-align: middle; }
@@ -435,4 +435,37 @@ table.data tbody tr:hover { background: #FEFAF6; }
   .kpi { padding: 14px 16px; }
   .kpi-value { font-size: 22px; }
   table.data th, table.data td { padding: 9px 10px; }
+}
+
+/* ---------------- 可视化数据版（Remotion Player） ---------------- */
+
+/* 大屏舞台：16:9 容器，内部 Player 自动缩放 */
+.dataviz-stage {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  min-height: 320px;
+  margin-bottom: 22px;
+  border-radius: 14px;
+  overflow: hidden;
+  background: #101B30;
+  border: 1px solid rgba(120, 190, 230, .20);
+  box-shadow: 0 0 0 1px rgba(34, 211, 238, .10), 0 8px 28px rgba(2, 8, 20, .40);
+}
+.dataviz-stage > div { width: 100%; height: 100%; }
+
+/* 加载中的占位 */
+.dataviz-fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: #94AEC6;
+  font-size: 13px;
+  letter-spacing: 1px;
+}
+
+/* 窄屏：大屏太挤时收起，保留下方静态明细 */
+@media (max-width: 860px) {
+  .dataviz-stage { aspect-ratio: 4 / 3; min-height: 240px; }
 }

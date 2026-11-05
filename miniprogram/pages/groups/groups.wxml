@@ -1,0 +1,68 @@
+<view class="groups-page">
+  <view class="groups-center" wx:if="{{loading}}">
+    <text class="groups-loading-text">正在加载群聊…</text>
+  </view>
+
+  <block wx:if="{{!loading}}">
+    <view class="groups-head">
+      <view class="groups-head-left">
+        <text class="groups-head-title">群聊广场</text>
+        <text class="groups-head-sub">{{groups.length}} 个公开群 · 实时消息</text>
+      </view>
+      <button class="groups-create" bindtap="onShowCreate">＋ 建群</button>
+    </view>
+
+    <view class="groups-list" wx:if="{{groups.length}}">
+      <view
+        class="group-item"
+        wx:for="{{groups}}"
+        wx:key="id"
+        data-id="{{item.id}}"
+        bindtap="onOpen"
+        style="border-top-color:{{item.accent}}"
+      >
+        <view class="group-item-top">
+          <view class="group-item-icon" style="background:{{item.iconBg}}">
+            <text>{{item.icon || '💬'}}</text>
+          </view>
+          <view class="group-item-count">{{item.live_member_count}} 人</view>
+        </view>
+        <view class="group-item-name">{{item.name}}</view>
+        <view class="group-item-desc">{{item.description || '欢迎交流'}}</view>
+        <view class="group-item-last">{{item.lastText}}</view>
+        <view class="group-item-foot">
+          <text>{{item.isOfficial ? '官方群' : '用户群'}}</text>
+          <text class="group-item-go" style="color:{{item.accent}}">进入 ›</text>
+        </view>
+      </view>
+    </view>
+
+    <view class="groups-center" wx:else>
+      <text class="groups-empty-icon">💬</text>
+      <text class="groups-empty-text">还没有群聊，点右上角建一个</text>
+    </view>
+
+    <view class="groups-login" wx:if="{{!loggedIn}}">
+      <text>登录后可在群里发言、创建自己的群</text>
+      <button class="btn btn-primary btn-sm" bindtap="onGoLogin">去登录</button>
+    </view>
+  </block>
+
+  <!-- 建群弹层 -->
+  <view class="modal-mask" wx:if="{{showCreate}}" bindtap="onHideCreate">
+    <view class="modal" catchtap="noop">
+      <view class="modal-title">新建群聊</view>
+      <view class="modal-sub">创建后自动成为群主</view>
+      <view class="modal-label">群名称</view>
+      <input class="modal-input" value="{{formName}}" bindinput="onFormName" maxlength="30" placeholder="例：创作者交流群" />
+      <view class="modal-label">群图标</view>
+      <input class="modal-input" value="{{formIcon}}" bindinput="onFormIcon" maxlength="4" placeholder="一个 emoji" />
+      <view class="modal-label">群简介</view>
+      <textarea class="modal-input modal-textarea" value="{{formDesc}}" bindinput="onFormDesc" maxlength="200" placeholder="这个群主要聊什么？" />
+      <view class="modal-actions">
+        <button class="btn btn-ghost" bindtap="onHideCreate">取消</button>
+        <button class="btn btn-primary" bindtap="onCreate" loading="{{creating}}" disabled="{{creating}}">创建群聊</button>
+      </view>
+    </view>
+  </view>
+</view>

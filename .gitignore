@@ -48,3 +48,13 @@ deploy/
 art.zip
 artx/
 ghlogs.zip
+
+# Remotion
+video/node_modules
+video/out
+
+# 本机工具与验证产物（体积大，不入库；线上运行不需要）
+tools/_pylib/
+shots/
+.playwright-cli/
+tmp-gh-*/

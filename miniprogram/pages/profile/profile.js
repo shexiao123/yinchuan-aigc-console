@@ -172,6 +172,20 @@ Page({
     wx.navigateTo({ url: '/pages/studio-publish/studio-publish' })
   },
 
+  /** 群聊广场 */
+  onGroups() {
+    wx.navigateTo({ url: '/pages/groups/groups' })
+  },
+
+  /** 企业商家：店铺与任务广场 */
+  onMerchants() {
+    wx.navigateTo({ url: '/pages/merchants/merchants' })
+  },
+
+  onMerchantConsole() {
+    wx.navigateTo({ url: '/pages/merchant-console/merchant-console' })
+  },
+
   /** 在线人工客服（会话式） */
   onOnlineSupport() {
     wx.navigateTo({ url: '/pages/support/support' })

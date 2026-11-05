@@ -100,6 +100,16 @@
           <text class="menu-text">接单工作台</text>
           <text class="menu-arrow">›</text>
         </view>
+        <view class="menu-item" bindtap="onMerchants">
+          <text class="menu-icon">🏬</text>
+          <text class="menu-text">企业商家 · 任务广场</text>
+          <text class="menu-arrow">›</text>
+        </view>
+        <view class="menu-item" bindtap="onMerchantConsole">
+          <text class="menu-icon">📢</text>
+          <text class="menu-text">我的店铺 / 发任务</text>
+          <text class="menu-arrow">›</text>
+        </view>
         <view class="menu-item" bindtap="onPublish" wx:if="{{provider}}">
           <text class="menu-icon">➕</text>
           <text class="menu-text">上架新服务</text>
@@ -113,9 +123,15 @@
       </view>
     </view>
 
-    <!-- 客服 -->
+    <!-- 客服与社群 -->
     <view class="section">
       <view class="card">
+        <view class="menu-item" bindtap="onGroups">
+          <text class="menu-icon">👥</text>
+          <text class="menu-text">群聊广场</text>
+          <text class="menu-value">多人实时</text>
+          <text class="menu-arrow">›</text>
+        </view>
         <view class="menu-item" bindtap="onOnlineSupport">
           <text class="menu-icon">💬</text>
           <text class="menu-text">在线客服</text>

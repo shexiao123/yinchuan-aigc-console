@@ -31,6 +31,13 @@
   }
 
   /**
+   * 运行模式：'desktop' | 'mobile'
+   * 移动模式下网格列数交给 mobile.css（横滑列表 / 纵向信息流），
+   * 桌面那套「按最小列宽算列数」的逻辑在窄屏会算出 1 列，不适用。
+   */
+  let mode = 'desktop'
+
+  /**
    * 为单个网格计算列数
    * @param {number} containerWidth 容器可用宽度
    * @param {number} itemCount 项数
@@ -64,6 +71,12 @@
     const cls = (el.getAttribute('class') || '').split(' ')[0]
     const rule = RULES[cls]
     if (!rule) return
+
+    // 移动模式下列数由 mobile.css 决定（横滑列表 / 信息流），这里不插手
+    if (mode === 'mobile') {
+      el.style.removeProperty('grid-template-columns')
+      return
+    }
 
     const items = el.children
     if (!items.length) return
@@ -101,5 +114,18 @@
     })
   }
 
-  global.AdaptiveGrid = { fitAll, fitOne, calcColumns, onResize }
+  global.AdaptiveGrid = {
+    fitAll,
+    fitOne,
+    calcColumns,
+    onResize,
+    /** 切换运行模式（由 mobile-mode.js 调用） */
+    setMode(m) {
+      mode = m === 'mobile' ? 'mobile' : 'desktop'
+      fitAll()
+    },
+    get mode() {
+      return mode
+    }
+  }
 })(window)

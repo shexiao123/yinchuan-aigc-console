@@ -1,0 +1,40 @@
+@import "../../styles/merchant.wxss";
+
+.center { text-align: center; padding: 70rpx 40rpx; }
+.big-icon { font-size: 72rpx; margin-bottom: 20rpx; }
+.center .btn-primary { margin-top: 30rpx; }
+.shop-banner {
+  display: flex;
+  align-items: center;
+  gap: 24rpx;
+  margin: 28rpx;
+  padding: 30rpx;
+  border-radius: 24rpx;
+  background: linear-gradient(120deg, #EAF3FE, #F0EEFD);
+  border: 1rpx solid rgba(79, 125, 243, .16);
+}
+.field { margin-top: 24rpx; }
+.label { display: block; font-size: 24rpx; font-weight: 650; color: #475569; margin-bottom: 10rpx; }
+.input, .textarea, .picker {
+  width: 100%;
+  padding: 20rpx 22rpx;
+  border-radius: 14rpx;
+  border: 1rpx solid var(--line);
+  background: #F7F8FA;
+  font-size: 26rpx;
+  color: var(--ink);
+}
+.textarea { height: 160rpx; }
+.picker { color: #0F172A; }
+.row { display: flex; gap: 16rpx; }
+.half { flex: 1; min-width: 0; }
+.video-pick {
+  padding: 30rpx;
+  text-align: center;
+  border-radius: 16rpx;
+  border: 2rpx dashed rgba(79, 125, 243, .45);
+  background: rgba(14, 165, 233, .05);
+  font-size: 26rpx;
+  color: #0284C7;
+}
+.video-clear { margin-top: 12rpx; font-size: 23rpx; color: #DC2626; text-align: right; }

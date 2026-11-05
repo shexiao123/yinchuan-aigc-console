@@ -498,7 +498,7 @@
   }
 
   function setActiveNav(route) {
-    const map = { home: 'home', services: 'services', hall: 'hall', orders: 'orders', studio: 'studio', admin: 'studio' }
+    const map = { home: 'home', services: 'services', hall: 'hall', groups: 'groups', group: 'groups', orders: 'orders', studio: 'studio', admin: 'studio', merchants: 'merchants', merchant: 'merchants', tasks: 'merchants', task: 'merchants', 'merchant-console': 'merchants' }
     const key = map[route] || 'home'
     document.querySelectorAll('.nav-link').forEach((n) => {
       n.classList.toggle('active', n.dataset.route === key)
@@ -513,6 +513,11 @@
   const VIEWS = {}
 
   function render() {
+    // 离开群聊页时停掉消息轮询，避免后台无效请求
+    if (window.__groupPoller) {
+      clearInterval(window.__groupPoller)
+      window.__groupPoller = null
+    }
     const { route, id, query } = parseHash()
     setActiveNav(route)
     const view = VIEWS[route] || VIEWS.home
@@ -542,82 +547,226 @@
   /* ---------------- 首页 ---------------- */
 
   VIEWS.home = async function () {
-    const [banners, categories, services, providers] = await Promise.all([
-      API.listBanners(), API.listCategories(), API.listServices({ limit: 8 }), API.listProviders()
+    const [banners, categories, services, providers, homeShops, homeTasks] = await Promise.all([
+      // 取全量：首页 KPI「在架服务」要用真实总数，热销卡再 slice 前 6 条
+      API.listBanners(), API.listCategories(), API.listServices({ limit: 200 }), API.listProviders(),
+      API.listMerchants().catch(() => []), API.listMerchantTasks({ publicOnly: true, limit: 6 }).catch(() => [])
     ])
     const settings = S.settings || (S.settings = await API.getSettings())
-    const hot = services.slice(0, 6)
+    const hot = (services || []).slice(0, 6)
 
     const heroBanner = banners[0] || { title: '银川AIGC数字文化产业基地', subtitle: '', theme: 'amber' }
-    const minis = banners.slice(1, 5)
-
-    /** banner 跳转目标：link_type=all 时跳全部服务，否则按分类 */
+    const minis = (banners || []).slice(1, 5)
     const bannerHref = (b) => (b.link_type === 'all' || !b.link_value ? '#/services' : '#/services?category=' + b.link_value)
 
+    const providerCount = (providers || []).length
+    const serviceCount = (services || []).length
+    const catCount = (categories || []).length
+    const _ratings = [].concat(
+      (providers || []).map((p) => Number(p.rating) || 0),
+      (services || []).map((s) => Number(s.rating) || 0)
+    ).filter((x) => x > 0)
+    const avgRatingVal = _ratings.length ? Number((_ratings.reduce((a, b) => a + b, 0) / _ratings.length).toFixed(1)) : 5
+    const _donut = (function () {
+      const n = categories.length || 1
+      const r = 54, C = 2 * Math.PI * r, gap = (C * 3.5) / 360
+      const cols = ['#0EA5E9', '#4F7DF3', '#7C5CF0', '#22B8A6', '#F59E0B', '#FF6B9A', '#8B5CF6', '#34D399']
+      let acc = 0
+      const segs = (categories.length ? categories : Array.from({ length: 1 })).map((c, i) => {
+        const frac = 1 / n
+        const len = Math.max(1, C * frac - gap)
+        const ang = acc * 360
+        acc += frac
+        return { len, ang, col: cols[i % cols.length], name: c ? (c.name || '类' + (i + 1)) : '类' + (i + 1) }
+      })
+      const svg = '<svg viewBox="0 0 140 140" class="home-donut-svg" role="img" aria-label="服务分类分布">' +
+        segs.map((s) => '<circle cx="70" cy="70" r="' + r + '" fill="none" stroke="' + s.col + '" stroke-width="15" stroke-linecap="butt" stroke-dasharray="' + s.len.toFixed(2) + ' ' + (C - s.len).toFixed(2) + '" stroke-dashoffset="' + s.len.toFixed(2) + '" transform="rotate(' + (s.ang - 90).toFixed(2) + ' 70 70)" data-len="' + s.len.toFixed(2) + '"/>').join('') +
+        '<circle cx="70" cy="70" r="38" fill="#FFFFFF"/>' +
+        '<text x="70" y="64" text-anchor="middle" class="home-donut-num">' + n + '</text>' +
+        '<text x="70" y="82" text-anchor="middle" class="home-donut-lbl">分类</text>' +
+        '</svg>'
+      const legend = '<div class="home-donut-legend-list">' + segs.map((s) => '<span class="home-donut-legend-item"><i style="background:' + s.col + '"></i>' + API.esc(s.name) + '</span>').join('') + '</div>'
+      return { svg, legend }
+    })()
+    const donutSvg = _donut.svg
+    const donutLegend = _donut.legend
+    const trustPills = minis
+      .map((m) => `<span class="home-trust" data-go="${bannerHref(m)}"><b>${API.esc(m.title || '')}</b>${m.subtitle ? `<i>${API.esc(m.subtitle)}</i>` : ''}</span>`)
+      .join('')
+
     return `
-      <div class="hero">
-        <div class="hero-banner banner-${heroBanner.theme || 'amber'} ${heroBanner.imageUrl ? 'hero-banner-has-img' : ''}" data-go="${bannerHref(heroBanner)}" ${heroBanner.imageUrl ? `style="background-image:url('${API.esc(heroBanner.imageUrl)}')"` : ''}>
-          <div class="banner-text">
-            <span class="banner-title">${API.esc(heroBanner.title)}</span>
-            <span class="banner-sub">${API.esc(heroBanner.subtitle)}</span>
+      <div class="home">
+        <section class="home-hero">
+          <div class="home-hero-copy">
+            <span class="home-hero-eyebrow">银川 · AIGC 数字文化产业基地</span>
+            <h1 class="home-hero-title">${API.esc(heroBanner.title)}</h1>
+            ${heroBanner.subtitle ? `<p class="home-hero-sub">${API.esc(heroBanner.subtitle)}</p>` : ''}
+            <div class="home-hero-cta">
+              <a class="btn btn-primary btn-lg" href="#/services">浏览全部服务</a>
+              <a class="btn btn-ghost btn-lg" href="#/hall">发布你的需求</a>
+            </div>
+            ${trustPills ? `<div class="home-hero-trust">${trustPills}</div>` : ''}
           </div>
-          <span class="banner-mark" ${heroBanner.imageUrl ? 'style="display:none"' : ''}>MG</span>
-        </div>
-        <div class="hero-side">
-          ${minis
-            .map(
-              (b, i) => `
-            <div class="hero-mini hero-mini-${['amber', 'olive', 'rose', 'blue'][i % 4]}" data-go="${bannerHref(b)}">
-              <span class="hero-mini-title">${API.esc(b.title)}</span>
-              <span class="hero-mini-sub">${API.esc(b.subtitle)}</span>
-            </div>`
-            )
-            .join('')}
-        </div>
-      </div>
-
-      <div class="section">
-        <div class="section-head">
-          <span class="section-title">服务分类</span>
-          <a class="section-more" href="#/services">全部服务 ›</a>
-        </div>
-        <div class="cat-grid">
-          ${categories
-            .map(
-              (c) => `
-            <a class="cat-item ${c.imageUrl ? 'cat-item-has-img' : ''}" href="#/services?category=${c.slug}">
-              ${c.imageUrl ? `<span class="cat-img-wrap"><img class="cat-img" src="${API.esc(c.imageUrl)}" alt="${API.esc(c.name || '')}" loading="lazy" /></span>` : `<span class="cat-icon-wrap">${c.icon || '🎬'}</span>`}
-              <span class="cat-name">${API.esc(c.name)}</span>
-              <span class="cat-desc">${API.esc(c.description)}</span>
-            </a>`
-            )
-            .join('')}
-        </div>
-      </div>
-
-      <div class="section">
-        <div class="section-head">
-          <span class="section-title">热销服务<span class="count">按销量排序</span></span>
-          <a class="section-more" href="#/services">更多 ›</a>
-        </div>
-        <div class="svc-grid">${hot.map(svcCard).join('')}</div>
-      </div>
-
-      <div class="section">
-        <div class="section-head">
-          <span class="section-title">推荐服务者<span class="count">按完成单量</span></span>
-        </div>
-        <div class="prov-grid">${providers.map(provCard).join('')}</div>
-      </div>
-
-      <div class="section">
-        <div class="card card-pad" style="background:linear-gradient(135deg,#FBF3EA,#F7EFE4)">
-          <div style="font-size:15px;font-weight:600;color:var(--brand-deep);margin-bottom:8px">平台规则</div>
-          <div style="font-size:13.5px;color:var(--ink-2);line-height:1.85">${API.esc(settings.notice)}</div>
-          <div style="font-size:13.5px;color:var(--ink-2);line-height:1.85">
-            最低下单金额 ¥${API.yuanShort(settings.min_order_amount)}，服务热线 ${API.esc(settings.support_phone)}
+          <div class="home-hero-media ${heroBanner.imageUrl ? 'has-img' : ''}" ${heroBanner.imageUrl ? `style="background-image:url('${API.esc(heroBanner.imageUrl)}')"` : ''}>
+            ${heroBanner.imageUrl ? '' : '<span class="home-hero-mark">MG</span>'}
           </div>
-        </div>
+        </section>
+
+        <section class="home-section home-stats">
+          <div class="home-stats-head">
+            <h2 class="home-sec-title">平台实时数据<span class="home-sec-sub">动态可视化</span></h2>
+            <span class="home-live"><i></i>LIVE</span>
+          </div>
+          <div class="home-stats-grid">
+            <div class="home-stat">
+              <span class="home-stat-icon">👥</span>
+              <span class="home-stat-num"><span class="count-up" data-target="${providerCount}">0</span><span class="home-stat-unit">位</span></span>
+              <span class="home-stat-label">入驻服务者</span>
+            </div>
+            <div class="home-stat">
+              <span class="home-stat-icon">🎬</span>
+              <span class="home-stat-num"><span class="count-up" data-target="${serviceCount}">0</span><span class="home-stat-unit">项</span></span>
+              <span class="home-stat-label">在架服务</span>
+            </div>
+            <div class="home-stat">
+              <span class="home-stat-icon">🗂️</span>
+              <span class="home-stat-num"><span class="count-up" data-target="${catCount}">0</span><span class="home-stat-unit">类</span></span>
+              <span class="home-stat-label">服务分类</span>
+            </div>
+            <div class="home-stat">
+              <span class="home-stat-icon">⭐</span>
+              <span class="home-stat-num"><span class="count-up" data-target="${avgRatingVal}" data-decimals="1">0</span><span class="home-stat-unit">分</span></span>
+              <span class="home-stat-label">平均满意度</span>
+            </div>
+            <div class="home-stat home-stat-online">
+              <span class="home-stat-icon home-stat-icon-live"><i></i></span>
+              <span class="home-stat-num"><span class="home-online-num" data-online-count>–</span><span class="home-stat-unit">人</span></span>
+              <span class="home-stat-label">当前在线 · 实时</span>
+            </div>
+          </div>
+        </section>
+
+        <section class="home-section home-viz">
+          <div class="home-viz-card">
+            <div class="home-viz-card-title">服务分类分布</div>
+            <div class="home-donut">${donutSvg}</div>
+            <div class="home-donut-legend">${donutLegend}</div>
+          </div>
+          <div class="home-viz-side">
+            <div class="home-viz-side-title">为什么选我们</div>
+            <ul class="home-viz-points">
+              <li><b>认证服务者</b>：实名与作品双重审核，交付质量更有保障</li>
+              <li><b>全程托管</b>：从下单到交付平台担保，资金更安全</li>
+              <li><b>明码标价</b>：服务价格透明，绝不隐形消费</li>
+              <li><b>极速接单</b>：需求大厅一键发布，最快当天接单</li>
+            </ul>
+          </div>
+        </section>
+
+        <section class="home-section">
+          <div class="home-sec-head">
+            <h2 class="home-sec-title">服务分类</h2>
+            <a class="home-sec-more" href="#/services">全部服务 ›</a>
+          </div>
+          <div class="home-cat-grid">
+            ${categories
+              .map(
+                (c) => `
+              <a class="home-cat" href="#/services?category=${c.slug}">
+                <span class="home-cat-media ${c.imageUrl ? 'has-img' : ''}" ${c.imageUrl ? `style="background-image:url('${API.esc(c.imageUrl)}')"` : ''}>
+                  ${c.imageUrl ? '' : `<span class="home-cat-icon">${c.icon || '🎬'}</span>`}
+                </span>
+                <span class="home-cat-name">${API.esc(c.name)}</span>
+                ${c.description ? `<span class="home-cat-desc">${API.esc(c.description)}</span>` : ''}
+              </a>`
+              )
+              .join('')}
+          </div>
+        </section>
+
+        <section class="home-section">
+          <div class="home-sec-head">
+            <h2 class="home-sec-title">热销服务<span class="home-sec-sub">按销量排序</span></h2>
+            <a class="home-sec-more" href="#/services">更多 ›</a>
+          </div>
+          <div class="home-svc-grid">
+            ${hot
+              .map(
+                (s) => `
+              <a class="home-svc" href="#/service/${s.id}">
+                <span class="home-svc-media" style="background:${API.coverTheme(s.id)}">
+                  ${s.coverUrl ? `<img ${API.imgAttrs(s.coverUrl, 'home-svc-img')} alt="${API.esc(s.title || '')}" loading="lazy" />` : '<span class="home-svc-mark">MG</span>'}
+                  ${s.original_price ? '<span class="home-svc-badge">限时优惠</span>' : ''}
+                </span>
+                <span class="home-svc-body">
+                  <span class="home-svc-title ellipsis">${API.esc(s.title)}</span>
+                  ${s.subtitle ? `<span class="home-svc-sub ellipsis">${API.esc(s.subtitle)}</span>` : ''}
+                  <span class="home-svc-meta">★ ${s.rating} · 已售 ${s.sales_count} · ${s.delivery_days} 天交付</span>
+                  <span class="home-svc-tags">${(s.tags || []).slice(0, 3).map((t) => `<span class="tag">${API.esc(t)}</span>`).join('')}</span>
+                  <span class="home-svc-foot">
+                    <span class="home-svc-unit">${API.esc(s.unit)}</span>
+                    <span class="home-svc-price"><span class="price-value">¥${API.yuanShort(s.price)}</span>${s.original_price ? `<s class="price-old">¥${API.yuanShort(s.original_price)}</s>` : ''}</span>
+                  </span>
+                </span>
+              </a>`
+              )
+              .join('')}
+          </div>
+        </section>
+
+        <section class="home-section">
+          <div class="home-sec-head">
+            <h2 class="home-sec-title">推荐服务者<span class="home-sec-sub">按完成单量</span></h2>
+          </div>
+          <div class="home-prov-grid">
+            ${(providers || []).slice(0, 6)
+              .map(
+                (p) => `
+              <a class="home-prov" href="#/provider/${p.id}">
+                <span class="avatar avatar-lg">${API.esc((p.nickname || '影').charAt(0))}</span>
+                <span class="home-prov-name">${API.esc(p.nickname)}${p.is_verified ? ' <i class="home-verified">✓</i>' : ''}</span>
+                ${p.bio ? `<span class="home-prov-bio ellipsis-2">${API.esc(p.bio)}</span>` : ''}
+                <span class="home-prov-meta">★ ${Number(p.rating || 5).toFixed(1)} · 完成 ${p.orders_done} 单 · ${API.esc(p.city || '')}</span>
+              </a>`
+              )
+              .join('')}
+          </div>
+        </section>
+
+        <section class="home-section home-merchant">
+          <div class="home-sec-head">
+            <h2 class="home-sec-title">企业商家 · 在招任务<span class="home-sec-sub">带参考视频</span></h2>
+            <a class="home-sec-more" href="#/tasks">任务广场 ›</a>
+          </div>
+          <div class="hm-layout">
+            <div class="hm-shops">
+              <div class="hm-col-title">入驻店铺 <a href="#/merchants">全部 ›</a></div>
+              ${(homeShops || []).slice(0, 3).map((m) => `
+                <a class="hm-shop" href="#/merchant/${m.id}">
+                  <span class="hm-shop-logo">${API.esc(m.initial || '商')}</span>
+                  <span class="hm-shop-txt"><b>${API.esc(m.name)}</b><small>${API.esc(m.city || '银川')} · ${m.open_task_count || 0} 个在招任务</small></span>
+                  <span class="hm-shop-arrow">›</span>
+                </a>`).join('') || '<div class="hm-empty">暂无入驻商家</div>'}
+            </div>
+            <div class="hm-tasks">
+              <div class="hm-col-title">最新任务 <a href="#/tasks">全部 ›</a></div>
+              ${(homeTasks || []).slice(0, 3).map((t) => `
+                <a class="hm-task" href="#/task/${t.id}">
+                  <span class="hm-task-txt"><b class="ellipsis">${API.esc(t.title)}</b><small>${API.esc((t.merchant && t.merchant.name) || '企业商家')}${t.reference_video_path ? ' · ▶ 参考视频' : ''}</small></span>
+                  <span class="hm-task-budget">${Number(t.budget) > 0 ? '¥' + API.yuanShort(t.budget) : '面议'}</span>
+                </a>`).join('') || '<div class="hm-empty">暂时没有在招任务</div>'}
+            </div>
+          </div>
+          <a class="hm-cta" href="#/merchant-console">🏬 我是企业商家 · 开通专属店铺、发布任务并上传参考视频 ›</a>
+        </section>
+
+        <section class="home-section">
+          <div class="home-rules">
+            <div class="home-rules-title">平台规则</div>
+            <div class="home-rules-text">${API.esc(settings.notice)}</div>
+            <div class="home-rules-text">最低下单金额 ¥${API.yuanShort(settings.min_order_amount)}，服务热线 ${API.esc(settings.support_phone)}</div>
+          </div>
+        </section>
       </div>
     `
   }
@@ -627,7 +776,7 @@
     return `
       <a class="card svc-card" href="#/service/${s.id}">
         <div class="svc-cover" style="background:${cover}">
-          ${s.coverUrl ? `<img class="svc-cover-img" src="${API.esc(s.coverUrl)}" alt="${API.esc(s.title || '')}" loading="lazy" />` : '<span class="svc-cover-mark">MG</span>'}
+          ${s.coverUrl ? `<img ${API.imgAttrs(s.coverUrl, 'svc-cover-img')} alt="${API.esc(s.title || '')}" loading="lazy" />` : '<span class="svc-cover-mark">MG</span>'}
           ${s.original_price ? '<span class="svc-cover-badge">限时优惠</span>' : ''}
         </div>
         <div class="svc-body">
@@ -667,6 +816,528 @@
         </span>
       </a>
     `
+  }
+
+  /* ---------------- 企业商家 · 店铺 / 任务 ---------------- */
+
+  const MC_STATUS = { open: '招募中', closed: '已结束', hidden: '已下架' }
+  let mcCategories = []
+
+  async function mcLoadCategories() {
+    if (mcCategories.length) return mcCategories
+    try { mcCategories = await API.listCategories() } catch (e) { mcCategories = [] }
+    return mcCategories
+  }
+
+  function mcCategoryOptions(selected) {
+    return '<option value="">不限分类</option>' + mcCategories.map((c) =>
+      `<option value="${API.esc(c.slug)}" ${selected === c.slug ? 'selected' : ''}>${API.esc(c.name)}</option>`
+    ).join('')
+  }
+
+  function mcCategoryName(slug) {
+    const c = mcCategories.filter((x) => x.slug === slug)[0]
+    return c ? c.name : (slug || '综合制作')
+  }
+
+  function mcShopCard(m) {
+    return `
+      <a class="mc-shop" href="#/merchant/${m.id}">
+        <span class="mc-shop-cover mc-grad-${(Number(m.id) % 4) + 1}">
+          <span class="mc-shop-cover-grid"></span>
+          <span class="mc-shop-logo">${API.esc(m.initial || '商')}</span>
+          ${m.is_verified ? '<span class="mc-verified">✓ 认证商家</span>' : ''}
+        </span>
+        <span class="mc-shop-body">
+          <span class="mc-shop-name">${API.esc(m.name)}</span>
+          <span class="mc-shop-meta">${API.esc(m.city || '银川')} · ${API.esc(mcCategoryName(m.category_slug))}</span>
+          <span class="mc-shop-intro ellipsis-2">${API.esc(m.intro || '这家商家还没有填写简介')}</span>
+          <span class="mc-shop-foot"><b>${m.open_task_count || 0}</b> 个在招任务 <i>进入店铺 ›</i></span>
+        </span>
+      </a>`
+  }
+
+  function mcTaskCard(t) {
+    const m = t.merchant || {}
+    const budget = Number(t.budget) > 0 ? '¥' + API.yuanShort(t.budget) : '面议'
+    return `
+      <a class="mc-task" href="#/task/${t.id}">
+        <span class="mc-task-top">
+          <span class="mc-task-cat">${API.esc(mcCategoryName(t.category_slug))}</span>
+          ${t.reference_video_path ? '<span class="mc-task-video">▶ 参考视频</span>' : ''}
+          <span class="mc-task-status ${t.status === 'open' ? 'is-open' : ''}">${MC_STATUS[t.status] || t.status}</span>
+        </span>
+        <span class="mc-task-title ellipsis-2">${API.esc(t.title)}</span>
+        <span class="mc-task-desc ellipsis-2">${API.esc(t.description || '商家暂未填写详细说明')}</span>
+        <span class="mc-task-foot">
+          <span class="mc-task-shop">${API.esc(m.name || '企业商家')}${m.is_verified ? ' ✓' : ''}</span>
+          <span class="mc-task-budget">${budget}</span>
+        </span>
+        <span class="mc-task-sub">${t.deadline ? '截止 ' + API.esc(t.deadline) : '长期有效'} · ${API.fromNow(t.created_at)}发布</span>
+      </a>`
+  }
+
+  /** 商家街：店铺列表 + 开通入口 */
+  VIEWS.merchants = async function () {
+    await mcLoadCategories()
+    const shops = await API.listMerchants()
+    return `
+      <div class="mc-hero">
+        <div class="mc-hero-copy">
+          <span class="mc-hero-eyebrow">企业商家 · 任务协作</span>
+          <h1 class="mc-hero-title">每个商家，都有自己的店铺</h1>
+          <p class="mc-hero-sub">开通店铺即可发布制作任务、上传参考视频，让服务者一眼看懂你要什么。</p>
+          <div class="mc-hero-cta">
+            <a class="btn btn-primary" href="#/merchant-console">开通 / 管理我的店铺</a>
+            <a class="btn btn-ghost" href="#/tasks">浏览任务广场 ›</a>
+          </div>
+        </div>
+        <div class="mc-hero-stat">
+          <div><b>${shops.length}</b><span>入驻商家</span></div>
+          <div><b>${shops.reduce((n, s) => n + (s.open_task_count || 0), 0)}</b><span>在招任务</span></div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-head"><span class="section-title">全部店铺<span class="count">${shops.length} 家</span></span></div>
+        ${shops.length
+          ? `<div class="mc-shop-grid">${shops.map(mcShopCard).join('')}</div>`
+          : `<div class="empty"><div class="empty-icon">🏬</div><span class="empty-text">还没有商家入驻</span><span class="empty-hint">成为第一家，点右上角开通店铺</span></div>`}
+      </div>
+    `
+  }
+
+  /** 店铺详情：店铺信息 + 该店铺在招任务 */
+  VIEWS.merchant = async function (id) {
+    await mcLoadCategories()
+    const [shop, tasks] = await Promise.all([
+      API.getMerchant(id),
+      API.listMerchantTasks({ merchantId: id, publicOnly: true, limit: 100 })
+    ])
+    if (!shop) return `<div class="empty"><div class="empty-icon">🏬</div><span class="empty-text">店铺不存在或已停用</span><a class="btn btn-ghost" href="#/merchants" style="margin-top:16px">返回商家街</a></div>`
+    return `
+      <a class="mc-back" href="#/merchants">‹ 返回商家街</a>
+      <div class="mc-detail-hero mc-grad-${(Number(shop.id) % 4) + 1}">
+        <span class="mc-detail-grid"></span>
+        <span class="mc-detail-logo">${API.esc(shop.initial || '商')}</span>
+        <div class="mc-detail-head">
+          <div class="mc-detail-name">${API.esc(shop.name)}${shop.is_verified ? '<span class="mc-verified">✓ 认证商家</span>' : ''}</div>
+          <div class="mc-detail-meta">${API.esc(shop.city || '银川')} · ${API.esc(mcCategoryName(shop.category_slug))} · ${tasks.length} 个在招任务</div>
+        </div>
+      </div>
+
+      <div class="mc-detail-cols">
+        <div class="card card-pad">
+          <div class="block-title">店铺简介</div>
+          <div class="block-text">${API.esc(shop.intro || '这家商家还没有填写简介。')}</div>
+          <div class="mc-contact">
+            <span>联系人：<b>${API.esc(shop.contact_name || '未填写')}</b></span>
+            <span>联系电话：<b>${API.esc(shop.contact_phone || '未填写')}</b></span>
+          </div>
+        </div>
+        <div class="card card-pad">
+          <div class="block-title">合作方式</div>
+          <div class="block-text">浏览下方在招任务，点开可查看完整需求与参考视频；合适的话直接报名，商家会在工作台查看并选定合作方。</div>
+          <a class="btn btn-soft btn-sm" href="#/tasks" style="margin-top:12px">去任务广场看看 ›</a>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-head"><span class="section-title">在招任务<span class="count">${tasks.length} 个</span></span></div>
+        ${tasks.length
+          ? `<div class="mc-task-grid">${tasks.map(mcTaskCard).join('')}</div>`
+          : `<div class="empty"><div class="empty-icon">📭</div><span class="empty-text">这家店铺暂时没有在招任务</span></div>`}
+      </div>
+    `
+  }
+
+  /** 任务广场：按分类筛选 */
+  VIEWS.tasks = async function (id, query) {
+    await mcLoadCategories()
+    const [all, myApps] = await Promise.all([
+      API.listMerchantTasks({ publicOnly: true, limit: 100 }),
+      API.listMyApplications().catch(() => [])
+    ])
+    const applied = {}
+    myApps.forEach((a) => { applied[a.task_id] = a })
+    const cat = (query && query.category) || ''
+    const tasks = cat ? all.filter((t) => t.category_slug === cat) : all
+    S.__mcApplied = applied
+    return `
+      <div class="page-head">
+        <div class="page-title">任务广场</div>
+        <div class="page-sub">企业商家公开发布的制作任务 · 含参考视频，看清楚再接单</div>
+      </div>
+      <div class="mc-filter">
+        <a class="mc-chip ${cat ? '' : 'active'}" href="#/tasks">全部 <b>${all.length}</b></a>
+        ${mcCategories.map((c) => {
+          const n = all.filter((t) => t.category_slug === c.slug).length
+          return n ? `<a class="mc-chip ${cat === c.slug ? 'active' : ''}" href="#/tasks?category=${API.esc(c.slug)}">${API.esc(c.name)} <b>${n}</b></a>` : ''
+        }).join('')}
+        <a class="mc-chip mc-chip-plain" href="#/merchant-console">我是商家 · 发布任务 ›</a>
+      </div>
+      ${tasks.length
+        ? `<div class="mc-task-grid">${tasks.map(mcTaskCard).join('')}</div>`
+        : `<div class="empty"><div class="empty-icon">📭</div><span class="empty-text">这个分类暂时没有任务</span><span class="empty-hint">换个分类，或稍后再来看看</span></div>`}
+    `
+  }
+
+  /** 任务详情：参考视频播放 + 报名 */
+  VIEWS.task = async function (id) {
+    await mcLoadCategories()
+    const [task, myApps] = await Promise.all([
+      API.getMerchantTask(id),
+      API.listMyApplications().catch(() => [])
+    ])
+    if (!task) return `<div class="empty"><div class="empty-icon">📄</div><span class="empty-text">任务不存在或已下架</span><a class="btn btn-ghost" href="#/tasks" style="margin-top:16px">返回任务广场</a></div>`
+    const applied = myApps.filter((a) => String(a.task_id) === String(id))[0]
+    const m = task.merchant || {}
+    const budget = Number(task.budget) > 0 ? '¥' + API.yuanShort(task.budget) : '面议'
+    const video = task.videoUrl
+      ? `<video class="mc-video" controls preload="metadata" playsinline src="${API.esc(task.videoUrl)}"></video>
+         <div class="mc-video-cap">▶ 参考视频 · ${API.esc(task.reference_video_name || '商家提供的风格参考')}</div>`
+      : `<div class="mc-no-video">📎 本任务未提供参考视频，请以文字需求为准</div>`
+    return `
+      <a class="mc-back" href="#/tasks">‹ 返回任务广场</a>
+      <div class="mc-task-detail">
+        <div class="mc-task-main">
+          <div class="card card-pad">
+            <div class="mc-detail-tags">
+              <span class="mc-task-cat">${API.esc(mcCategoryName(task.category_slug))}</span>
+              <span class="mc-task-status ${task.status === 'open' ? 'is-open' : ''}">${MC_STATUS[task.status] || task.status}</span>
+              ${task.reference_video_path ? '<span class="mc-task-video">▶ 含参考视频</span>' : ''}
+            </div>
+            <h1 class="mc-detail-title">${API.esc(task.title)}</h1>
+            <div class="mc-detail-budget"><span>任务预算</span><b>${budget}</b><span class="mc-detail-deadline">${task.deadline ? '截止 ' + API.esc(task.deadline) : '长期有效'} · ${API.fromNow(task.created_at)}发布</span></div>
+            <div class="block-title" style="margin-top:22px">需求说明</div>
+            <div class="mc-detail-text">${API.esc(task.description || '商家暂未填写详细说明。')}</div>
+          </div>
+          <div class="card card-pad" style="margin-top:16px">
+            <div class="block-title">参考视频</div>
+            <p class="mc-hint">商家上传的参考片用于说明节奏、调色与镜头风格，播放需要联网。</p>
+            ${video}
+          </div>
+        </div>
+        <aside class="mc-task-side">
+          <div class="card card-pad">
+            <div class="block-title">发布商家</div>
+            <a class="mc-side-shop" href="#/merchant/${m.id || ''}">
+              <span class="mc-side-logo">${API.esc((m.name || '商').charAt(0))}</span>
+              <span><b>${API.esc(m.name || '企业商家')}</b>${m.is_verified ? '<i>✓ 认证</i>' : ''}<small>${API.esc(m.city || '银川')} · ${m.open_task_count != null ? m.open_task_count + ' 个在招' : '查看店铺'}</small></span>
+            </a>
+            <div class="mc-side-line">联系人：${API.esc(m.contact_name || '未填写')}</div>
+            <div class="mc-side-line">电话：${API.esc(m.contact_phone || '未填写')}</div>
+          </div>
+          <div class="card card-pad" style="margin-top:16px">
+            <div class="block-title">接单报名</div>
+            ${applied
+              ? `<div class="mc-applied">✓ 你已报名（${applied.status === 'selected' ? '商家已选定你' : applied.status === 'rejected' ? '本次未入选' : '等待商家查看'}）</div>
+                 <p class="mc-hint">${API.esc(applied.message || '')}</p>`
+              : `<p class="mc-hint">附上你的相关作品与报价思路，商家会在工作台查看报名。</p>
+                 <button class="btn btn-primary btn-block" id="mcApplyBtn" ${task.status === 'open' ? '' : 'disabled'}>${task.status === 'open' ? '我要接单' : '任务已结束'}</button>`}
+            <a class="btn btn-ghost btn-block" href="#/tasks" style="margin-top:10px">看看其他任务</a>
+          </div>
+        </aside>
+      </div>
+    `
+  }
+
+  BINDINGS.task = function (id) {
+    const btn = document.getElementById('mcApplyBtn')
+    if (!btn) return
+    btn.addEventListener('click', () => {
+      openAction(
+        '报名接单',
+        `<label class="field-label">给商家的留言</label>
+         <textarea class="input" id="mcApplyMsg" rows="4" maxlength="500" placeholder="例：做过 3 支同类品牌片，可先给一版分镜，报价可谈"></textarea>
+         <p class="mc-hint" style="margin-top:8px">报名后商家会在工作台看到你的留言，一人一任务只能报名一次。</p>`,
+        async () => {
+          const msg = (document.getElementById('mcApplyMsg') || {}).value || ''
+          await API.applyMerchantTask(Number(id), msg)
+          toast('报名已提交，等商家查看')
+          render()
+        },
+        '提交报名'
+      )
+    })
+  }
+
+  /** 商家工作台：开通店铺 / 编辑店铺 / 发布任务（含视频上传）/ 报名管理 */
+  VIEWS['merchant-console'] = async function () {
+    await mcLoadCategories()
+    const logged = !!(S.session && S.session.user)
+    if (!logged) {
+      return `<div class="page-head"><div class="page-title">商家工作台</div></div>
+        <div class="card card-pad"><div class="empty"><div class="empty-icon">🔐</div>
+        <span class="empty-text">请先登录，再开通企业店铺</span>
+        <button class="btn btn-primary" id="mcLoginBtn" style="margin-top:16px">登录 / 注册</button></div></div>`
+    }
+    const shop = await API.getMyMerchant()
+    if (!shop) {
+      return `
+        <div class="page-head"><div class="page-title">开通企业店铺</div><div class="page-sub">一个账号对应一家店铺，开通后即可发布任务、上传参考视频</div></div>
+        <div class="card card-pad" style="max-width:680px">
+          <div class="mc-form">
+            <label class="field-label">店铺名称 <span style="color:#DC2626">*</span></label>
+            <input class="input" id="mcShopName" maxlength="40" placeholder="例：贺兰山品牌视觉">
+            <div class="mc-form-row">
+              <div><label class="field-label">主营分类</label><select class="input" id="mcShopCat">${mcCategoryOptions('')}</select></div>
+              <div><label class="field-label">所在城市</label><input class="input" id="mcShopCity" maxlength="20" value="银川"></div>
+            </div>
+            <label class="field-label">店铺简介</label>
+            <textarea class="input" id="mcShopIntro" rows="3" maxlength="500" placeholder="介绍团队、擅长领域与交付方式"></textarea>
+            <div class="mc-form-row">
+              <div><label class="field-label">联系人</label><input class="input" id="mcShopContact" maxlength="20"></div>
+              <div><label class="field-label">联系电话</label><input class="input" id="mcShopPhone" maxlength="30"></div>
+            </div>
+            <div class="mc-form-row">
+              <div><label class="field-label">店铺 Logo 地址（可选）</label><input class="input" id="mcShopLogo" placeholder="https://..."></div>
+              <div><label class="field-label">店铺封面地址（可选）</label><input class="input" id="mcShopCover" placeholder="https://..."></div>
+            </div>
+            <button class="btn btn-primary" id="mcShopSubmit">开通店铺</button>
+          </div>
+        </div>`
+    }
+
+    const [tasks, apps] = await Promise.all([
+      API.listMerchantTasks({ merchantId: shop.id, limit: 100 }),
+      API.listMerchantApplications().catch(() => [])
+    ])
+    const myApps = apps.filter((a) => a.task && a.task.owner_id === (S.session.user.id || ''))
+    const openCount = tasks.filter((t) => t.status === 'open').length
+    S.__mcShop = shop
+    S.__mcTasks = tasks
+
+    return `
+      <div class="page-head">
+        <div class="page-title">商家工作台</div>
+        <div class="page-sub">管理你的店铺、任务与收到的报名</div>
+      </div>
+
+      <div class="mc-console-head">
+        <div class="mc-console-shop">
+          <span class="mc-shop-logo">${API.esc(shop.initial)}</span>
+          <div><b>${API.esc(shop.name)}</b><small>${API.esc(shop.city || '银川')} · ${API.esc(mcCategoryName(shop.category_slug))}${shop.is_verified ? ' · ✓ 认证商家' : ' · 待认证'}</small></div>
+        </div>
+        <div class="mc-console-actions">
+          <a class="btn btn-ghost btn-sm" href="#/merchant/${shop.id}">查看店铺页</a>
+          <button class="btn btn-soft btn-sm" id="mcShopEdit">编辑店铺</button>
+          <button class="btn btn-primary btn-sm" id="mcTaskCreate">＋ 发布任务</button>
+        </div>
+      </div>
+
+      <div class="mc-kpis">
+        <div class="mc-kpi"><b>${tasks.length}</b><span>累计任务</span></div>
+        <div class="mc-kpi"><b>${openCount}</b><span>招募中</span></div>
+        <div class="mc-kpi"><b>${myApps.length}</b><span>收到报名</span></div>
+        <div class="mc-kpi"><b>${myApps.filter((a) => a.status === 'selected').length}</b><span>已选定</span></div>
+      </div>
+
+      <div class="card" style="margin-top:18px">
+        <div class="card-head"><div><div class="card-title">我发布的任务</div><div class="card-sub">参考视频上传后自动随任务展示，支持 mp4 / mov / webm，单文件 ≤100MB</div></div></div>
+        <div class="table-wrap">
+          <table class="data">
+            <thead><tr><th>任务</th><th>预算</th><th>参考视频</th><th>状态</th><th>报名</th><th>发布时间</th><th>操作</th></tr></thead>
+            <tbody>
+              ${tasks.length ? tasks.map((t) => `
+                <tr>
+                  <td class="td-strong" style="min-width:200px"><a href="#/task/${t.id}" style="color:inherit">${API.esc(t.title)}</a></td>
+                  <td>${Number(t.budget) > 0 ? '¥' + API.yuanShort(t.budget) : '面议'}</td>
+                  <td style="white-space:nowrap">${t.reference_video_path ? '▶ 已上传' : '<span class="muted">—</span>'}</td>
+                  <td style="white-space:nowrap"><span class="badge ${t.status === 'open' ? '' : 'badge-pending'}">${MC_STATUS[t.status] || t.status}</span></td>
+                  <td>${myApps.filter((a) => String(a.task_id) === String(t.id)).length}</td>
+                  <td class="muted" style="white-space:nowrap">${API.fromNow(t.created_at)}</td>
+                  <td style="white-space:nowrap">
+                    <button class="btn btn-soft btn-sm" data-mc-edit-task="${t.id}">编辑</button>
+                    <button class="btn btn-ghost btn-sm" data-mc-toggle-task="${t.id}" data-next="${t.status === 'open' ? 'closed' : 'open'}">${t.status === 'open' ? '结束' : '重开'}</button>
+                    <button class="btn btn-ghost btn-sm" data-mc-del-task="${t.id}" style="color:#DC2626">删除</button>
+                  </td>
+                </tr>`).join('')
+                : '<tr><td colspan="7"><div class="empty"><span class="empty-text">还没有发布任务，点「＋ 发布任务」开始</span></div></td></tr>'}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:18px">
+        <div class="card-head"><div><div class="card-title">收到的报名</div><div class="card-sub">选定后请自行与对方联系，平台留存报名记录</div></div></div>
+        <div class="table-wrap">
+          <table class="data">
+            <thead><tr><th>任务</th><th>报名者</th><th>留言</th><th>状态</th><th>时间</th><th>操作</th></tr></thead>
+            <tbody>
+              ${myApps.length ? myApps.map((a) => `
+                <tr>
+                  <td class="td-strong">${API.esc((a.task && a.task.title) || '任务已删除')}</td>
+                  <td>${API.esc(a.applicant_name || '服务者')}</td>
+                  <td class="muted ellipsis" style="max-width:260px">${API.esc(a.message || '—')}</td>
+                  <td style="white-space:nowrap"><span class="badge ${a.status === 'selected' ? '' : a.status === 'pending' ? 'badge-pending' : 'badge-cancelled'}">${a.status === 'selected' ? '已选定' : a.status === 'rejected' ? '未入选' : '待查看'}</span></td>
+                  <td class="muted" style="white-space:nowrap">${API.fromNow(a.created_at)}</td>
+                  <td style="white-space:nowrap">
+                    <button class="btn btn-soft btn-sm" data-mc-app="${a.id}" data-status="selected" ${a.status === 'selected' ? 'disabled' : ''}>选定</button>
+                    <button class="btn btn-ghost btn-sm" data-mc-app="${a.id}" data-status="rejected" ${a.status === 'rejected' ? 'disabled' : ''}>婉拒</button>
+                  </td>
+                </tr>`).join('')
+                : '<tr><td colspan="6"><div class="empty"><span class="empty-text">还没有收到报名</span></div></td></tr>'}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    `
+  }
+
+  /** 读取店铺表单（内联开通表单与编辑弹层共用同一套字段 id） */
+  function mcReadShopForm(shop) {
+    const v = (id) => (document.getElementById(id) || {}).value || ''
+    return {
+      id: shop ? shop.id : null,
+      name: v('mcShopName'),
+      category_slug: v('mcShopCat'),
+      city: v('mcShopCity'),
+      intro: v('mcShopIntro'),
+      contact_name: v('mcShopContact'),
+      contact_phone: v('mcShopPhone'),
+      logo_path: v('mcShopLogo'),
+      cover_path: v('mcShopCover')
+    }
+  }
+
+  /** 店铺表单（编辑用弹层；开通走工作台内联表单） */
+  function mcOpenShopForm(shop) {
+    openAction(
+      shop ? '编辑店铺' : '开通企业店铺',
+      `<div class="mc-form">
+        <label class="field-label">店铺名称 <span style="color:#DC2626">*</span></label>
+        <input class="input" id="mcShopName" maxlength="40" value="${API.esc(shop ? shop.name : '')}" placeholder="例：贺兰山品牌视觉">
+        <div class="mc-form-row">
+          <div><label class="field-label">主营分类</label><select class="input" id="mcShopCat">${mcCategoryOptions(shop ? shop.category_slug : '')}</select></div>
+          <div><label class="field-label">所在城市</label><input class="input" id="mcShopCity" maxlength="20" value="${API.esc(shop ? shop.city || '银川' : '银川')}"></div>
+        </div>
+        <label class="field-label">店铺简介</label>
+        <textarea class="input" id="mcShopIntro" rows="3" maxlength="500">${API.esc(shop ? shop.intro || '' : '')}</textarea>
+        <div class="mc-form-row">
+          <div><label class="field-label">联系人</label><input class="input" id="mcShopContact" maxlength="20" value="${API.esc(shop ? shop.contact_name || '' : '')}"></div>
+          <div><label class="field-label">联系电话</label><input class="input" id="mcShopPhone" maxlength="30" value="${API.esc(shop ? shop.contact_phone || '' : '')}"></div>
+        </div>
+        <div class="mc-form-row">
+          <div><label class="field-label">Logo 地址</label><input class="input" id="mcShopLogo" value="${API.esc(shop ? shop.logo_path || '' : '')}"></div>
+          <div><label class="field-label">封面地址</label><input class="input" id="mcShopCover" value="${API.esc(shop ? shop.cover_path || '' : '')}"></div>
+        </div>
+      </div>`,
+      async () => {
+        await API.saveMerchant(mcReadShopForm(shop))
+        toast(shop ? '店铺已更新' : '店铺已开通')
+        render()
+      },
+      shop ? '保存' : '开通店铺'
+    )
+  }
+
+  /** 任务表单（发布 / 编辑），含本地参考视频上传 */
+  function mcOpenTaskForm(task) {
+    openAction(
+      task ? '编辑任务' : '发布制作任务',
+      `<div class="mc-form">
+        <label class="field-label">任务标题 <span style="color:#DC2626">*</span></label>
+        <input class="input" id="mcTaskTitle" maxlength="80" value="${API.esc(task ? task.title : '')}" placeholder="例：连锁餐饮品牌 30 秒开业宣传片">
+        <div class="mc-form-row">
+          <div><label class="field-label">任务分类</label><select class="input" id="mcTaskCat">${mcCategoryOptions(task ? task.category_slug : '')}</select></div>
+          <div><label class="field-label">预算（元，填 0 为面议）</label><input class="input" id="mcTaskBudget" type="number" min="0" value="${task ? Math.round(Number(task.budget || 0) / 100) : ''}" placeholder="8000"></div>
+        </div>
+        <label class="field-label">截止日期</label>
+        <input class="input" id="mcTaskDeadline" type="date" value="${API.esc(task ? task.deadline || '' : '')}">
+        <label class="field-label">需求说明</label>
+        <textarea class="input" id="mcTaskDesc" rows="4" maxlength="2000" placeholder="交付物、规格、风格、时间节点写清楚，服务者更好报价">${API.esc(task ? task.description || '' : '')}</textarea>
+        <label class="field-label">上传参考视频（mp4 / mov / webm，≤100MB）</label>
+        <input class="input" id="mcTaskVideo" type="file" accept="video/mp4,video/quicktime,video/x-m4v,video/webm">
+        <label class="field-label">或粘贴参考视频链接（http/https）</label>
+        <input class="input" id="mcTaskVideoUrl" value="${task && /^https?:/i.test(task.reference_video_path || '') ? API.esc(task.reference_video_path) : ''}" placeholder="https://.../reference.mp4">
+        ${task && task.reference_video_path ? `<p class="mc-hint">当前已有参考视频：${API.esc(task.reference_video_name || task.reference_video_path)}。不选文件、不填链接则保持不变。</p>` : ''}
+      </div>`,
+      async () => {
+        const fileInput = document.getElementById('mcTaskVideo')
+        const file = fileInput && fileInput.files && fileInput.files[0]
+        const url = (document.getElementById('mcTaskVideoUrl') || {}).value || ''
+        const payload = {
+          id: task ? task.id : null,
+          title: document.getElementById('mcTaskTitle').value,
+          category_slug: document.getElementById('mcTaskCat').value,
+          budget: Math.round(Number(document.getElementById('mcTaskBudget').value || 0) * 100),
+          deadline: document.getElementById('mcTaskDeadline').value || null,
+          description: document.getElementById('mcTaskDesc').value,
+          videoFile: file,
+          reference_video_path: url.trim() || (task ? task.reference_video_path : ''),
+          reference_video_name: task ? task.reference_video_name : '',
+          reference_video_size: task ? task.reference_video_size : 0
+        }
+        if (file) toast('正在上传参考视频，请稍候…')
+        await API.saveMerchantTask(payload)
+        toast(task ? '任务已更新' : '任务已发布')
+        render()
+      },
+      task ? '保存' : '发布任务'
+    )
+  }
+
+  BINDINGS['merchant-console'] = function () {
+    const loginBtn = document.getElementById('mcLoginBtn')
+    if (loginBtn) loginBtn.addEventListener('click', () => document.getElementById('loginModal').classList.add('show'))
+
+    const shopSubmit = document.getElementById('mcShopSubmit')
+    if (shopSubmit) shopSubmit.addEventListener('click', async () => {
+      shopSubmit.disabled = true
+      try {
+        await API.saveMerchant(mcReadShopForm(null))
+        toast('店铺已开通，现在可以发布任务了')
+        render()
+      } catch (e) { toast(API.friendlyError(e)) } finally { shopSubmit.disabled = false }
+    })
+
+    const shopEdit = document.getElementById('mcShopEdit')
+    if (shopEdit) shopEdit.addEventListener('click', () => mcOpenShopForm(S.__mcShop))
+
+    const create = document.getElementById('mcTaskCreate')
+    if (create) create.addEventListener('click', () => mcOpenTaskForm(null))
+
+    document.querySelectorAll('[data-mc-edit-task]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const t = (S.__mcTasks || []).filter((x) => String(x.id) === String(btn.dataset.mcEditTask))[0]
+        if (t) mcOpenTaskForm(t)
+      })
+    })
+
+    document.querySelectorAll('[data-mc-toggle-task]').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        btn.disabled = true
+        try {
+          await API.setMerchantTaskStatus(Number(btn.dataset.mcToggleTask), btn.dataset.next)
+          toast(btn.dataset.next === 'open' ? '任务已重新开放' : '任务已结束')
+          render()
+        } catch (e) { toast(API.friendlyError(e)) } finally { btn.disabled = false }
+      })
+    })
+
+    document.querySelectorAll('[data-mc-del-task]').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        if (!confirm('确定删除这条任务？相关报名也会一并删除，且不可恢复。')) return
+        btn.disabled = true
+        try {
+          await API.deleteMerchantTask(Number(btn.dataset.mcDelTask))
+          toast('任务已删除')
+          render()
+        } catch (e) { toast(API.friendlyError(e)) } finally { btn.disabled = false }
+      })
+    })
+
+    document.querySelectorAll('[data-mc-app]').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        btn.disabled = true
+        try {
+          await API.setApplicationStatus(Number(btn.dataset.mcApp), btn.dataset.status)
+          toast(btn.dataset.status === 'selected' ? '已选定该服务者' : '已标记为未入选')
+          render()
+        } catch (e) { toast(API.friendlyError(e)) } finally { btn.disabled = false }
+      })
+    })
   }
 
   /* ---------------- 服务列表 ---------------- */
@@ -716,7 +1387,7 @@
                 return `
             <a class="card svc-card" href="#/service/${s.id}">
               <div class="svc-cover" style="background:${API.coverTheme(s.id)}">
-                ${s.coverUrl ? `<img class="svc-cover-img" src="${API.esc(s.coverUrl)}" alt="${API.esc(s.title || '')}" loading="lazy" />` : '<span class="svc-cover-mark">MG</span>'}
+                ${s.coverUrl ? `<img ${API.imgAttrs(s.coverUrl, 'svc-cover-img')} alt="${API.esc(s.title || '')}" loading="lazy" />` : '<span class="svc-cover-mark">MG</span>'}
               </div>
               <div class="svc-body">
                 <span class="svc-title ellipsis">${API.esc(s.title)}</span>
@@ -797,7 +1468,7 @@
     return `
       <div class="detail-hero">
         <div class="detail-cover ${service.coverUrl ? 'detail-cover-has-img' : ''}" style="background:${service.coverUrl ? 'transparent' : API.coverTheme(service.id)}">
-          ${service.coverUrl ? `<img class="detail-cover-img" src="${API.esc(service.coverUrl)}" alt="${API.esc(service.title || '')}" />` : '<span class="detail-cover-mark">MG</span>'}
+          ${service.coverUrl ? `<img ${API.imgAttrs(service.coverUrl, 'detail-cover-img')} alt="${API.esc(service.title || '')}" />` : '<span class="detail-cover-mark">MG</span>'}
         </div>
         <div class="detail-info">
           <div class="detail-title">${API.esc(service.title)}</div>
@@ -1385,6 +2056,171 @@
 
   /* ---------------- 人工客服 ---------------- */
 
+  /* ---------------- 群聊广场 ---------------- */
+
+  const GROUP_ACCENTS = ['#0EA5E9', '#4F7DF3', '#7C5CF0', '#22B8A6', '#F59E0B', '#FF6B9A', '#8B5CF6', '#34D399']
+
+  /** 单条群消息气泡（系统消息居中，自己的靠右） */
+  function groupBubbleHtml(m, uid) {
+    if (m.sender_role === 'system') {
+      return `<div class="group-msg-sys">${API.esc(m.content)}</div>`
+    }
+    const mine = !!uid && m.sender_id === uid
+    const hidden = m.status && m.status !== 'normal'
+    return `
+      <div class="msg-row ${mine ? 'msg-row-mine' : ''}">
+        <div class="msg-bubble ${mine ? 'msg-bubble-mine' : ''} ${hidden ? 'group-msg-hidden' : ''}">
+          ${!mine ? `<div class="msg-sender">${API.esc(m.sender_name || '群成员')}${hidden ? ' · 已隐藏' : ''}</div>` : ''}
+          <div class="msg-text">${API.esc(m.content)}</div>
+        </div>
+        <div class="msg-time">${API.fromNow(m.created_at)}</div>
+      </div>`
+  }
+
+  VIEWS.groups = async function () {
+    const groups = await API.listChatGroups()
+    const logged = !!(S.session && S.session.user)
+    return `
+      <div class="page-head group-head">
+        <div>
+          <div class="page-title">群聊广场</div>
+          <div class="page-sub">按品类建群，多人实时交流。登录后即可发言，进群自动加入</div>
+        </div>
+        <button class="btn btn-primary btn-sm" id="groupCreateBtn">＋ 新建群聊</button>
+      </div>
+
+      <div class="group-banner">
+        <span class="group-banner-icon">💬</span>
+        <div class="group-banner-txt">
+          <b>${groups.length} 个公开群</b>
+          <span>官方群与用户自建群 · 消息实时同步 · 管理端有审核</span>
+        </div>
+        <span class="group-live"><i></i>实时</span>
+      </div>
+
+      ${
+        groups.length
+          ? `<div class="group-grid">${groups
+              .map(
+                (g, i) => `
+          <a class="group-card" href="#/group/${g.id}" style="--g-accent:${GROUP_ACCENTS[i % GROUP_ACCENTS.length]}">
+            <div class="group-card-top">
+              <span class="group-card-icon">${API.esc(g.icon || '💬')}</span>
+              <span class="group-card-members">${g.live_member_count || 0} 人</span>
+            </div>
+            <div class="group-card-name">${API.esc(g.name)}</div>
+            <div class="group-card-desc">${API.esc(g.description || '欢迎交流')}</div>
+            <div class="group-card-last">${
+              g.last
+                ? `<b>${API.esc(g.last.sender_name || '成员')}：</b>${API.esc(String(g.last.content || '').slice(0, 42))}`
+                : '还没有消息，来发第一条'
+            }</div>
+            <div class="group-card-foot">
+              <span>${g.owner_id === 'platform' ? '官方群' : '用户群'}</span>
+              <span>进入 ›</span>
+            </div>
+          </a>`
+              )
+              .join('')}</div>`
+          : `<div class="card card-pad"><div class="empty"><div class="empty-icon">💬</div>
+              <span class="empty-text">还没有群聊</span><span class="empty-hint">点右上角创建第一个群</span></div></div>`
+      }
+
+      <div class="group-modal-mask" id="groupModal" hidden>
+        <div class="group-modal card card-pad">
+          <div class="group-modal-title">新建群聊</div>
+          <div class="group-modal-sub">${logged ? '创建后自动成为群主，并发一条建群欢迎语' : '请先登录后再创建群聊'}</div>
+          <label class="field-label">群名称</label>
+          <input class="input" id="groupName" maxlength="30" placeholder="例：银川短视频创作者交流">
+          <label class="field-label">群图标</label>
+          <input class="input" id="groupIcon" maxlength="4" value="💬" placeholder="一个 emoji">
+          <label class="field-label">群简介</label>
+          <textarea class="input" id="groupDesc" rows="3" maxlength="200" placeholder="这个群主要聊什么？"></textarea>
+          <div class="group-modal-actions">
+            <button class="btn btn-ghost" id="groupModalCancel">取消</button>
+            <button class="btn btn-primary" id="groupModalSubmit">创建群聊</button>
+          </div>
+        </div>
+      </div>
+    `
+  }
+
+  VIEWS.group = async function (id) {
+    if (!id) {
+      return `<div class="card card-pad"><div class="empty"><span class="empty-text">群聊不存在</span>
+        <a class="btn btn-ghost btn-sm" href="#/groups" style="margin-top:16px">返回群聊广场</a></div></div>`
+    }
+    const group = await API.getChatGroup(id)
+    if (!group) {
+      return `<div class="card card-pad"><div class="empty"><span class="empty-text">群聊不存在或已停用</span>
+        <a class="btn btn-ghost btn-sm" href="#/groups" style="margin-top:16px">返回群聊广场</a></div></div>`
+    }
+    const uid = (S.session && S.session.user && S.session.user.id) || ''
+    // 登录用户进群即自动加入（幂等）
+    if (uid) await API.joinChatGroup(id).catch(() => null)
+    const [messages, members] = await Promise.all([
+      API.listChatMessages(id, 60),
+      API.listChatGroupMembers(id)
+    ])
+    if (uid) API.markChatRead(id).catch(() => null)
+
+    const memberRows = members.length
+      ? members
+          .slice(0, 30)
+          .map(
+            (m) => `<div class="group-member">
+              <span class="group-member-avatar">${API.esc(String(m.user_name || '群').slice(0, 1))}</span>
+              <span class="group-member-name">${API.esc(m.user_name || '群成员')}</span>
+              ${m.role !== 'member' ? '<span class="group-member-tag">群主</span>' : ''}
+            </div>`
+          )
+          .join('')
+      : '<div class="group-member-empty">还没有成员，登录后进群会自动加入</div>'
+
+    return `
+      <div class="page-head group-room-head">
+        <div class="group-room-title">
+          <a class="group-back" href="#/groups">‹ 群聊广场</a>
+          <div class="page-title">${API.esc(group.icon || '💬')} ${API.esc(group.name)}</div>
+          <div class="page-sub">${API.esc(group.description || '欢迎交流')}</div>
+        </div>
+        <div class="group-room-meta">
+          <span>${members.length} 位成员</span>
+          <span class="group-live"><i></i>实时</span>
+        </div>
+      </div>
+
+      <div class="group-room">
+        <div class="card group-chat">
+          <div class="group-chat-msgs" id="groupMessages" data-last-id="${messages.length ? messages[messages.length - 1].id : 0}">
+            ${messages.length ? messages.map((m) => groupBubbleHtml(m, uid)).join('') : '<div class="group-msg-sys">还没有消息，来说第一句吧</div>'}
+          </div>
+          ${
+            uid
+              ? `<div class="support-input group-chat-input">
+                  <textarea class="support-input-field" id="groupInput" rows="2" maxlength="1000" placeholder="说点什么…（Ctrl + Enter 发送）"></textarea>
+                  <button class="btn btn-primary" id="groupSendBtn">发送</button>
+                </div>`
+              : `<div class="group-chat-login">
+                  <span>登录后即可在群里发言</span>
+                  <button class="btn btn-primary btn-sm" id="groupLoginBtn">去登录</button>
+                </div>`
+          }
+        </div>
+
+        <aside class="card group-side">
+          <div class="group-side-title">群成员 <span>${members.length}</span></div>
+          <div class="group-member-list">${memberRows}</div>
+          <div class="group-side-rule">
+            <b>群规</b>
+            <p>文明交流，禁止广告与无关链接。违规消息会被管理端隐藏；有问题可联系人工客服。</p>
+          </div>
+        </aside>
+      </div>
+      <div class="group-room-tip" id="groupTip">消息每 5 秒自动刷新 · 当前显示最近 60 条</div>
+    `
+  }
+
   VIEWS.support = async function () {
     if (!S.session || !S.session.user) {
       return `<div class="card card-pad"><div class="empty">
@@ -1714,6 +2550,9 @@
         <a class="menu-row" href="#/studio"><span class="menu-row-icon">🎬</span><span class="menu-row-text">接单工作台</span><span class="menu-row-arrow">›</span></a>
         <a class="menu-row" href="#/membership"><span class="menu-row-icon">👑</span><span class="menu-row-text">会员中心</span><span class="menu-row-value">${isMember ? API.esc(memberStatus.planName) : '未开通'}</span><span class="menu-row-arrow">›</span></a>
         <a class="menu-row" href="#/notifications"><span class="menu-row-icon">🔔</span><span class="menu-row-text">消息通知</span><span class="menu-row-arrow">›</span></a>
+        <a class="menu-row" href="#/groups"><span class="menu-row-icon">👥</span><span class="menu-row-text">群聊广场</span><span class="menu-row-arrow">›</span></a>
+        <a class="menu-row" href="#/merchants"><span class="menu-row-icon">🏬</span><span class="menu-row-text">企业商家</span><span class="menu-row-arrow">›</span></a>
+        <a class="menu-row" href="#/merchant-console"><span class="menu-row-icon">📢</span><span class="menu-row-text">我的店铺 / 发任务</span><span class="menu-row-arrow">›</span></a>
         <a class="menu-row" href="#/support"><span class="menu-row-icon">💬</span><span class="menu-row-text">在线客服</span><span class="menu-row-arrow">›</span></a>
         <button class="menu-row" id="profLogoutBtn"><span class="menu-row-icon">↪️</span><span class="menu-row-text">退出登录</span><span class="menu-row-arrow">›</span></button>
       </div>
@@ -1979,6 +2818,120 @@
         }
       })
     }
+  }
+
+  BINDINGS.groups = function () {
+    const createBtn = $('#groupCreateBtn')
+    const modal = $('#groupModal')
+    if (!createBtn || !modal) return
+    const logged = !!(S.session && S.session.user)
+    const close = () => {
+      modal.hidden = true
+    }
+    createBtn.addEventListener('click', () => {
+      if (!logged) {
+        toast('请先登录后再创建群聊')
+        openLogin()
+        return
+      }
+      modal.hidden = false
+      const nameInput = $('#groupName')
+      if (nameInput) nameInput.focus()
+    })
+    const cancel = $('#groupModalCancel')
+    if (cancel) cancel.addEventListener('click', close)
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) close()
+    })
+    const submit = $('#groupModalSubmit')
+    if (!submit) return
+    submit.addEventListener('click', async () => {
+      const nameInput = $('#groupName')
+      const name = nameInput ? nameInput.value.trim() : ''
+      if (!name) {
+        toast('请填写群名称')
+        return
+      }
+      submit.disabled = true
+      try {
+        const g = await API.createChatGroup({
+          name,
+          icon: ($('#groupIcon') && $('#groupIcon').value.trim()) || '💬',
+          description: ($('#groupDesc') && $('#groupDesc').value.trim()) || ''
+        })
+        if (!g || !g.id) throw new Error('创建群聊失败，请稍后重试')
+        toast('群聊已创建')
+        close()
+        navigate('#/group/' + g.id)
+      } catch (e) {
+        toast(API.friendlyError(e))
+      } finally {
+        submit.disabled = false
+      }
+    })
+  }
+
+  BINDINGS.group = function (id) {
+    const loginBtn = $('#groupLoginBtn')
+    if (loginBtn) loginBtn.addEventListener('click', openLogin)
+
+    const box = $('#groupMessages')
+    if (!box) return
+    const uid = (S.session && S.session.user && S.session.user.id) || ''
+    const input = $('#groupInput')
+    const sendBtn = $('#groupSendBtn')
+    let lastId = Number(box.dataset.lastId || 0)
+
+    const paint = (list) =>
+      list.length
+        ? list.map((m) => groupBubbleHtml(m, uid)).join('')
+        : '<div class="group-msg-sys">还没有消息，来说第一句吧</div>'
+
+    /** 拉新消息；只在有新内容时重绘，避免打断正在输入/翻历史的用户 */
+    const refresh = async (force) => {
+      try {
+        const list = await API.listChatMessages(id, 60)
+        const newest = list.length ? list[list.length - 1].id : 0
+        if (!force && newest <= lastId) return
+        const nearBottom = box.scrollHeight - box.scrollTop - box.clientHeight < 140
+        box.innerHTML = paint(list)
+        box.dataset.lastId = String(newest)
+        lastId = newest
+        if (nearBottom || force) box.scrollTop = box.scrollHeight
+      } catch (e) {
+        // 轮询失败静默重试，不打扰当前会话
+      }
+    }
+
+    box.scrollTop = box.scrollHeight
+
+    if (input && sendBtn) {
+      const doSend = async () => {
+        const content = input.value.trim()
+        if (!content) return
+        sendBtn.disabled = true
+        try {
+          await API.sendChatMessage(id, content)
+          input.value = ''
+          await refresh(true)
+        } catch (e) {
+          toast(API.friendlyError(e))
+        } finally {
+          sendBtn.disabled = false
+          input.focus()
+        }
+      }
+      sendBtn.addEventListener('click', doSend)
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+          e.preventDefault()
+          doSend()
+        }
+      })
+    }
+
+    // 离开页面时由 render() 统一清理
+    window.__groupPoller = setInterval(() => refresh(false), 5000)
   }
 
   BINDINGS.support = function () {
@@ -2806,6 +3759,19 @@
   /* ---------------- 启动 ---------------- */
 
   async function boot() {
+    // 等云服务 SDK 加载完成（CDN 异步脚本，可能晚于本脚本执行）
+    if (window.cloudReady) {
+      try {
+        await window.cloudReady
+      } catch (e) {
+        console.error('[boot] cloud SDK not ready', e)
+        app.innerHTML = `<div class="empty"><div class="empty-icon">⚠️</div>
+          <span class="empty-text">云服务加载失败</span>
+          <span class="empty-hint">${API.esc(e.message || '请检查网络后刷新重试')}</span></div>`
+        return
+      }
+    }
+
     // 先确认云服务端点可达 —— 平台分配的域名可能临时解析失败，
     // 端点不通时自动切到备用（见 config.js 的 ensureEndpoint）
     let endpointOk = true
@@ -2815,7 +3781,8 @@
       } catch (e) {
         console.error('[boot] ensureEndpoint failed', e)
       }
-      endpointOk = window.APP_CONFIG && window.APP_CONFIG.publicConfig.endpoint === (window.APP_CONFIG.activeEndpoint || window.APP_CONFIG.publicConfig.endpoint)
+      // activeEndpoint 为 null 表示所有候选端点都不可达
+      endpointOk = !!(window.APP_CONFIG && window.APP_CONFIG.activeEndpoint)
     }
 
     // 微信授权回调优先处理，必须在路由守卫之前
@@ -2839,15 +3806,24 @@
       if (session) await onLogin(session)
     }
     updateUserChip()
-    render()
 
-    // 端点不可达时给出明确提示（平台侧域名故障，不是前端 bug）
-    if (!endpointOk && window.APP_CONFIG && window.APP_CONFIG.endpointFailureHint) {
+    // 端点不可达：直接显示明确的故障页，不做无谓的渲染
+    if (!endpointOk) {
+      const hint = (window.APP_CONFIG && window.APP_CONFIG.endpointFailureHint) || '服务暂时无法连接，请稍后刷新重试'
+      app.innerHTML = `<div class="empty" style="padding:80px 24px">
+        <div class="empty-icon">🔌</div>
+        <span class="empty-text">服务暂时无法连接</span>
+        <span class="empty-hint">${API.esc(hint)}</span>
+        <button class="btn btn-primary" style="margin-top:20px" onclick="location.reload()">重新加载</button>
+      </div>`
       const bar = document.createElement('div')
       bar.className = 'endpoint-warn'
-      bar.textContent = window.APP_CONFIG.endpointFailureHint
+      bar.textContent = hint
       document.body.appendChild(bar)
+      return
     }
+
+    render()
   }
 
   // 移动端菜单

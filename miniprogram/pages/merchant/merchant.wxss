@@ -1,0 +1,33 @@
+@import "../../styles/merchant.wxss";
+
+.shop-hero {
+  display: flex;
+  align-items: center;
+  gap: 26rpx;
+  padding: 44rpx 34rpx;
+  background: linear-gradient(125deg, #DCEEFB 0%, #C8D8F8 52%, #E3DAFB 100%);
+}
+.shop-hero-logo {
+  width: 130rpx;
+  height: 130rpx;
+  flex: none;
+  border-radius: 32rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #FFFFFF;
+  font-size: 58rpx;
+  font-weight: 700;
+  background: linear-gradient(135deg, #0EA5E9, #4F7DF3 55%, #7C5CF0);
+  box-shadow: 0 10rpx 28rpx rgba(79, 125, 243, .26);
+}
+.shop-hero-txt { min-width: 0; }
+.shop-hero-name { font-size: 38rpx; font-weight: 800; color: #0F172A; }
+.shop-hero-meta { font-size: 24rpx; color: #475569; margin-top: 10rpx; }
+.info-row {
+  font-size: 25rpx;
+  color: var(--ink-2);
+  padding: 14rpx 0;
+  border-top: 1rpx solid var(--line);
+  margin-top: 14rpx;
+}

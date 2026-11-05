@@ -42,6 +42,84 @@
   </view>
 
   <block wx:if="{{!loading && isStaff}}">
+    <!-- 可视化数据版（与网页端同源 tokens，Canvas 渲染） -->
+    <canvas type="2d" id="vizBg" class="viz-bg"></canvas>
+    <view class="container">
+      <view class="viz-panel">
+        <view class="viz-head">
+          <view class="viz-head-left">
+            <view class="viz-bar"></view>
+            <text class="viz-title">近 7 天订单趋势</text>
+          </view>
+          <text class="viz-sub">柱=订单量 · 折线=成交额</text>
+        </view>
+        <canvas type="2d" id="vizTrend" class="viz-canvas"
+                style="width:{{vizTrendW}}px;height:{{vizTrendH}}px"></canvas>
+      </view>
+    </view>
+
+    <view class="container">
+      <view class="viz-panel">
+        <view class="viz-head">
+          <view class="viz-head-left">
+            <view class="viz-bar"></view>
+            <text class="viz-title">服务分类分布</text>
+          </view>
+          <text class="viz-sub">在架 {{stats.onShelf}}</text>
+        </view>
+        <view class="viz-donut-row">
+          <canvas type="2d" id="vizDonut" class="viz-canvas"
+                  style="width:{{vizDonutSize}}px;height:{{vizDonutSize}}px"></canvas>
+          <view class="viz-legend">
+            <view class="viz-legend-item" wx:for="{{stats.byCategory}}" wx:key="name">
+              <view class="viz-dot" style="background:{{item.color}}"></view>
+              <text class="viz-legend-name">{{item.name}}</text>
+              <text class="viz-legend-count">{{item.count}}</text>
+            </view>
+          </view>
+        </view>
+      </view>
+    </view>
+
+    <view class="container">
+      <view class="viz-panel">
+        <view class="viz-head">
+          <view class="viz-head-left">
+            <view class="viz-bar"></view>
+            <text class="viz-title">热销服务 TOP 5</text>
+          </view>
+          <text class="viz-sub">按销量排序</text>
+        </view>
+        <canvas type="2d" id="vizTop" class="viz-canvas"
+                style="width:{{vizTopW}}px;height:{{vizTopH}}px"></canvas>
+      </view>
+    </view>
+
+    <view class="container">
+      <view class="viz-panel">
+        <view class="viz-head">
+          <view class="viz-head-left">
+            <view class="viz-bar"></view>
+            <text class="viz-title">数据报告视频</text>
+          </view>
+          <text class="viz-sub">可分享</text>
+        </view>
+        <view class="viz-video-wrap">
+          <video
+            class="viz-video"
+            src="{{reportVideoUrl}}"
+            controls
+            object-fit="contain"
+            show-center-play-btn
+            show-play-btn
+            show-fullscreen-btn
+            enable-progress-gesture
+          ></video>
+          <text class="viz-video-tip">竖屏数据卡 · 由 Remotion 渲染，与网页端同一套视觉</text>
+        </view>
+      </view>
+    </view>
+
     <!-- 数据看板 -->
     <view class="admin-head">
       <text class="admin-title">平台总览</text>

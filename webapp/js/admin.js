@@ -35,9 +35,12 @@
     applications: '入驻审核',
     services: '服务与分类',
     content: '首页与内容',
+    merchants: '商家管理',
+    notice: '公告管理',
     settings: '平台设置',
     members: '会员管理',
     support: '客服会话',
+    chat: '群聊管理',
     logs: '操作日志'
   }
 
@@ -312,6 +315,52 @@
     const handler = BINDS[S.page]
     if (typeof handler === 'function') handler()
     else if (Array.isArray(handler)) handler.forEach((fn) => fn())
+
+    // 可视化数据版（Remotion）：概览页挂载实时数据大屏
+    if (S.page === 'dashboard' && S.stats && window.WBDataViz) {
+      mountDataViz(S.stats)
+    }
+  }
+
+  /**
+   * 把 adminStats 的数据喂给 Remotion Player
+   * 字段名与 video/src/tokens.ts 的 DashboardData 一一对应
+   */
+  function mountDataViz(stats) {
+    const stage = document.getElementById('datavizStage')
+    if (!stage) return
+    try {
+      window.WBDataViz.mount(
+        stage,
+        {
+          total: stats.total,
+          open: stats.open,
+          taken: stats.taken,
+          producing: stats.producing,
+          delivered: stats.delivered,
+          completed: stats.completed,
+          cancelled: stats.cancelled,
+          gmv: stats.gmv,
+          commission: stats.commission,
+          providers: stats.providers,
+          verifiedProviders: stats.verifiedProviders,
+          services: stats.services,
+          onShelf: stats.onShelf,
+          categories: stats.categories,
+          reviews: stats.reviews,
+          avgRating: stats.avgRating,
+          pendingApplications: stats.pendingApplications,
+          pendingSettlements: stats.pendingSettlements,
+          trend: stats.trend || [],
+          topServices: stats.topServices || [],
+          byCategory: stats.byCategory || []
+        },
+        {loop: true}
+      )
+    } catch (e) {
+      console.error('dataviz mount failed', e)
+      stage.innerHTML = '<div class="dataviz-fallback">可视化数据版加载失败，下方为静态明细</div>'
+    }
   }
 
   const BINDS = {}
@@ -324,9 +373,13 @@
 
     const maxTrend = Math.max(1, ...stats.trend.map((t) => t.count))
     const totalServices = stats.byCategory.reduce((s, c) => s + c.count, 0) || 1
-    const distColors = ['#C4703F', '#6E7F5C', '#5B7186', '#B5707A', '#9C8449']
+    const distColors = ['#C4703F', '#6E7F5C', '#5B7186', '#B5707A', '#9C8449', '#4F7DF3', '#0EA5E9', '#7C5CF0']
 
     return `
+      <div class="dataviz-stage" id="datavizStage">
+        <div class="dataviz-fallback">可视化数据版加载中…</div>
+      </div>
+
       <div class="kpi-grid">
         <div class="kpi kpi-1">
           <span class="kpi-accent"></span>
@@ -825,6 +878,7 @@
             <div class="card-title">服务分类</div>
             <div class="card-sub">共 ${categories.length} 个分类</div>
           </div>
+          <button class="btn btn-primary btn-sm" id="catAddBtn">＋ 新增分类</button>
         </div>
         <div class="card-pad">
           ${categories
@@ -958,6 +1012,52 @@
         }
       })
     })
+
+    const catAddBtn = document.getElementById('catAddBtn')
+    if (catAddBtn) {
+      catAddBtn.addEventListener('click', () => {
+        openAction(
+          '新增服务分类',
+          `<div class="field">
+             <label class="field-label">分类名称</label>
+             <input class="input" id="addCatName" placeholder="例如：漫剧制作">
+           </div>
+           <div class="field">
+             <label class="field-label">分类标识 slug（小写英文 + 短横线，全站唯一）</label>
+             <input class="input" id="addCatSlug" placeholder="例如：comic-drama">
+           </div>
+           <div class="field">
+             <label class="field-label">图标（emoji）</label>
+             <input class="input" id="addCatIcon" value="🎬">
+           </div>
+           <div class="field">
+             <label class="field-label">描述</label>
+             <textarea class="textarea" id="addCatDesc"></textarea>
+           </div>
+           <div class="field">
+             <label class="field-label">配图地址（可选，留空显示 emoji）</label>
+             <input class="input" id="addCatImage" placeholder="https://.../assets/covers/light/l-cat-08.jpg">
+           </div>
+           <div class="field">
+             <label class="field-label">排序（可选，留空排到末尾）</label>
+             <input class="input" id="addCatSort" type="number" min="1" placeholder="自动">
+           </div>`,
+          async () => {
+            await API.createCategory({
+              name: $('#addCatName').value.trim(),
+              slug: $('#addCatSlug').value.trim(),
+              icon: $('#addCatIcon').value.trim(),
+              description: $('#addCatDesc').value.trim(),
+              image_url: $('#addCatImage').value.trim(),
+              sort_order: $('#addCatSort').value ? Number($('#addCatSort').value) : null
+            })
+            toast('分类已新增')
+            render()
+          },
+          '新增'
+        )
+      })
+    }
 
     document.querySelectorAll('[data-cat-edit]').forEach((btn) => {      btn.addEventListener('click', () => {
         const id = Number(btn.dataset.catEdit)
@@ -1377,6 +1477,440 @@
     `
   }
 
+  /* ---------------- 群聊管理 ---------------- */
+
+  /* ---------------- 商家管理 ---------------- */
+
+  VIEWS.merchants = async function () {
+    const [shops, tasks, stats] = await Promise.all([
+      API.adminListMerchants(), API.adminListMerchantTasks(), API.merchantStats()
+    ])
+    S.merchantShops = shops
+    S.merchantTasks = tasks
+    const shopMap = {}
+    shops.forEach((m) => { shopMap[m.id] = m })
+    const cards = [
+      ['入驻商家', stats.merchants, '家'], ['启用中', stats.active, '家'],
+      ['发布任务', stats.tasks, '条'], ['招募中', stats.open, '条'],
+      ['收到报名', stats.applications, '条'], ['已选定', stats.selected, '条']
+    ].map(([label, val, unit]) => `
+      <div class="card card-pad" style="padding:16px 18px">
+        <div style="font-size:12px;color:#61738A;margin-bottom:8px">${label}</div>
+        <div style="font-size:25px;font-weight:800;color:#0B1F33;line-height:1">${val}<span style="font-size:12px;font-weight:600;color:#8A9AAE;margin-left:4px">${unit}</span></div>
+      </div>`).join('')
+
+    return `
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:18px">${cards}</div>
+
+      <div class="card">
+        <div class="card-head"><div><div class="card-title">商家店铺</div><div class="card-sub">共 ${shops.length} 家 · 可认证、停用；停用后店铺与其任务对用户端不可见</div></div>
+          <button class="btn btn-ghost btn-sm" id="mcAdmRefresh">刷新</button></div>
+        <div class="table-wrap"><table class="data">
+          <thead><tr><th>店铺</th><th>店主</th><th>分类 / 城市</th><th>认证</th><th>状态</th><th>开通时间</th><th>操作</th></tr></thead>
+          <tbody>
+            ${shops.length ? shops.map((m) => `
+              <tr>
+                <td class="td-strong">${esc(m.name)}</td>
+                <td class="muted ellipsis" style="max-width:150px">${esc(m.owner_id || '')}</td>
+                <td class="muted">${esc(m.category_slug || '—')} / ${esc(m.city || '—')}</td>
+                <td style="white-space:nowrap"><span class="badge ${m.is_verified ? '' : 'badge-pending'}">${m.is_verified ? '已认证' : '待认证'}</span></td>
+                <td style="white-space:nowrap"><span class="badge ${m.status === 'active' ? '' : 'badge-cancelled'}">${m.status === 'active' ? '启用中' : '已停用'}</span></td>
+                <td class="muted" style="white-space:nowrap">${fromNow(m.created_at)}</td>
+                <td style="white-space:nowrap">
+                  <button class="btn btn-soft btn-sm" data-mc-verify="${m.id}" data-next="${m.is_verified ? '0' : '1'}">${m.is_verified ? '取消认证' : '认证'}</button>
+                  <button class="btn btn-ghost btn-sm" data-mc-shop-status="${m.id}" data-next="${m.status === 'active' ? 'suspended' : 'active'}">${m.status === 'active' ? '停用' : '启用'}</button>
+                </td>
+              </tr>`).join('')
+              : '<tr><td colspan="7"><div class="empty"><span class="empty-text">还没有商家入驻</span></div></td></tr>'}
+          </tbody>
+        </table></div>
+      </div>
+
+      <div class="card" style="margin-top:18px">
+        <div class="card-head"><div><div class="card-title">商家任务</div><div class="card-sub">共 ${tasks.length} 条 · 含参考视频标记；下架后用户端立即不可见</div></div></div>
+        <div class="table-wrap"><table class="data">
+          <thead><tr><th>任务</th><th>所属商家</th><th>预算</th><th>参考视频</th><th>状态</th><th>发布时间</th><th>操作</th></tr></thead>
+          <tbody>
+            ${tasks.length ? tasks.map((t) => `
+              <tr>
+                <td class="td-strong" style="min-width:220px">${esc(t.title)}</td>
+                <td class="muted">${esc((shopMap[t.merchant_id] || {}).name || '—')}</td>
+                <td style="white-space:nowrap">${Number(t.budget) > 0 ? '¥' + yuanShort(t.budget) : '面议'}</td>
+                <td style="white-space:nowrap">${t.reference_video_path ? '▶ 已上传' : '<span class="muted">—</span>'}</td>
+                <td style="white-space:nowrap"><span class="badge ${t.status === 'open' ? '' : 'badge-pending'}">${t.status === 'open' ? '招募中' : t.status === 'hidden' ? '已下架' : '已结束'}</span></td>
+                <td class="muted" style="white-space:nowrap">${fromNow(t.created_at)}</td>
+                <td style="white-space:nowrap">
+                  <button class="btn btn-soft btn-sm" data-mc-task-status="${t.id}" data-next="${t.status === 'hidden' ? 'open' : 'hidden'}">${t.status === 'hidden' ? '恢复' : '下架'}</button>
+                </td>
+              </tr>`).join('')
+              : '<tr><td colspan="7"><div class="empty"><span class="empty-text">还没有商家发布任务</span></div></td></tr>'}
+          </tbody>
+        </table></div>
+      </div>
+    `
+  }
+
+  BINDS.merchants = function () {
+    const refresh = $('#mcAdmRefresh')
+    if (refresh) refresh.addEventListener('click', () => render())
+
+    document.querySelectorAll('[data-mc-verify]').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        btn.disabled = true
+        try {
+          await API.setMerchantVerified(Number(btn.dataset.mcVerify), btn.dataset.next === '1')
+          toast(btn.dataset.next === '1' ? '已认证' : '已取消认证')
+          render()
+        } catch (e) { toast(API.friendlyError(e)) } finally { btn.disabled = false }
+      })
+    })
+    document.querySelectorAll('[data-mc-shop-status]').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        btn.disabled = true
+        try {
+          await API.setMerchantStatus(Number(btn.dataset.mcShopStatus), btn.dataset.next)
+          toast(btn.dataset.next === 'active' ? '店铺已启用' : '店铺已停用')
+          render()
+        } catch (e) { toast(API.friendlyError(e)) } finally { btn.disabled = false }
+      })
+    })
+    document.querySelectorAll('[data-mc-task-status]').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        btn.disabled = true
+        try {
+          await API.setMerchantTaskStatus(Number(btn.dataset.mcTaskStatus), btn.dataset.next)
+          toast(btn.dataset.next === 'open' ? '任务已恢复' : '任务已下架')
+          render()
+        } catch (e) { toast(API.friendlyError(e)) } finally { btn.disabled = false }
+      })
+    })
+  }
+
+  /* ---------------- 公告管理 ---------------- */
+
+  function noticeFormHtml(a) {
+    const v = a || {}
+    const toLocal = (iso) => {
+      if (!iso) return ''
+      const d = new Date(iso)
+      if (isNaN(d.getTime())) return ''
+      const pad = (n) => String(n).padStart(2, '0')
+      return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`
+    }
+    return `
+      <label class="field-label">公告标题 <span style="color:#DC2626">*</span></label>
+      <input class="input" id="ntTitle" maxlength="80" placeholder="例：新版首页上线 · 平台数据实时可视化" value="${esc(v.title || '')}">
+      <label class="field-label">公告正文</label>
+      <textarea class="input" id="ntContent" rows="4" maxlength="600" placeholder="点击公告后展示的完整内容">${esc(v.content || '')}</textarea>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div>
+          <label class="field-label">标签</label>
+          <input class="input" id="ntTag" maxlength="8" placeholder="公告 / 活动 / 提醒" value="${esc(v.tag || '公告')}">
+        </div>
+        <div>
+          <label class="field-label">级别（决定标签颜色）</label>
+          <select class="input" id="ntLevel">
+            <option value="info" ${v.level === 'info' || !v.level ? 'selected' : ''}>普通 · 蓝</option>
+            <option value="activity" ${v.level === 'activity' ? 'selected' : ''}>活动 · 紫</option>
+            <option value="important" ${v.level === 'important' ? 'selected' : ''}>重要 · 红</option>
+          </select>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div>
+          <label class="field-label">排序权重（越大越靠前）</label>
+          <input class="input" id="ntSort" type="number" value="${Number(v.sort_order) || 0}">
+        </div>
+        <div>
+          <label class="field-label">跳转链接（可选，如 #/groups）</label>
+          <input class="input" id="ntLink" maxlength="200" placeholder="留空则只展示正文" value="${esc(v.link || '')}">
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div>
+          <label class="field-label">开始展示（可选）</label>
+          <input class="input" id="ntStart" type="datetime-local" value="${toLocal(v.starts_at)}">
+        </div>
+        <div>
+          <label class="field-label">结束展示（可选）</label>
+          <input class="input" id="ntEnd" type="datetime-local" value="${toLocal(v.ends_at)}">
+        </div>
+      </div>
+      <div style="display:flex;gap:22px;margin-top:14px">
+        <label style="display:flex;align-items:center;gap:7px;font-size:13px;color:#475569;cursor:pointer">
+          <input type="checkbox" id="ntPinned" ${v.is_pinned ? 'checked' : ''}> 置顶
+        </label>
+        <label style="display:flex;align-items:center;gap:7px;font-size:13px;color:#475569;cursor:pointer">
+          <input type="checkbox" id="ntActive" ${v.is_active !== false ? 'checked' : ''}> 立即启用
+        </label>
+      </div>
+    `
+  }
+
+  /** 从表单读数；datetime-local 转 ISO，空值转 null */
+  function readNoticeForm() {
+    const iso = (id) => {
+      const val = ($(id) && $(id).value) || ''
+      if (!val) return null
+      const d = new Date(val)
+      return isNaN(d.getTime()) ? null : d.toISOString()
+    }
+    return {
+      title: $('#ntTitle').value.trim(),
+      content: $('#ntContent').value.trim(),
+      tag: $('#ntTag').value.trim(),
+      level: $('#ntLevel').value,
+      link: $('#ntLink').value.trim(),
+      sort_order: Number($('#ntSort').value) || 0,
+      starts_at: iso('#ntStart'),
+      ends_at: iso('#ntEnd'),
+      is_pinned: $('#ntPinned').checked,
+      is_active: $('#ntActive').checked
+    }
+  }
+
+  /** 新建 / 编辑公告，提交后立刻重绘（上方预览同步变化） */
+  function openNoticeForm(row) {
+    const isEdit = !!row
+    openAction(
+      isEdit ? '编辑公告' : '发布新公告',
+      noticeFormHtml(row),
+      async () => {
+        const payload = readNoticeForm()
+        if (!payload.title) throw new Error('请填写公告标题')
+        if (payload.starts_at && payload.ends_at && new Date(payload.starts_at) >= new Date(payload.ends_at)) {
+          throw new Error('结束时间必须晚于开始时间')
+        }
+        if (isEdit) {
+          await API.updateAnnouncement(row.id, payload)
+          await API.setAnnouncementActive(row.id, payload.is_active)
+        } else {
+          await API.createAnnouncement(payload)
+        }
+        toast(isEdit ? '公告已保存' : '公告已发布')
+        render()
+      },
+      isEdit ? '保存' : '发布'
+    )
+  }
+
+  VIEWS.notice = async function () {
+    const rows = await API.adminListAnnouncements()
+    S.announcements = rows
+    const now = Date.now()
+    const isLive = (a) =>
+      a.is_active &&
+      (!a.starts_at || new Date(a.starts_at).getTime() <= now) &&
+      (!a.ends_at || new Date(a.ends_at).getTime() >= now)
+    const live = rows.filter(isLive)
+    const pinned = rows.filter((a) => a.is_pinned && isLive(a)).length
+
+    const statCards = [
+      ['公告总数', rows.length, '条'],
+      ['展示中', live.length, '条'],
+      ['置顶', pinned, '条'],
+      ['已停用 / 过期', rows.length - live.length, '条']
+    ]
+      .map(([label, val, unit]) => `
+        <div class="card card-pad" style="padding:18px 20px">
+          <div style="font-size:12px;color:#61738A;margin-bottom:8px">${label}</div>
+          <div style="font-size:26px;font-weight:800;color:#0B1F33;line-height:1">${val}<span style="font-size:12px;font-weight:600;color:#8A9AAE;margin-left:4px">${unit}</span></div>
+        </div>`)
+      .join('')
+
+    // 实时预览：与用户端同一套 notice-* 视觉，直接看得到滚动效果
+    const pv = live.length ? live : rows.slice(0, 3)
+    const lvCls = (l) => (l === 'important' ? 'nt-important' : l === 'activity' ? 'nt-activity' : 'nt-info')
+    const one = pv.length
+      ? pv.map((a) => `<span class="notice-item"><span class="notice-tag ${lvCls(a.level)}">${esc(a.tag || '公告')}</span><span class="notice-title">${esc(a.title)}</span>${a.is_pinned ? '<span class="notice-pin">置顶</span>' : ''}<span class="notice-sep">·</span></span>`).join('')
+      : '<span class="notice-item"><span class="notice-title">暂无展示中的公告，发布后这里会实时预览</span><span class="notice-sep">·</span></span>'
+    const group = one + one + one
+    const preview = `
+      <div class="admin-notice-preview">
+        <div class="notice-bar-inner">
+          <span class="notice-label"><span class="notice-label-icon">📢</span>平台公告</span>
+          <div class="notice-viewport">
+            <div class="notice-track">
+              <div class="notice-group">${group}</div>
+              <div class="notice-group" aria-hidden="true">${group}</div>
+            </div>
+          </div>
+          <span class="notice-more">全部 ›</span>
+        </div>
+      </div>`
+
+    const period = (a) => {
+      const d = (iso) => (iso ? fromNow(iso) : '')
+      if (!a.starts_at && !a.ends_at) return '<span class="muted">长期有效</span>'
+      if (!a.ends_at) return `<span class="muted">${d(a.starts_at)}起</span>`
+      return `<span class="muted">至 ${d(a.ends_at)}</span>`
+    }
+
+    return `
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:18px">${statCards}</div>
+
+      <div style="font-size:12px;color:#61738A;margin:0 0 8px 2px">用户端滚动栏实时预览</div>
+      ${preview}
+
+      <div class="card">
+        <div class="card-head">
+          <div>
+            <div class="card-title">公告列表</div>
+            <div class="card-sub">共 ${rows.length} 条 · 置顶优先，其次按排序权重 · 停用或过期后用户端立即不显示</div>
+          </div>
+          <div style="display:flex;gap:10px">
+            <button class="btn btn-ghost btn-sm" id="ntRefresh">刷新</button>
+            <button class="btn btn-primary btn-sm" id="ntCreate">＋ 发布公告</button>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <table class="data">
+            <thead><tr><th>公告</th><th>正文摘要</th><th>状态</th><th>有效期</th><th>权重</th><th>更新时间</th><th>操作</th></tr></thead>
+            <tbody>
+              ${rows.length ? rows.map((a) => `
+                <tr>
+                  <td class="td-strong" style="min-width:270px;max-width:340px">
+                    <span class="notice-tag ${lvCls(a.level)}">${esc(a.tag || '公告')}</span>
+                    ${esc(a.title)}
+                    ${a.is_pinned ? '<span class="notice-pin" style="margin-left:6px">置顶</span>' : ''}
+                  </td>
+                  <td class="muted ellipsis" style="max-width:240px">${esc(a.content || '—')}</td>
+                  <td style="white-space:nowrap"><span class="badge ${isLive(a) ? '' : 'badge-pending'}">${isLive(a) ? '展示中' : a.is_active ? '未到期 / 已过期' : '已停用'}</span></td>
+                  <td style="white-space:nowrap">${period(a)}</td>
+                  <td class="muted">${Number(a.sort_order) || 0}</td>
+                  <td class="muted">${fromNow(a.updated_at || a.created_at)}</td>
+                  <td style="white-space:nowrap">
+                    <button class="btn btn-soft btn-sm" data-nt-edit="${a.id}">编辑</button>
+                    <button class="btn btn-ghost btn-sm" data-nt-pin="${a.id}" data-next="${a.is_pinned ? '0' : '1'}">${a.is_pinned ? '取消置顶' : '置顶'}</button>
+                    <button class="btn btn-ghost btn-sm" data-nt-toggle="${a.id}" data-next="${a.is_active ? '0' : '1'}">${a.is_active ? '停用' : '启用'}</button>
+                    <button class="btn btn-ghost btn-sm" data-nt-del="${a.id}" style="color:#DC2626">删除</button>
+                  </td>
+                </tr>`).join('')
+                : '<tr><td colspan="7"><div class="empty"><span class="empty-text">还没有公告，点「发布公告」新建一条</span></div></td></tr>'}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    `
+  }
+
+  BINDS.notice = function () {
+    const refreshBtn = $('#ntRefresh')
+    if (refreshBtn) refreshBtn.addEventListener('click', () => render())
+    const createBtn = $('#ntCreate')
+    if (createBtn) createBtn.addEventListener('click', () => openNoticeForm(null))
+
+    const find = (id) => (S.announcements || []).filter((a) => String(a.id) === String(id))[0]
+
+    document.querySelectorAll('[data-nt-edit]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const row = find(btn.dataset.ntEdit)
+        if (row) openNoticeForm(row)
+      })
+    })
+
+    document.querySelectorAll('[data-nt-pin]').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        btn.disabled = true
+        try {
+          await API.setAnnouncementPinned(Number(btn.dataset.ntPin), btn.dataset.next === '1')
+          toast(btn.dataset.next === '1' ? '已置顶' : '已取消置顶')
+          render()
+        } catch (e) { toast(API.friendlyError(e)) } finally { btn.disabled = false }
+      })
+    })
+
+    document.querySelectorAll('[data-nt-toggle]').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        btn.disabled = true
+        try {
+          await API.setAnnouncementActive(Number(btn.dataset.ntToggle), btn.dataset.next === '1')
+          toast(btn.dataset.next === '1' ? '已启用' : '已停用')
+          render()
+        } catch (e) { toast(API.friendlyError(e)) } finally { btn.disabled = false }
+      })
+    })
+
+    document.querySelectorAll('[data-nt-del]').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const row = find(btn.dataset.ntDel)
+        if (!row || !confirm(`确定删除公告「${row.title}」？此操作不可恢复。`)) return
+        btn.disabled = true
+        try {
+          await API.deleteAnnouncement(Number(btn.dataset.ntDel))
+          toast('公告已删除')
+          render()
+        } catch (e) { toast(API.friendlyError(e)) } finally { btn.disabled = false }
+      })
+    })
+  }
+
+  VIEWS.chat = async function () {
+    const [groups, stats] = await Promise.all([API.adminListChatGroups(), API.chatStats()])
+    S.chatGroups = groups
+    const statCards = [
+      ['公开群', stats.groups, '个'],
+      ['启用中', stats.active, '个'],
+      ['群消息', stats.messages, '条'],
+      ['今日新消息', stats.today, '条'],
+      ['入群成员', stats.members, '人']
+    ]
+      .map(
+        ([label, val, unit]) => `
+        <div class="card card-pad" style="padding:18px 20px">
+          <div style="font-size:12px;color:#61738A;margin-bottom:8px">${label}</div>
+          <div style="font-size:26px;font-weight:800;color:#0B1F33;line-height:1">${val}<span style="font-size:12px;font-weight:600;color:#8A9AAE;margin-left:4px">${unit}</span></div>
+        </div>`
+      )
+      .join('')
+
+    return `
+      <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:18px">${statCards}</div>
+
+      <div class="card">
+        <div class="card-head">
+          <div>
+            <div class="card-title">群聊管理</div>
+            <div class="card-sub">共 ${groups.length} 个群 · 可新建、停用与审核消息</div>
+          </div>
+          <div style="display:flex;gap:10px">
+            <button class="btn btn-ghost btn-sm" id="chatRefresh">刷新</button>
+            <button class="btn btn-primary btn-sm" id="chatCreateBtn">＋ 新建群聊</button>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <table class="data">
+            <thead><tr><th>群聊</th><th>简介</th><th>创建者</th><th>状态</th><th>创建时间</th><th>操作</th></tr></thead>
+            <tbody>
+              ${
+                groups.length
+                  ? groups
+                      .map(
+                        (g) => `
+                <tr>
+                  <td class="td-strong">${esc(g.icon || '💬')} ${esc(g.name)}</td>
+                  <td class="muted ellipsis" style="max-width:260px">${esc(g.description || '—')}</td>
+                  <td class="muted">${esc(g.owner_name || (g.owner_id === 'platform' ? '平台官方' : '用户'))}</td>
+                  <td><span class="badge ${g.status === 'active' ? '' : 'badge-pending'}">${g.status === 'active' ? '启用中' : '已停用'}</span></td>
+                  <td class="muted">${fromNow(g.created_at)}</td>
+                  <td style="white-space:nowrap">
+                    <button class="btn btn-soft btn-sm" data-group-msgs="${g.id}" data-group-name="${esc(g.name)}">消息审核</button>
+                    <button class="btn btn-ghost btn-sm" data-toggle-group="${g.id}" data-group-status="${g.status === 'active' ? 'archived' : 'active'}">${g.status === 'active' ? '停用' : '启用'}</button>
+                  </td>
+                </tr>`
+                      )
+                      .join('')
+                  : '<tr><td colspan="6"><div class="empty"><span class="empty-text">还没有群聊</span></div></td></tr>'
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    `
+  }
+
   /* ---------------- 客服会话 ---------------- */
 
   VIEWS.support = async function () {
@@ -1647,6 +2181,134 @@
         })
       })
     })
+  }
+
+  BINDS.chat = function () {
+    const refresh = $('#chatRefresh')
+    if (refresh) refresh.addEventListener('click', () => render())
+
+    const createBtn = $('#chatCreateBtn')
+    if (createBtn) createBtn.addEventListener('click', openCreateChatGroup)
+
+    document.querySelectorAll('[data-group-msgs]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        openChatMessages(Number(btn.dataset.groupMsgs), btn.dataset.groupName || '群聊')
+      })
+    })
+
+    document.querySelectorAll('[data-toggle-group]').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const id = Number(btn.dataset.toggleGroup)
+        const next = btn.dataset.groupStatus
+        const label = next === 'active' ? '启用' : '停用'
+        if (!confirm(`确定${label}该群聊？停用后用户端将不再显示。`)) return
+        btn.disabled = true
+        try {
+          await API.setChatGroupStatus(id, next)
+          toast(`已${label}`)
+          render()
+        } catch (e) {
+          toast(API.friendlyError(e))
+        } finally {
+          btn.disabled = false
+        }
+      })
+    })
+  }
+
+  /** 管理端新建群 */
+  function openCreateChatGroup() {
+    openAction(
+      '新建群聊',
+      `
+      <label class="field-label">群名称</label>
+      <input class="input" id="admGroupName" maxlength="30" placeholder="例：品牌片创作者交流">
+      <label class="field-label">群图标</label>
+      <input class="input" id="admGroupIcon" maxlength="4" value="💬" placeholder="一个 emoji">
+      <label class="field-label">群简介</label>
+      <textarea class="input" id="admGroupDesc" rows="3" maxlength="200" placeholder="这个群主要聊什么？"></textarea>
+      <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:20px">
+        <button class="btn btn-primary" id="admGroupSubmit">创建群聊</button>
+      </div>
+      `,
+      () => {
+        const submit = $('#admGroupSubmit')
+        if (!submit) return
+        submit.addEventListener('click', async () => {
+          const name = ($('#admGroupName') && $('#admGroupName').value.trim()) || ''
+          if (!name) {
+            toast('请填写群名称')
+            return
+          }
+          submit.disabled = true
+          try {
+            await API.createChatGroup({
+              name,
+              icon: ($('#admGroupIcon') && $('#admGroupIcon').value.trim()) || '💬',
+              description: ($('#admGroupDesc') && $('#admGroupDesc').value.trim()) || ''
+            })
+            closeAction()
+            toast('群聊已创建')
+            render()
+          } catch (e) {
+            toast(API.friendlyError(e))
+          } finally {
+            submit.disabled = false
+          }
+        })
+      },
+      '取消'
+    )
+  }
+
+  /** 群消息审核：隐藏 / 恢复违规消息 */
+  async function openChatMessages(groupId, groupName) {
+    let msgs
+    try {
+      msgs = await API.adminListChatMessages(groupId)
+    } catch (e) {
+      toast(API.friendlyError(e))
+      return
+    }
+    const rows = msgs.length
+      ? msgs
+          .map(
+            (m) => `
+        <div style="display:flex;gap:12px;align-items:flex-start;padding:11px 0;border-bottom:1px solid #EEF2F7">
+          <div style="flex:1;min-width:0">
+            <div style="font-size:11.5px;color:#7A8BA0;margin-bottom:4px">${esc(m.sender_name || '成员')} · ${fromNow(m.created_at)}${m.status !== 'normal' ? ' · 已隐藏' : ''}</div>
+            <div style="font-size:13px;line-height:1.6;color:#33465C;word-break:break-word;${m.status !== 'normal' ? 'opacity:.5;text-decoration:line-through' : ''}">${esc(m.content)}</div>
+          </div>
+          <button class="btn btn-soft btn-sm" data-toggle-msg="${m.id}" data-msg-status="${m.status}">${m.status === 'normal' ? '隐藏' : '恢复'}</button>
+        </div>`
+          )
+          .join('')
+      : '<div class="empty"><span class="empty-text">暂无消息</span></div>'
+
+    openAction(
+      `消息审核 · ${groupName}`,
+      `<div class="card-sub" style="margin-bottom:10px">被隐藏的消息对用户端不可见，可随时恢复</div>
+       <div style="max-height:360px;overflow-y:auto">${rows}</div>`,
+      () => {
+        document.querySelectorAll('[data-toggle-msg]').forEach((btn) => {
+          btn.addEventListener('click', async () => {
+            const next = btn.dataset.msgStatus === 'normal' ? 'hidden' : 'normal'
+            btn.disabled = true
+            try {
+              await API.setChatMessageStatus(Number(btn.dataset.toggleMsg), next)
+              closeAction()
+              toast(next === 'hidden' ? '消息已隐藏' : '消息已恢复')
+              render()
+            } catch (e) {
+              toast(API.friendlyError(e))
+            } finally {
+              btn.disabled = false
+            }
+          })
+        })
+      },
+      '关闭'
+    )
   }
 
   BINDS.support = function () {

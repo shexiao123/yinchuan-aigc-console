@@ -1,4 +1,6 @@
 const api = require('../../utils/api')
+const presence = require('../../utils/presence')
+const notice = require('../../utils/notice')
 const { coverTheme, yuanShort, fromNow } = require('../../utils/util')
 
 Page({
@@ -9,11 +11,15 @@ Page({
     hotServices: [],
     providers: [],
     settings: null,
-    loggedIn: false
+    loggedIn: false,
+    onlineCount: '–',
+    notices: [],
+    noticeCurrent: 0
   },
 
   onLoad() {
     this.loadData()
+    this.startOnlineBeat()
   },
 
   onShow() {
@@ -22,16 +28,19 @@ Page({
     if (loggedIn !== this.data.loggedIn) {
       this.setData({ loggedIn })
     }
+    // 从后台切回时立刻刷新在线数
+    if (this._onlineStarted) this.reportOnline()
   },
 
   async loadData() {
     this.setData({ loading: true })
     try {
-      const [banners, categories, hotServices, providers] = await Promise.all([
+      const [banners, categories, hotServices, providers, notices] = await Promise.all([
         api.listBanners(),
         api.listCategories(),
         api.listServices({ limit: 6 }),
-        api.listProviders()
+        api.listProviders(),
+        notice.listAnnouncements()
       ])
       const settings = await api.getSettings()
       const app = getApp()
@@ -56,6 +65,8 @@ Page({
           ratingText: Number(p.rating || 5).toFixed(1)
         })),
         settings,
+        notices,
+        noticeCurrent: 0,
         loggedIn: !!(app.globalData.session && app.globalData.session.user),
         loading: false
       })
@@ -97,6 +108,66 @@ Page({
 
   onSeeAll() {
     wx.navigateTo({ url: '/pages/services/services' })
+  },
+
+  /** 企业商家：店铺与任务广场 */
+  onMerchantEntry() {
+    wx.navigateTo({ url: '/pages/merchants/merchants' })
+  },
+
+  /** 公告滚动栏：垂直轮播记录当前索引，点击看全文 */
+  onNoticeChange(e) {
+    this.setData({ noticeCurrent: e.detail.current || 0 })
+  },
+
+  onNoticeTap() {
+    const a = this.data.notices[this.data.noticeCurrent]
+    if (a) this.showNoticeDetail(a)
+  },
+
+  onNoticeAll() {
+    const list = this.data.notices.slice(0, 6)
+    if (!list.length) return
+    wx.showActionSheet({
+      itemList: list.map((a) => `${a.tag || '公告'} · ${a.title}`.slice(0, 24)),
+      success: (res) => this.showNoticeDetail(list[res.tapIndex]),
+      fail: () => {}
+    })
+  },
+
+  showNoticeDetail(a) {
+    if (!a) return
+    wx.showModal({
+      title: a.title.slice(0, 24),
+      content: a.content || '（无详细内容）',
+      showCancel: false,
+      confirmText: '知道了'
+    })
+  },
+
+  /** 平台在线人数：真实心跳，30 秒刷新，失败显示「–」 */
+  async reportOnline() {
+    const n = await presence.reportOnline('pages/index/index')
+    const text = n == null ? '–' : String(n)
+    if (this.data.onlineCount !== text) this.setData({ onlineCount: text })
+  },
+
+  startOnlineBeat() {
+    this._onlineStarted = true
+    this.reportOnline()
+    this.clearOnlineBeat()
+    this._onlineTimer = setInterval(() => this.reportOnline(), 30000)
+  },
+
+  clearOnlineBeat() {
+    if (this._onlineTimer) {
+      clearInterval(this._onlineTimer)
+      this._onlineTimer = null
+    }
+  },
+
+  onUnload() {
+    this.clearOnlineBeat()
   },
 
   onPullDownRefresh() {

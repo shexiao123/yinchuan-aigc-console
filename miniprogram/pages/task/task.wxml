@@ -1,0 +1,45 @@
+<view class="page" wx:if="{{task}}">
+  <view class="card">
+    <view class="tags">
+      <text class="tag-open">{{task.status === 'open' ? '招募中' : '已结束'}}</text>
+      <text class="tag-video" wx:if="{{task.reference_video_path}}">▶ 含参考视频</text>
+    </view>
+    <view class="title">{{task.title}}</view>
+    <view class="budget-row">
+      <text class="budget-label">任务预算</text>
+      <text class="budget">{{task.budgetText}}</text>
+      <text class="deadline">{{task.deadline || '长期有效'}}</text>
+    </view>
+    <view class="card-title">需求说明</view>
+    <view class="card-text">{{task.description || '商家暂未填写详细说明。'}}</view>
+  </view>
+
+  <view class="card">
+    <view class="card-title">参考视频</view>
+    <video wx:if="{{task.videoUrl}}" class="video" src="{{task.videoUrl}}" controls object-fit="contain" show-fullscreen-btn="{{true}}"></video>
+    <view wx:else class="no-video">本任务未提供参考视频，请以文字需求为准</view>
+    <view class="video-cap" wx:if="{{task.videoUrl}}">{{task.reference_video_name || '商家提供的风格参考'}}</view>
+  </view>
+
+  <view class="card">
+    <view class="card-title">发布商家</view>
+    <view class="shop-row" bindtap="onShop">
+      <view class="shop-logo small">{{task.merchant.name[0] || '商'}}</view>
+      <view>
+        <view class="shop-name">{{task.merchant.name || '企业商家'}}</view>
+        <view class="shop-meta">{{task.merchant.city || '银川'}} · 点击查看店铺 ›</view>
+      </view>
+    </view>
+  </view>
+
+  <view class="apply-box" wx:if="{{applied}}">
+    <text class="applied">✓ 你已报名（{{applied.status === 'selected' ? '商家已选定你' : applied.status === 'rejected' ? '本次未入选' : '等待商家查看'}}）</text>
+  </view>
+  <button wx:elif="{{task.status === 'open'}}" class="btn-primary" bindtap="onApply">我要接单</button>
+  <button wx:else class="btn-disabled" disabled>任务已结束</button>
+  <button class="btn-ghost" bindtap="onAllTasks">看看其他任务</button>
+</view>
+
+<view class="page" wx:elif="{{!loading}}">
+  <view class="empty">任务不存在或已下架</view>
+</view>

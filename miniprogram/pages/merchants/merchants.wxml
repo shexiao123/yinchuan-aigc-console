@@ -1,0 +1,40 @@
+<view class="page">
+  <view class="mc-hero">
+    <text class="mc-hero-eyebrow">企业商家 · 任务协作</text>
+    <text class="mc-hero-title">每个商家，都有自己的店铺</text>
+    <text class="mc-hero-sub">发布制作任务、上传参考视频，让服务者一眼看懂你要什么</text>
+    <view class="mc-hero-btn" bindtap="onConsole">开通 / 管理我的店铺 ›</view>
+  </view>
+
+  <view class="tabs">
+    <view class="tab {{tab === 'shops' ? 'active' : ''}}" data-tab="shops" bindtap="onTab">店铺 <text>{{shops.length}}</text></view>
+    <view class="tab {{tab === 'tasks' ? 'active' : ''}}" data-tab="tasks" bindtap="onTab">在招任务 <text>{{tasks.length}}</text></view>
+  </view>
+
+  <view class="list" wx:if="{{tab === 'shops'}}">
+    <view class="shop-card" wx:for="{{shops}}" wx:key="id" bindtap="onShop" data-id="{{item.id}}">
+      <view class="shop-logo">{{item.initial}}</view>
+      <view class="shop-body">
+        <view class="shop-name">{{item.name}}<text class="verified" wx:if="{{item.is_verified}}">✓ 认证</text></view>
+        <view class="shop-meta">{{item.city || '银川'}} · {{item.openTaskCount}} 个在招任务</view>
+        <view class="shop-intro ellipsis-2">{{item.intro || '这家商家还没有填写简介'}}</view>
+      </view>
+      <text class="arrow">›</text>
+    </view>
+    <view class="empty" wx:if="{{!shops.length && !loading}}">还没有商家入驻</view>
+  </view>
+
+  <view class="list" wx:else>
+    <view class="task-card" wx:for="{{tasks}}" wx:key="id" bindtap="onTask" data-id="{{item.id}}">
+      <view class="task-top">
+        <text class="task-badge">招募中</text>
+        <text class="task-video" wx:if="{{item.hasVideo}}">▶ 参考视频</text>
+        <text class="task-budget">{{item.budgetText}}</text>
+      </view>
+      <view class="task-title ellipsis-2">{{item.title}}</view>
+      <view class="task-desc ellipsis-2">{{item.description || '商家暂未填写详细说明'}}</view>
+      <view class="task-foot">{{item.merchantName}} · {{item.deadline || '长期有效'}}</view>
+    </view>
+    <view class="empty" wx:if="{{!tasks.length && !loading}}">暂时没有在招任务</view>
+  </view>
+</view>

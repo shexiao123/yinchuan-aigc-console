@@ -171,6 +171,9 @@ window.API = (function () {
     if (/InvalidPhone|phone.*invalid/i.test(msg)) {
       return '手机号格式不正确，请检查后重试'
     }
+    if (/MISSING_CREDENTIALS|Credentials missing/i.test(msg)) {
+      return '登录状态已失效，请重新登录后再上传视频'
+    }
     if (/InvalidToken|token.*invalid|expired/i.test(msg)) {
       return '验证码无效或已过期，请重新获取'
     }
@@ -278,11 +281,15 @@ window.API = (function () {
   function toRelativeAsset(url) {
     if (!url) return ''
     const s = String(url)
-    if (!/^https?:\/\//i.test(s)) return s
     // 保留 query（sharecode 等）
     const q = s.indexOf('?')
-    const query = q >= 0 ? s.slice(q) : ''
+    let query = q >= 0 ? s.slice(q) : ''
     const pathname = q >= 0 ? s.slice(0, q) : s
+    // 本地封面图换版后统一刷新缓存版本号（只动站内静态图，不动云存储签名地址）
+    if (/(?:covers\/|l-hero|l-cat-|l-mini-)/i.test(pathname) && /^\?v=/i.test(query)) {
+      query = '?v=20261105b'
+    }
+    if (!/^https?:\/\//i.test(s)) return pathname + query
     // 本站域名 → 相对路径
     if (/^https?:\/\/(guangying-web|meige-prototype)\.app\.workbuddy\.host/i.test(pathname)) {
       return pathname.replace(/^https?:\/\/[^/]+/i, '') + query
@@ -1158,6 +1165,37 @@ window.API = (function () {
     return rows[0]
   }
 
+  /**
+   * 新增服务分类（管理端）。
+   * slug 必须唯一且与英文短横线命名一致；sort_order 不填则排到末尾。
+   */
+  async function createCategory(payload) {
+    const slug = String(payload.slug || '').trim()
+    if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)) {
+      throw new Error('分类标识只能用小写字母、数字和短横线，例如 comic-drama')
+    }
+    const exists = await cloud.database.from('categories').select('id').eq('slug', slug)
+    if ((unwrap(exists, '校验分类失败') || []).length) throw new Error('该分类标识已存在')
+
+    let sortOrder = Number(payload.sort_order)
+    if (!Number.isFinite(sortOrder) || sortOrder <= 0) {
+      const all = await cloud.database.from('categories').select('sort_order').order('sort_order', { ascending: false })
+      const rows = unwrap(all, '读取分类失败') || []
+      sortOrder = (Number(rows[0] && rows[0].sort_order) || 0) + 1
+    }
+    const res = await cloud.database.from('categories').insert({
+      name: String(payload.name || '').trim(),
+      slug,
+      icon: String(payload.icon || '🎬').trim() || '🎬',
+      description: String(payload.description || '').trim(),
+      image_url: String(payload.image_url || '').trim(),
+      sort_order: sortOrder
+    }).select()
+    const rows = unwrap(res, '新增分类失败')
+    if (!rows || rows.length === 0) throw new Error('新增分类失败')
+    return rows[0]
+  }
+
   async function updateSettings(payload) {
     const res = await cloud.database.from('platform_settings').update(payload).eq('id', 1).select()
     const rows = unwrap(res, '更新失败')
@@ -1928,9 +1966,741 @@ window.API = (function () {
     }
   }
 
+  /* ---------------- 群聊 ---------------- */
+
+  /** 群列表，附带实时成员数与最新一条消息（不依赖缓存字段，避免普通成员无写权限） */
+  async function listChatGroups() {
+    const res = await cloud.database
+      .from('chat_groups')
+      .select('*')
+      .eq('status', 'active')
+      .order('id', { ascending: true })
+      .limit(50)
+    const groups = unwrap(res, '群聊加载失败') || []
+    if (!groups.length) return []
+    const ids = groups.map((g) => g.id)
+    const [memRes, msgRes] = await Promise.all([
+      cloud.database.from('chat_group_members').select('group_id').in('group_id', ids).limit(1000),
+      cloud.database
+        .from('chat_messages')
+        .select('group_id, content, created_at, sender_name')
+        .in('group_id', ids)
+        .eq('status', 'normal')
+        .order('id', { ascending: false })
+        .limit(300)
+    ])
+    const members = unwrap(memRes, '') || []
+    const msgs = unwrap(msgRes, '') || []
+    const memberMap = {}
+    members.forEach((m) => {
+      memberMap[m.group_id] = (memberMap[m.group_id] || 0) + 1
+    })
+    const lastMap = {}
+    msgs.forEach((m) => {
+      if (!lastMap[m.group_id]) lastMap[m.group_id] = m
+    })
+    return groups.map((g) => ({
+      ...g,
+      live_member_count: memberMap[g.id] || 0,
+      last: lastMap[g.id] || null
+    }))
+  }
+
+  /** 单个群详情 */
+  async function getChatGroup(groupId) {
+    if (!groupId) return null
+    const res = await cloud.database
+      .from('chat_groups')
+      .select('*')
+      .eq('id', groupId)
+      .maybeSingle()
+    return unwrap(res, '群聊不存在') || null
+  }
+
+  /**
+   * 建群。owner_id 由数据库 DEFAULT auth.uid() 填充，前端不传，避免伪造身份被 RLS 拒绝。
+   */
+  async function createChatGroup(payload) {
+    const uid = await currentUid()
+    if (!uid) throw new Error('请先登录后再创建群聊')
+    const name = String((payload && payload.name) || '').trim()
+    if (!name) throw new Error('群名称不能为空')
+    if (name.length > 30) throw new Error('群名称不能超过 30 字')
+    const session = await getSession()
+    const u = (session && session.user) || {}
+    const slug = String((payload && payload.slug) || '').trim() ||
+      ('g-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 6))
+    if (!/^[a-z0-9-]{2,40}$/.test(slug)) throw new Error('群标识只能用小写字母、数字和连字符')
+    const res = await cloud.database
+      .from('chat_groups')
+      .insert({
+        name,
+        slug,
+        icon: String((payload && payload.icon) || '💬').slice(0, 8),
+        description: String((payload && payload.description) || '').trim().slice(0, 200),
+        category_slug: String((payload && payload.category_slug) || '').trim(),
+        owner_name: u.name || u.nickname || '群主',
+        visibility: 'public',
+        status: 'active'
+      })
+      .select()
+    const rows = unwrap(res, '创建群聊失败')
+    const group = rows && rows[0]
+    if (group) {
+      await joinChatGroup(group.id).catch(() => null)
+      await sendChatMessage(group.id, `群「${name}」已创建，欢迎大家发言。`, 'system').catch(() => null)
+    }
+    return group
+  }
+
+  /** 加入群（幂等；并发重复插入忽略唯一键冲突） */
+  async function joinChatGroup(groupId) {
+    const uid = await currentUid()
+    if (!uid || !groupId) return null
+    const existingRes = await cloud.database
+      .from('chat_group_members')
+      .select('id')
+      .eq('group_id', groupId)
+      .eq('user_id', uid)
+      .maybeSingle()
+    const existing = unwrap(existingRes, '')
+    if (existing) return existing
+    const session = await getSession()
+    const u = (session && session.user) || {}
+    try {
+      const res = await cloud.database
+        .from('chat_group_members')
+        .insert({
+          group_id: groupId,
+          user_name: u.name || u.nickname || '群成员',
+          user_avatar: u.avatarUrl || ''
+        })
+        .select()
+      const rows = unwrap(res, '')
+      return (rows && rows[0]) || null
+    } catch (e) {
+      // 23505: 同一瞬间重复加入，视为已加入
+      return null
+    }
+  }
+
+  /** 我是否已加入某群 */
+  async function isChatMember(groupId) {
+    const uid = await currentUid()
+    if (!uid || !groupId) return false
+    const res = await cloud.database
+      .from('chat_group_members')
+      .select('id')
+      .eq('group_id', groupId)
+      .eq('user_id', uid)
+      .maybeSingle()
+    return !!unwrap(res, '')
+  }
+
+  /** 群成员列表 */
+  async function listChatGroupMembers(groupId) {
+    if (!groupId) return []
+    const res = await cloud.database
+      .from('chat_group_members')
+      .select('*')
+      .eq('group_id', groupId)
+      .order('id', { ascending: true })
+      .limit(200)
+    return unwrap(res, '成员加载失败') || []
+  }
+
+  /** 群消息（最近 N 条，按时间升序返回；轮询用同一个方法） */
+  async function listChatMessages(groupId, limit) {
+    if (!groupId) return []
+    const res = await cloud.database
+      .from('chat_messages')
+      .select('*')
+      .eq('group_id', groupId)
+      .order('id', { ascending: false })
+      .limit(limit || 60)
+    const rows = unwrap(res, '消息加载失败') || []
+    return rows.reverse()
+  }
+
+  /** 发消息（自动确保已入群；sender_id 由数据库填充） */
+  async function sendChatMessage(groupId, content, senderRole) {
+    const uid = await currentUid()
+    if (!uid) throw new Error('请先登录后再发言')
+    const text = String(content || '').trim()
+    if (!text) throw new Error('消息不能为空')
+    if (text.length > 1000) throw new Error('单条消息不能超过 1000 字')
+    if (senderRole !== 'system') await joinChatGroup(groupId).catch(() => null)
+    const session = await getSession()
+    const u = (session && session.user) || {}
+    const res = await cloud.database
+      .from('chat_messages')
+      .insert({
+        group_id: groupId,
+        sender_name: senderRole === 'system' ? '平台助手' : (u.name || u.nickname || '群成员'),
+        sender_avatar: senderRole === 'system' ? '' : (u.avatarUrl || ''),
+        sender_role: senderRole || 'member',
+        content: text,
+        message_type: 'text',
+        status: 'normal'
+      })
+      .select()
+    const rows = unwrap(res, '发送失败')
+    return (rows && rows[0]) || null
+  }
+
+  /** 标记已读时间 */
+  async function markChatRead(groupId) {
+    const uid = await currentUid()
+    if (!uid || !groupId) return
+    try {
+      await cloud.database
+        .from('chat_group_members')
+        .update({ last_read_at: new Date().toISOString() })
+        .eq('group_id', groupId)
+        .eq('user_id', uid)
+    } catch (e) {
+      // 忽略
+    }
+  }
+
+  /* ---- 管理端群聊 ---- */
+
+  /** 管理端：全部群（含已停用，staff 可见） */
+  async function adminListChatGroups() {
+    const res = await cloud.database.from('chat_groups').select('*').order('id', { ascending: true }).limit(200)
+    return unwrap(res, '群聊加载失败') || []
+  }
+
+  /** 管理端：群消息（含被隐藏的，staff 可见） */
+  async function adminListChatMessages(groupId) {
+    if (!groupId) return []
+    const res = await cloud.database
+      .from('chat_messages')
+      .select('*')
+      .eq('group_id', groupId)
+      .order('id', { ascending: false })
+      .limit(100)
+    return (unwrap(res, '') || []).reverse()
+  }
+
+  /** 管理端：隐藏 / 恢复消息 */
+  async function setChatMessageStatus(messageId, status) {
+    const res = await cloud.database
+      .from('chat_messages')
+      .update({ status: status === 'normal' ? 'normal' : 'hidden' })
+      .eq('id', messageId)
+      .select()
+    const rows = unwrap(res, '操作失败')
+    return rows && rows[0]
+  }
+
+  /** 管理端：启用 / 停用群 */
+  async function setChatGroupStatus(groupId, status) {
+    const res = await cloud.database
+      .from('chat_groups')
+      .update({ status: status === 'active' ? 'active' : 'archived', updated_at: new Date().toISOString() })
+      .eq('id', groupId)
+      .select()
+    const rows = unwrap(res, '操作失败')
+    return rows && rows[0]
+  }
+
+  /** 管理端：群聊统计 */
+  async function chatStats() {
+    const [gRes, mMsgRes, mMemRes] = await Promise.all([
+      cloud.database.from('chat_groups').select('id, status').limit(500),
+      cloud.database.from('chat_messages').select('id, created_at').order('id', { ascending: false }).limit(500),
+      cloud.database.from('chat_group_members').select('id').limit(1000)
+    ])
+    const groups = unwrap(gRes, '') || []
+    const msgs = unwrap(mMsgRes, '') || []
+    const members = unwrap(mMemRes, '') || []
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    return {
+      groups: groups.length,
+      active: groups.filter((g) => g.status === 'active').length,
+      messages: msgs.length,
+      today: msgs.filter((m) => new Date(m.created_at) >= today).length,
+      members: members.length
+    }
+  }
+
+  /* ---------------- 企业商家 · 店铺 / 任务 ---------------- */
+
+  const MAX_TASK_VIDEO_MB = 100
+
+  /** 媒体路径 → 可播放地址：http/站点静态资源直接用，云存储路径换签名链接 */
+  async function resolveMedia(path) {
+    const p = String(path || '')
+    if (!p) return ''
+    if (/^https?:\/\//i.test(p) || p.startsWith('assets/') || p.startsWith('/')) return p
+    try {
+      const res = await window.cloud.storage.createSignedUrl(p, 7200)
+      if (res && res.error) return ''
+      const d = res && res.data
+      return (d && (d.url || d.signedUrl)) || (typeof d === 'string' ? d : '')
+    } catch (e) {
+      return ''
+    }
+  }
+
+  function merchantInitial(name) {
+    return String(name || '商').trim().charAt(0) || '商'
+  }
+
+  /** 公开店铺列表，附在招任务数 */
+  async function listMerchants() {
+    const res = await cloud.database
+      .from('merchants')
+      .select('*')
+      .eq('status', 'active')
+      .order('id', { ascending: true })
+      .limit(100)
+    const shops = unwrap(res, '商家加载失败') || []
+    const tRes = await cloud.database.from('merchant_tasks').select('merchant_id, status').limit(500)
+    const tasks = unwrap(tRes, '') || []
+    const counts = {}
+    tasks.forEach((t) => {
+      if (t.status !== 'open') return
+      counts[t.merchant_id] = (counts[t.merchant_id] || 0) + 1
+    })
+    return shops.map((m) => ({ ...m, initial: merchantInitial(m.name), open_task_count: counts[m.id] || 0 }))
+  }
+
+  async function getMerchant(id) {
+    if (!id) return null
+    const res = await cloud.database.from('merchants').select('*').eq('id', id).maybeSingle()
+    const m = unwrap(res, '') || null
+    return m ? { ...m, initial: merchantInitial(m.name), logoUrl: m.logo_path ? await resolveMedia(m.logo_path) : '', coverUrl: m.cover_path ? await resolveMedia(m.cover_path) : '' } : null
+  }
+
+  /** 当前登录用户的店铺（一人一店，没开返回 null） */
+  async function getMyMerchant() {
+    const uid = await currentUid()
+    if (!uid) return null
+    const res = await cloud.database.from('merchants').select('*').eq('owner_id', uid).maybeSingle()
+    const m = unwrap(res, '') || null
+    return m ? { ...m, initial: merchantInitial(m.name) } : null
+  }
+
+  /** 开通 / 编辑自己的店铺。owner_id 不传，由服务端会话决定，避免伪造身份 */
+  async function saveMerchant(payload) {
+    const uid = await currentUid()
+    if (!uid) throw new Error('请先登录后再开通店铺')
+    const p = payload || {}
+    const name = String(p.name || '').trim()
+    if (name.length < 2) throw new Error('店铺名称至少 2 个字')
+    if (name.length > 40) throw new Error('店铺名称不能超过 40 字')
+    const row = {
+      name,
+      category_slug: String(p.category_slug || '').trim(),
+      city: String(p.city || '').trim().slice(0, 20),
+      intro: String(p.intro || '').trim().slice(0, 500),
+      contact_name: String(p.contact_name || '').trim().slice(0, 20),
+      contact_phone: String(p.contact_phone || '').trim().slice(0, 30),
+      logo_path: String(p.logo_path || '').trim(),
+      cover_path: String(p.cover_path || '').trim(),
+      updated_at: new Date().toISOString()
+    }
+    if (p.id) {
+      const res = await cloud.database.from('merchants').update(row).eq('id', p.id).eq('owner_id', uid).select()
+      const rows = unwrap(res, '保存店铺失败')
+      if (!rows || !rows.length) throw new Error('保存失败，店铺不存在或不属于你')
+      return rows[0]
+    }
+    const slug = 'm-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 6)
+    const res = await cloud.database.from('merchants').insert({ ...row, owner_id: uid, slug, status: 'active' }).select()
+    const rows = unwrap(res, '开通店铺失败')
+    if (!rows || !rows.length) throw new Error('开通店铺失败，请确认登录状态')
+    return rows[0]
+  }
+
+  /** 任务列表：公开只看 open；商家后台可看自己全部 */
+  async function listMerchantTasks(opts) {
+    const o = opts || {}
+    let q = cloud.database.from('merchant_tasks').select('*')
+    if (o.merchantId) q = q.eq('merchant_id', o.merchantId)
+    if (o.status) q = q.eq('status', o.status)
+    const res = await q.order('created_at', { ascending: false }).limit(o.limit || 100)
+    let rows = unwrap(res, '任务加载失败') || []
+    if (o.publicOnly) rows = rows.filter((t) => t.status === 'open')
+    if (!rows.length) return []
+    const mRes = await cloud.database.from('merchants').select('id, name, slug, city, is_verified, status, logo_path').limit(200)
+    const map = {}
+    ;(unwrap(mRes, '') || []).forEach((m) => { map[m.id] = m })
+    return rows.map((t) => ({ ...t, merchant: map[t.merchant_id] || null }))
+  }
+
+  async function getMerchantTask(id) {
+    if (!id) return null
+    const res = await cloud.database.from('merchant_tasks').select('*').eq('id', id).maybeSingle()
+    const t = unwrap(res, '') || null
+    if (!t) return null
+    const merchant = await getMerchant(t.merchant_id)
+    const videoUrl = t.reference_video_path ? await resolveMedia(t.reference_video_path) : ''
+    return { ...t, merchant, videoUrl }
+  }
+
+  /** 上传参考视频到云存储，返回路径与文件信息；不负责写库 */
+  async function uploadTaskVideo(file, uid) {
+    if (!file) return null
+    if (file.size > MAX_TASK_VIDEO_MB * 1024 * 1024) {
+      throw new Error(`参考视频不能超过 ${MAX_TASK_VIDEO_MB}MB（当前 ${(file.size / 1024 / 1024).toFixed(1)}MB）`)
+    }
+    const ext = String(file.name || '').toLowerCase().split('.').pop()
+    const safeExt = /^[a-z0-9]{2,5}$/.test(ext) ? ext : 'mp4'
+    const path = `shared/${uid || 'platform'}/merchant-tasks/${Date.now()}-${Math.random().toString(36).slice(2, 10)}.${safeExt}`
+    const res = await window.cloud.storage.upload(path, file, {
+      contentType: file.type || 'video/mp4',
+      cacheControl: '3600',
+      upsert: false,
+      metadata: { purpose: 'merchant_task_reference' }
+    })
+    if (res && res.error) throw new Error(res.error.message || '视频上传失败')
+    return { path, name: file.name || '参考视频.mp4', size: file.size || 0 }
+  }
+
+  /**
+   * 发布 / 编辑任务。参考视频支持三种来源：
+   * ① 本地文件（走云存储）② 粘贴 http 视频链接 ③ 不传（无参考视频）
+   */
+  async function saveMerchantTask(payload) {
+    const uid = await currentUid()
+    if (!uid) throw new Error('请先登录后再发布任务')
+    const shop = await getMyMerchant()
+    if (!shop) throw new Error('请先开通店铺，再发布任务')
+    const p = payload || {}
+    const title = String(p.title || '').trim()
+    if (title.length < 4) throw new Error('任务标题至少 4 个字')
+    if (title.length > 80) throw new Error('任务标题不能超过 80 字')
+
+    let videoPath = String(p.reference_video_path || '').trim()
+    let videoName = String(p.reference_video_name || '').trim()
+    let videoSize = Number(p.reference_video_size) || 0
+    if (p.videoFile) {
+      const up = await uploadTaskVideo(p.videoFile, uid)
+      if (up) { videoPath = up.path; videoName = up.name; videoSize = up.size }
+    }
+
+    const row = {
+      title,
+      description: String(p.description || '').trim().slice(0, 2000),
+      category_slug: String(p.category_slug || '').trim(),
+      budget: Math.max(0, Math.round(Number(p.budget) || 0)),
+      deadline: p.deadline || null,
+      reference_video_path: videoPath,
+      reference_video_name: videoName,
+      reference_video_size: videoSize,
+      updated_at: new Date().toISOString()
+    }
+    if (p.id) {
+      const res = await cloud.database.from('merchant_tasks').update(row).eq('id', p.id).eq('owner_id', uid).select()
+      const rows = unwrap(res, '保存任务失败')
+      if (!rows || !rows.length) throw new Error('保存失败，任务不存在或不属于你')
+      return rows[0]
+    }
+    const res = await cloud.database
+      .from('merchant_tasks')
+      .insert({ ...row, merchant_id: shop.id, owner_id: uid, status: 'open' })
+      .select()
+    const rows = unwrap(res, '发布任务失败')
+    if (!rows || !rows.length) throw new Error('发布失败，请确认登录状态')
+    return rows[0]
+  }
+
+  async function setMerchantTaskStatus(id, status) {
+    const res = await cloud.database
+      .from('merchant_tasks')
+      .update({ status: status === 'open' ? 'open' : status === 'hidden' ? 'hidden' : 'closed', updated_at: new Date().toISOString() })
+      .eq('id', id)
+      .select()
+    const rows = unwrap(res, '操作失败')
+    if (!rows || !rows.length) throw new Error('操作失败，任务不存在或不属于你')
+    return rows[0]
+  }
+
+  async function deleteMerchantTask(id) {
+    const res = await cloud.database.from('merchant_tasks').delete().eq('id', id).select()
+    const rows = unwrap(res, '删除失败')
+    if (!rows || !rows.length) throw new Error('删除失败，任务不存在或不属于你')
+    return rows[0]
+  }
+
+  /** 服务者报名接任务（一人一任务只能报一次） */
+  async function applyMerchantTask(taskId, message) {
+    const uid = await currentUid()
+    if (!uid) throw new Error('请先登录后再报名')
+    const session = await getSession()
+    const u = (session && session.user) || {}
+    const res = await cloud.database
+      .from('merchant_task_applications')
+      .insert({
+        task_id: taskId,
+        applicant_id: uid,
+        applicant_name: u.name || u.nickname || '服务者',
+        message: String(message || '').trim().slice(0, 500),
+        status: 'pending'
+      })
+      .select()
+    const rows = unwrap(res, '报名失败')
+    if (!rows || !rows.length) throw new Error('报名失败，请确认登录状态')
+    return rows[0]
+  }
+
+  async function listMyApplications() {
+    const uid = await currentUid()
+    if (!uid) return []
+    const res = await cloud.database
+      .from('merchant_task_applications')
+      .select('*')
+      .eq('applicant_id', uid)
+      .order('created_at', { ascending: false })
+      .limit(100)
+    return unwrap(res, '') || []
+  }
+
+  /** 商家查看自己任务收到的报名（RLS 只放行自己任务的报名） */
+  async function listMerchantApplications() {
+    const res = await cloud.database
+      .from('merchant_task_applications')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(300)
+    const apps = unwrap(res, '') || []
+    if (!apps.length) return []
+    const ids = [...new Set(apps.map((a) => a.task_id))]
+    const tRes = await cloud.database.from('merchant_tasks').select('id, title, owner_id').in('id', ids).limit(300)
+    const map = {}
+    ;(unwrap(tRes, '') || []).forEach((t) => { map[t.id] = t })
+    return apps.map((a) => ({ ...a, task: map[a.task_id] || null }))
+  }
+
+  async function setApplicationStatus(id, status) {
+    const next = status === 'selected' ? 'selected' : status === 'rejected' ? 'rejected' : 'pending'
+    const res = await cloud.database
+      .from('merchant_task_applications')
+      .update({ status: next, updated_at: new Date().toISOString() })
+      .eq('id', id)
+      .select()
+    const rows = unwrap(res, '操作失败')
+    if (!rows || !rows.length) throw new Error('操作失败，没有管理权限')
+    return rows[0]
+  }
+
+  /* ---- 管理端：商家与任务审核 ---- */
+
+  async function adminListMerchants() {
+    const res = await cloud.database.from('merchants').select('*').order('id', { ascending: true }).limit(200)
+    return unwrap(res, '商家加载失败') || []
+  }
+
+  async function adminListMerchantTasks() {
+    const res = await cloud.database.from('merchant_tasks').select('*').order('id', { ascending: false }).limit(300)
+    return unwrap(res, '任务加载失败') || []
+  }
+
+  async function setMerchantStatus(id, status) {
+    const res = await cloud.database
+      .from('merchants')
+      .update({ status: status === 'active' ? 'active' : 'suspended', updated_at: new Date().toISOString() })
+      .eq('id', id)
+      .select()
+    const rows = unwrap(res, '操作失败')
+    if (!rows || !rows.length) throw new Error('操作失败，没有管理权限')
+    return rows[0]
+  }
+
+  async function setMerchantVerified(id, verified) {
+    const res = await cloud.database
+      .from('merchants')
+      .update({ is_verified: !!verified, updated_at: new Date().toISOString() })
+      .eq('id', id)
+      .select()
+    const rows = unwrap(res, '操作失败')
+    if (!rows || !rows.length) throw new Error('操作失败，没有管理权限')
+    return rows[0]
+  }
+
+  async function merchantStats() {
+    const [mRes, tRes, aRes] = await Promise.all([
+      cloud.database.from('merchants').select('id, status').limit(500),
+      cloud.database.from('merchant_tasks').select('id, status').limit(500),
+      cloud.database.from('merchant_task_applications').select('id, status').limit(500)
+    ])
+    const m = unwrap(mRes, '') || []
+    const t = unwrap(tRes, '') || []
+    const a = unwrap(aRes, '') || []
+    return {
+      merchants: m.length,
+      active: m.filter((x) => x.status === 'active').length,
+      tasks: t.length,
+      open: t.filter((x) => x.status === 'open').length,
+      applications: a.length,
+      selected: a.filter((x) => x.status === 'selected').length
+    }
+  }
+
+  /* ---------------- 平台公告 ---------------- */
+
+  const ANNOUNCEMENT_FIELDS = 'id,title,content,tag,level,link,sort_order,is_pinned,is_active,starts_at,ends_at,created_at,updated_at'
+  const ANNOUNCEMENT_LEVELS = ['info', 'activity', 'important']
+
+  /** 排序：置顶优先 → 权重降序 → 新的在前 */
+  function sortAnnouncements(rows) {
+    return (rows || []).slice().sort(
+      (a, b) =>
+        Number(!!b.is_pinned) - Number(!!a.is_pinned) ||
+        (Number(b.sort_order) || 0) - (Number(a.sort_order) || 0) ||
+        (Number(b.id) || 0) - (Number(a.id) || 0)
+    )
+  }
+
+  /** 是否在投放有效期内（前端再兜一层，避免 RLS 未生效时露出过期公告） */
+  function announcementInWindow(a) {
+    const now = Date.now()
+    const from = a.starts_at ? new Date(a.starts_at).getTime() : 0
+    const to = a.ends_at ? new Date(a.ends_at).getTime() : Infinity
+    return now >= from && now <= to
+  }
+
+  /** 用户端：当前生效的公告（RLS 只放行 is_active=true 的行） */
+  async function listAnnouncements() {
+    const res = await cloud.database
+      .from('announcements')
+      .select(ANNOUNCEMENT_FIELDS)
+      .eq('is_active', true)
+      .order('sort_order', { ascending: false })
+      .limit(50)
+    const rows = unwrap(res, '公告加载失败') || []
+    return sortAnnouncements(rows.filter(announcementInWindow))
+  }
+
+  /** 管理端：全部公告（含停用与过期，staff 策略放行） */
+  async function adminListAnnouncements() {
+    const res = await cloud.database
+      .from('announcements')
+      .select(ANNOUNCEMENT_FIELDS)
+      .order('sort_order', { ascending: false })
+      .limit(200)
+    return sortAnnouncements(unwrap(res, '公告加载失败') || [])
+  }
+
+  function normalizeAnnouncement(payload) {
+    const p = payload || {}
+    const title = String(p.title || '').trim()
+    if (!title) throw new Error('公告标题不能为空')
+    if (title.length > 80) throw new Error('公告标题不能超过 80 字')
+    return {
+      title,
+      content: String(p.content || '').trim().slice(0, 600),
+      tag: String(p.tag || '公告').trim().slice(0, 8) || '公告',
+      level: ANNOUNCEMENT_LEVELS.indexOf(p.level) >= 0 ? p.level : 'info',
+      link: String(p.link || '').trim().slice(0, 200),
+      sort_order: Number(p.sort_order) || 0,
+      is_pinned: !!p.is_pinned,
+      is_active: p.is_active !== false,
+      starts_at: p.starts_at || null,
+      ends_at: p.ends_at || null,
+      updated_at: new Date().toISOString()
+    }
+  }
+
+  async function createAnnouncement(payload) {
+    const row = normalizeAnnouncement(payload)
+    const res = await cloud.database.from('announcements').insert(row).select()
+    const rows = unwrap(res, '发布公告失败')
+    if (!rows || !rows.length) throw new Error('发布公告失败，请确认管理员身份')
+    return rows[0]
+  }
+
+  async function updateAnnouncement(id, payload) {
+    const row = normalizeAnnouncement(payload)
+    delete row.is_active
+    const res = await cloud.database.from('announcements').update(row).eq('id', id).select()
+    const rows = unwrap(res, '保存公告失败')
+    if (!rows || !rows.length) throw new Error('保存失败，该公告不存在或没有管理权限')
+    return rows[0]
+  }
+
+  async function deleteAnnouncement(id) {
+    const res = await cloud.database.from('announcements').delete().eq('id', id).select()
+    const rows = unwrap(res, '删除公告失败')
+    if (!rows || !rows.length) throw new Error('删除失败，该公告不存在或没有管理权限')
+    return rows[0]
+  }
+
+  async function setAnnouncementActive(id, isActive) {
+    const res = await cloud.database
+      .from('announcements')
+      .update({ is_active: !!isActive, updated_at: new Date().toISOString() })
+      .eq('id', id)
+      .select()
+    const rows = unwrap(res, '操作失败')
+    if (!rows || !rows.length) throw new Error('操作失败，没有管理权限')
+    return rows[0]
+  }
+
+  async function setAnnouncementPinned(id, isPinned) {
+    const res = await cloud.database
+      .from('announcements')
+      .update({ is_pinned: !!isPinned, updated_at: new Date().toISOString() })
+      .eq('id', id)
+      .select()
+    const rows = unwrap(res, '操作失败')
+    if (!rows || !rows.length) throw new Error('操作失败，没有管理权限')
+    return rows[0]
+  }
+
+  /* ---------------- 在线人数 ---------------- */
+
+  const ONLINE_SID_KEY = 'wb_online_sid'
+
+  /** 每个浏览器标签/设备一个稳定会话标识，存在 localStorage，刷新不重复计数 */
+  function onlineSessionId() {
+    let sid = ''
+    try { sid = localStorage.getItem(ONLINE_SID_KEY) || '' } catch (e) {}
+    if (!sid) {
+      sid = 'web-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 12)
+      try { localStorage.setItem(ONLINE_SID_KEY, sid) } catch (e) {}
+    }
+    return sid
+  }
+
+  /**
+   * 上报一次在线心跳，返回「近 2 分钟活跃会话数」。
+   * 走 SECURITY DEFINER RPC：匿名访客也能上报，且不直接暴露心跳表。
+   * 失败返回 null，UI 显示「–」，绝不编造在线数字。
+   */
+  async function reportOnline(page) {
+    try {
+      const res = await cloud.database.rpc('online_presence_beat', {
+        p_session_key: onlineSessionId(),
+        p_channel: 'web',
+        p_page: String(page == null ? (location.hash || '/') : page).slice(0, 120)
+      })
+      if (res && res.error) return null
+      const row = res && res.data && res.data[0]
+      return row ? Number(row.online_count) || 0 : null
+    } catch (e) {
+      return null
+    }
+  }
+
   return {
     // 工具
     yuan, yuanShort, coverTheme, ORDER_STATUS, STATUS_TEXT, FLOW_TEXT, fromNow, esc, friendlyError,
+    // 企业商家 · 店铺 / 任务
+    resolveMedia, listMerchants, getMerchant, getMyMerchant, saveMerchant,
+    listMerchantTasks, getMerchantTask, uploadTaskVideo, saveMerchantTask,
+    setMerchantTaskStatus, deleteMerchantTask,
+    applyMerchantTask, listMyApplications, listMerchantApplications, setApplicationStatus,
+    adminListMerchants, adminListMerchantTasks, setMerchantStatus, setMerchantVerified, merchantStats,
+    // 平台公告
+    listAnnouncements, adminListAnnouncements, createAnnouncement, updateAnnouncement,
+    deleteAnnouncement, setAnnouncementActive, setAnnouncementPinned,
+    // 在线人数
+    reportOnline, onlineSessionId,
     // 会话
     getSession, sendPhoneCode, verifyPhoneCode, wechatLoginUrl, handleWechatCallback, signOut,
     // 业务
@@ -1947,13 +2717,17 @@ window.API = (function () {
     listApplications, reviewApplication,
     listProvidersAdmin, setProviderVerified,
     adminUpdateOrderStatus,
-    updateBanner, createBanner, deleteBanner, updateCategory, updateSettings,
+    updateBanner, createBanner, deleteBanner, updateCategory, createCategory, updateSettings,
     listSettlements, generateSettlements, paySettlement,
     listAdminActions,
     // 人工客服
     createSupportConversation, listMySupportConversations, listSupportConversations,
     getSupportConversation, sendSupportMessage, markSupportRead,
     closeSupportConversation, assignSupportConversation, supportStats,
+    // 群聊
+    listChatGroups, getChatGroup, createChatGroup, joinChatGroup, isChatMember,
+    listChatGroupMembers, listChatMessages, sendChatMessage, markChatRead,
+    adminListChatGroups, adminListChatMessages, setChatMessageStatus, setChatGroupStatus, chatStats,
     // 会员包月
     listMemberPlans, listMemberSubscriptions, listMemberPaymentOrders,
     listProviderDeposits, memberStats, activateMemberSubscription,

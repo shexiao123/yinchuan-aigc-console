@@ -230,3 +230,108 @@
   gap: 16rpx;
   margin-top: 24rpx;
 }
+
+/* ---------------- 可视化数据版（与网页端同源 tokens） ---------------- */
+
+.viz-panel {
+  background: rgba(28, 46, 76, .62);
+  border: 1rpx solid rgba(120, 190, 230, .20);
+  border-radius: 24rpx;
+  padding: 26rpx 24rpx 20rpx;
+  position: relative;
+  overflow: hidden;
+}
+
+/* 顶部霓虹高光边 */
+.viz-panel::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1rpx;
+  background: linear-gradient(90deg, transparent, #22D3EE, transparent);
+}
+
+.viz-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 16rpx;
+}
+.viz-head-left { display: flex; align-items: center; }
+.viz-bar {
+  width: 6rpx;
+  height: 26rpx;
+  background: linear-gradient(180deg, #22D3EE, #A78BFA);
+  border-radius: 3rpx;
+  margin-right: 14rpx;
+}
+.viz-title {
+  color: #F4FAFF;
+  font-size: 28rpx;
+  letter-spacing: 2rpx;
+}
+.viz-sub { color: #94AEC6; font-size: 22rpx; }
+
+.viz-canvas { display: block; }
+
+.viz-donut-row {
+  display: flex;
+  align-items: center;
+  gap: 24rpx;
+}
+.viz-legend { flex: 1; min-width: 0; }
+.viz-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  margin-bottom: 12rpx;
+}
+.viz-dot {
+  width: 14rpx;
+  height: 14rpx;
+  border-radius: 4rpx;
+  flex-shrink: 0;
+}
+.viz-legend-name {
+  flex: 1;
+  min-width: 0;
+  color: #C3D6E8;
+  font-size: 24rpx;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.viz-legend-count {
+  color: #F4FAFF;
+  font-size: 26rpx;
+  font-weight: 600;
+}
+
+.viz-video-wrap {
+  margin-top: 12rpx;
+}
+.viz-video {
+  width: 100%;
+  height: 640rpx;
+  border-radius: 20rpx;
+  background: #0A1222;
+}
+.viz-video-tip {
+  display: block;
+  color: #94AEC6;
+  font-size: 21rpx;
+  margin-top: 12rpx;
+  text-align: center;
+}
+
+/* 电影感背景层：固定在内容区顶部，pointer-events 穿透 */
+.viz-bg {
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: 0;
+  width: 100%;
+  height: 100vh;
+  z-index: 0;
+  pointer-events: none;
+}
