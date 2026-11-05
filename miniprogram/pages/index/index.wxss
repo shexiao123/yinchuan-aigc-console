@@ -82,31 +82,80 @@
 .tech-grid {
   position: absolute; left: -40rpx; top: -40rpx; right: -40rpx; bottom: -40rpx;
   background-image:
-    repeating-linear-gradient(0deg, rgba(79, 125, 243, .14) 0 2rpx, transparent 2rpx 34rpx),
-    repeating-linear-gradient(90deg, rgba(79, 125, 243, .14) 0 2rpx, transparent 2rpx 34rpx);
+    repeating-linear-gradient(0deg, rgba(79, 125, 243, .20) 0 2rpx, transparent 2rpx 28rpx),
+    repeating-linear-gradient(90deg, rgba(79, 125, 243, .20) 0 2rpx, transparent 2rpx 28rpx);
   animation: techGridDrift 14s linear infinite;
+}
+/* 城市天际线：三层错落楼体柱条，与网页端 Canvas 都市剪影同源 */
+.tech-city {
+  position: absolute; left: 0; right: 0; bottom: 0; height: 124rpx;
+  background-image:
+    linear-gradient(rgba(79, 125, 243, .22), rgba(79, 125, 243, .22)),
+    linear-gradient(rgba(79, 125, 243, .16), rgba(79, 125, 243, .16)),
+    linear-gradient(rgba(79, 125, 243, .11), rgba(79, 125, 243, .11));
+  background-repeat: repeat-x;
+  background-size: 46rpx 78rpx, 34rpx 112rpx, 62rpx 56rpx;
+  background-position: 0 bottom, 14rpx bottom, 30rpx bottom;
+}
+.tech-windows {
+  position: absolute; left: 0; right: 0; bottom: 0; height: 108rpx;
+  background-image: radial-gradient(circle, rgba(255, 255, 255, .90) 1.5rpx, transparent 2rpx);
+  background-size: 15rpx 17rpx;
+}
+/* 斜向流动光轨 */
+.tech-beam {
+  position: absolute; top: -80rpx; left: -180rpx; width: 180rpx; height: 460rpx;
+  background: linear-gradient(180deg, rgba(14, 165, 233, 0), rgba(14, 165, 233, .24) 46%, rgba(124, 92, 240, 0));
+  transform: rotate(26deg);
+  animation: techBeamMove 9s linear infinite;
+}
+.tech-beam-2 {
+  background: linear-gradient(180deg, rgba(124, 92, 240, 0), rgba(124, 92, 240, .18) 46%, rgba(14, 165, 233, 0));
+  animation-duration: 13s;
+  animation-delay: -5s;
+}
+/* 底部数据波形 */
+.tech-wave {
+  position: absolute; left: 0; right: 0; bottom: 0; height: 40rpx;
+  border-top: 2rpx solid rgba(14, 165, 233, .38);
+  border-radius: 50% 50% 0 0 / 100% 100% 0 0;
+  background: linear-gradient(180deg, rgba(14, 165, 233, .14), rgba(14, 165, 233, 0));
+  animation: techWaveSwing 6s ease-in-out infinite alternate;
+}
+/* 右上数据刻度 */
+.tech-hud {
+  position: absolute; right: 26rpx; top: 20rpx; width: 132rpx; height: 14rpx;
+  background-image: repeating-linear-gradient(90deg, rgba(79, 125, 243, .46) 0 2rpx, transparent 2rpx 12rpx);
 }
 .tech-scan {
   position: absolute; left: 0; right: 0; top: -140rpx; height: 140rpx;
-  background: linear-gradient(180deg, #E4F0FF 0%, #C6DCFA 50%, #E4F0FF 100%);
+  background: linear-gradient(180deg, #E4F0FF 0%, #BBD8FA 50%, #E4F0FF 100%);
   animation: techScanDown 7s linear infinite;
 }
 .tech-ring {
   position: absolute; right: 46rpx; top: 34rpx; width: 110rpx; height: 110rpx;
-  border: 3rpx solid #A9C9F5; border-radius: 50%;
+  border: 3rpx solid #9CC4F2; border-radius: 50%;
   animation: techRingPulse 6s ease-out infinite;
 }
 @keyframes techGridDrift {
   from { transform: translateY(0); }
-  to { transform: translateY(34rpx); }
+  to { transform: translateY(28rpx); }
 }
 @keyframes techScanDown {
   from { top: -140rpx; }
   to { top: 300rpx; }
 }
 @keyframes techRingPulse {
-  0% { transform: scale(.4); border-color: #A9C9F5; }
+  0% { transform: scale(.4); border-color: #9CC4F2; }
   100% { transform: scale(2.2); border-color: #E4F0FF; }
+}
+@keyframes techBeamMove {
+  from { left: -180rpx; }
+  to { left: 780rpx; }
+}
+@keyframes techWaveSwing {
+  from { transform: scaleY(.7) translateY(6rpx); }
+  to { transform: scaleY(1.25) translateY(-4rpx); }
 }
 
 .banner-inner {

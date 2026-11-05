@@ -19,6 +19,12 @@
           <!-- 蓝色科技动态背景：与网页端同源风格，整幅实色不透明 -->
           <view class="tech-motion" wx:if="{{!item.hasImage}}">
             <view class="tech-grid"></view>
+            <view class="tech-city"></view>
+            <view class="tech-windows"></view>
+            <view class="tech-beam"></view>
+            <view class="tech-beam tech-beam-2"></view>
+            <view class="tech-wave"></view>
+            <view class="tech-hud"></view>
             <view class="tech-scan"></view>
             <view class="tech-ring"></view>
           </view>
