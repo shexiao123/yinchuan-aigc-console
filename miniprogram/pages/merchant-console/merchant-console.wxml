@@ -1,17 +1,23 @@
 <view class="page">
+  <view wx:if="{{loading}}" class="center"><view class="card-text">加载中…</view></view>
+
   <!-- 未登录 -->
   <view wx:if="{{!loading && !logged}}" class="card center">
     <view class="big-icon">🔐</view>
     <view class="card-title">请先登录，再开通企业店铺</view>
-    <view class="card-text">一个账号对应一家店铺，登录后即可发布任务、上传参考视频</view>
+    <view class="card-text">企业商家入驻为付费服务，登录后可选择套餐并生成缴费订单</view>
     <button class="btn-primary" bindtap="onLogin">去登录</button>
+    <view class="link" bindtap="onJoin">先看入驻套餐与费用 ›</view>
   </view>
 
-  <!-- 未开通：开店表单 -->
-  <block wx:if="{{logged && !shop}}">
+  <!-- 未开通店铺：资料 + 套餐 -->
+  <block wx:if="{{!loading && logged && !shop}}">
+    <view class="notice">
+      <view class="notice-title">企业商家入驻需缴纳额外费用</view>
+      <view class="notice-text">费用 = 入驻服务费（年）＋ 一次性开店服务费 ＋ 可退履约保证金。提交资料后生成缴费订单，平台确认到账即可开通。</view>
+    </view>
     <view class="card">
       <view class="card-title">开通企业店铺</view>
-      <view class="card-text">开通后拥有独立店铺页，可发布制作任务与参考视频</view>
       <view class="field">
         <text class="label">店铺名称 *</text>
         <input class="input" placeholder="例：贺兰山品牌视觉" value="{{form.shopName}}" data-field="shopName" bindinput="onInput" />
@@ -37,12 +43,93 @@
           <input class="input" placeholder="联系电话" value="{{form.phone}}" data-field="phone" bindinput="onInput" />
         </view>
       </view>
-      <button class="btn-primary" bindtap="onOpenShop" disabled="{{submitting}}">开通店铺</button>
+      <view class="field">
+        <text class="label">入驻套餐 *</text>
+        <picker mode="selector" range="{{planNames}}" value="{{planIndex}}" bindchange="onJoinPlan">
+          <view class="picker">{{planNames.length ? planNames[planIndex] : '加载套餐中'}}</view>
+        </picker>
+      </view>
+      <button class="btn-primary" bindtap="onOpenShop" disabled="{{submitting}}">提交资料并生成缴费订单</button>
+      <view class="link" bindtap="onJoin">查看完整费用说明 ›</view>
     </view>
   </block>
 
-  <!-- 已开通：店铺 + 发布任务 -->
-  <block wx:if="{{logged && shop}}">
+  <!-- 有店铺但未缴费 / 已到期 -->
+  <block wx:if="{{!loading && logged && shop && !paid}}">
+    <view class="notice">
+      <view class="notice-title">{{payInfo.expired ? '入驻服务已到期，续费后恢复展示' : '资料已提交，等待缴费与平台审核'}}</view>
+      <view class="notice-text">店铺「{{shop.name}}」暂未对外展示。完成缴费并经平台确认后，立即开通店铺、任务发布与参考视频权限。</view>
+    </view>
+
+    <block wx:if="{{pendingOrder}}">
+      <view class="card">
+        <view class="card-title">缴费订单</view>
+        <view class="order-no">{{pendingOrder.order_no}}</view>
+        <view class="pay-row"><text>入驻套餐</text><text class="b">{{pendingOrder.plan_name || '—'}}</text></view>
+        <view class="pay-row"><text>服务周期</text><text class="b">{{pendingOrder.period_days}} 天</text></view>
+        <view class="pay-row"><text>状态</text><text class="b">{{pendingOrder.statusText}}</text></view>
+        <view class="pay-row total"><text>应付合计</text><text class="b">{{pendingOrder.amountText}}</text></view>
+      </view>
+
+      <view class="card">
+        <view class="card-title">① 按订单金额对公转账</view>
+        <view class="card-text">转账备注请填写订单号 {{pendingOrder.order_no}}</view>
+        <view class="pay-row"><text>户　名</text><text class="b">{{payCfg.payName || '待平台填写'}}</text></view>
+        <view class="pay-row"><text>开户行</text><text class="b">{{payCfg.payBank || '待平台填写'}}</text></view>
+        <view class="pay-row"><text>账　号</text><text class="b">{{payCfg.payAccount || '待平台填写'}}</text></view>
+        <view class="pay-note">{{payCfg.payNote || '付款后上传凭证等待平台确认'}}</view>
+      </view>
+
+      <view class="card">
+        <view class="card-title">② 提交付款信息</view>
+        <view class="field">
+          <text class="label">银行流水号 / 转账备注</text>
+          <input class="input" placeholder="例：20261105 对公转账" value="{{payTxn}}" bindinput="onPayTxn" />
+        </view>
+        <view class="field">
+          <text class="label">给平台的备注</text>
+          <textarea class="textarea" placeholder="例：已按订单号备注，请尽快审核" value="{{payRemark}}" bindinput="onPayRemark" />
+        </view>
+        <view class="field">
+          <text class="label">付款凭证（可选）</text>
+          <view class="video-pick" bindtap="onChooseProof"><text>{{proofName || '＋ 选择付款截图'}}</text></view>
+        </view>
+        <button class="btn-primary" bindtap="onPaySubmit" disabled="{{submitting}}">提交付款信息</button>
+        <view class="card-hint">平台核实到账后 1 个工作日内开通</view>
+      </view>
+    </block>
+
+    <view class="card" wx:else>
+      <view class="card-title">重新生成缴费订单</view>
+      <view class="card-text">{{orders.length ? '上一笔订单已关闭，请重新选择套餐' : '请选择入驻套餐'}}</view>
+      <view class="field">
+        <text class="label">入驻套餐</text>
+        <picker mode="selector" range="{{planNames}}" value="{{planIndex}}" bindchange="onJoinPlan">
+          <view class="picker">{{planNames.length ? planNames[planIndex] : '加载套餐中'}}</view>
+        </picker>
+      </view>
+      <button class="btn-primary" bindtap="onCreateOrder" disabled="{{submitting}}">生成缴费订单</button>
+    </view>
+
+    <view class="card" wx:if="{{orders.length}}">
+      <view class="card-title">我的缴费订单</view>
+      <view class="order-item" wx:for="{{orders}}" wx:key="id">
+        <text class="order-no">{{item.order_no}}</text>
+        <text>{{item.plan_name}} · {{item.amountText}} · {{item.statusText}} · {{item.dateText}}</text>
+      </view>
+    </view>
+  </block>
+
+  <!-- 已缴费：正常工作台 -->
+  <block wx:if="{{!loading && logged && shop && paid}}">
+    <view class="paid-bar">
+      <text class="paid-icon">✓</text>
+      <view>
+        <view class="paid-title">入驻服务中 · {{payInfo.planCode === 'legacy' ? '历史入驻商家' : '已缴费'}}</view>
+        <view class="paid-sub">有效期至 {{payInfo.paidUntil}} · 剩余 {{payInfo.daysLeft}} 天 · 每年任务 {{payInfo.taskLimit > 0 ? payInfo.taskLimit : '不限'}} · 视频 {{videoLimit}}MB</view>
+      </view>
+    </view>
+
     <view class="shop-banner" bindtap="onShopPage">
       <view class="shop-logo">{{shop.name[0]}}</view>
       <view>
@@ -80,7 +167,7 @@
         <textarea class="textarea" placeholder="交付物、规格、风格与时间节点写清楚" value="{{form.desc}}" data-field="desc" bindinput="onInput" />
       </view>
       <view class="field">
-        <text class="label">上传参考视频（≤100MB）</text>
+        <text class="label">上传参考视频（≤{{videoLimit}}MB）</text>
         <view class="video-pick" bindtap="onChooseVideo">
           <text wx:if="{{videoName}}">▶ {{videoName}}</text>
           <text wx:else>＋ 选择本地视频</text>
@@ -92,6 +179,26 @@
         <input class="input" placeholder="https://.../reference.mp4" value="{{form.videoUrl}}" data-field="videoUrl" bindinput="onInput" />
       </view>
       <button class="btn-primary" bindtap="onPublish" disabled="{{submitting}}">发布任务</button>
+    </view>
+
+    <view class="card">
+      <view class="card-title">续费 / 升级入驻套餐</view>
+      <view class="card-text">服务期内续费会从原到期日顺延，升级套餐可解锁更多任务与更大的参考视频额度</view>
+      <view class="field">
+        <text class="label">选择套餐</text>
+        <picker mode="selector" range="{{planNames}}" value="{{planIndex}}" bindchange="onJoinPlan">
+          <view class="picker">{{planNames.length ? planNames[planIndex] : '加载套餐中'}}</view>
+        </picker>
+      </view>
+      <button class="btn-soft" bindtap="onRenew">生成续费订单</button>
+    </view>
+
+    <view class="card" wx:if="{{orders.length}}">
+      <view class="card-title">我的缴费订单</view>
+      <view class="order-item" wx:for="{{orders}}" wx:key="id">
+        <text class="order-no">{{item.order_no}}</text>
+        <text>{{item.plan_name}} · {{item.amountText}} · {{item.statusText}} · {{item.dateText}}</text>
+      </view>
     </view>
 
     <view class="section-head"><text class="section-title">我发布的任务</text></view>

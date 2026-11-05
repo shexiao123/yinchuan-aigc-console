@@ -8,6 +8,27 @@ const { cloud } = require('./cloud')
 
 const MAX_VIDEO_MB = 100
 const SITE_BASE = 'https://guangying-web.app.workbuddy.host/'
+const ORDER_STATUS = { pending: '待审核', paid: '已收款', rejected: '已驳回', cancelled: '已取消' }
+
+function fmtMoney(cents) {
+  const n = Number(cents || 0) / 100
+  return '¥' + (n % 1 === 0 ? String(n) : n.toFixed(2))
+}
+
+/** 店铺是否处于有效缴费期 */
+function paidInfo(shop) {
+  const s = shop || {}
+  const until = s.paid_until ? new Date(s.paid_until).getTime() : 0
+  const paid = s.payment_status === 'paid' && until > Date.now()
+  return {
+    paid,
+    expired: s.payment_status === 'paid' && until > 0 && until <= Date.now(),
+    paidUntil: s.paid_until ? String(s.paid_until).slice(0, 10) : '',
+    daysLeft: paid ? Math.ceil((until - Date.now()) / 86400000) : 0,
+    taskLimit: Number(s.task_limit) || 0,
+    planCode: s.plan_code || ''
+  }
+}
 
 function unwrap(res) {
   if (res && res.error) throw new Error(res.error.message || '数据加载失败')
@@ -132,11 +153,12 @@ async function saveMerchant(payload) {
   if (p.id) {
     res = await cloud.database.from('merchants').update(row).eq('id', p.id).eq('owner_id', uid).select()
   } else {
+    // 新店铺一律「待缴费」，由平台确认到账后激活；前端改 status 也会被数据库触发器拦下
     res = await cloud.database.from('merchants').insert({
       ...row,
       owner_id: uid,
       slug: 'mp-' + randomId(),
-      status: 'active'
+      status: 'pending_payment'
     }).select()
   }
   const rows = unwrap(res)
@@ -145,9 +167,10 @@ async function saveMerchant(payload) {
 }
 
 /** 上传参考视频，返回 { path, name, size } */
-async function uploadVideo(tempFilePath, size, name) {
+async function uploadVideo(tempFilePath, size, name, maxMb) {
   const bytes = Number(size) || 0
-  if (bytes > MAX_VIDEO_MB * 1024 * 1024) throw new Error(`参考视频不能超过 ${MAX_VIDEO_MB}MB`)
+  const limit = Math.max(1, Number(maxMb) || MAX_VIDEO_MB)
+  if (bytes > limit * 1024 * 1024) throw new Error(`参考视频不能超过 ${limit}MB，可升级入驻套餐`)
   const uid = await currentUid()
   const ext = (String(name || '').match(/\.([a-z0-9]{2,5})$/i) || [])[1] || 'mp4'
   const path = `shared/${uid || 'platform'}/merchant-tasks/${randomId()}.${ext.toLowerCase()}`
@@ -173,15 +196,22 @@ async function saveTask(payload) {
   if (!uid) throw new Error('请先登录后再发布任务')
   const shop = await getMyMerchant()
   if (!shop) throw new Error('请先开通店铺')
+  const info = paidInfo(shop)
+  if (!info.paid) throw new Error('店铺尚未完成入驻缴费，请先完成付款并等待平台确认')
   const p = payload || {}
   const title = String(p.title || '').trim()
   if (title.length < 4) throw new Error('任务标题至少 4 个字')
+  if (!p.id && info.taskLimit > 0) {
+    const cRes = await cloud.database.from('merchant_tasks').select('id').eq('merchant_id', shop.id).limit(500)
+    const count = unwrap(cRes).length
+    if (count >= info.taskLimit) throw new Error(`当前套餐每年最多发布 ${info.taskLimit} 个任务，请升级套餐`)
+  }
 
   let videoPath = String(p.reference_video_path || '').trim()
   let videoName = String(p.reference_video_name || '').trim()
   let videoSize = Number(p.reference_video_size) || 0
   if (p.videoTempPath) {
-    const up = await uploadVideo(p.videoTempPath, p.videoSize, p.videoName)
+    const up = await uploadVideo(p.videoTempPath, p.videoSize, p.videoName, shop.video_limit_mb)
     videoPath = up.path
     videoName = up.name
     videoSize = up.size
@@ -236,8 +266,130 @@ async function listMyApplications() {
   return unwrap(res)
 }
 
+/* ---------------- 企业商家 · 付费入驻 ---------------- */
+
+async function listPlans() {
+  const res = await cloud.database
+    .from('merchant_plans')
+    .select('*')
+    .eq('status', 'on')
+    .order('sort_order', { ascending: true })
+    .limit(20)
+  return unwrap(res).map((p) => {
+    const total = Number(p.price_cents || 0) + Number(p.deposit_cents || 0) + Number(p.onboarding_fee_cents || 0)
+    return {
+      ...p,
+      totalCents: total,
+      totalText: fmtMoney(total),
+      priceText: fmtMoney(p.price_cents),
+      depositText: fmtMoney(p.deposit_cents),
+      onboardText: fmtMoney(p.onboarding_fee_cents),
+      taskText: Number(p.max_tasks) > 0 ? p.max_tasks + ' 个/年' : '不限',
+      benefits: Array.isArray(p.benefits) ? p.benefits : [],
+      isHot: p.code === 'pro'
+    }
+  })
+}
+
+async function getPayConfig() {
+  const res = await cloud.database
+    .from('platform_settings')
+    .select('merchant_enroll_enabled,merchant_pay_name,merchant_pay_bank,merchant_pay_account,merchant_pay_note')
+    .eq('id', 1)
+    .maybeSingle()
+  const s = (res && res.data) || {}
+  return {
+    payName: s.merchant_pay_name || '待平台填写',
+    payBank: s.merchant_pay_bank || '待平台填写',
+    payAccount: s.merchant_pay_account || '待平台填写',
+    payNote: s.merchant_pay_note || '转账备注请填写订单号'
+  }
+}
+
+function decorateOrder(o) {
+  return {
+    ...o,
+    amountText: fmtMoney(o.amount_cents),
+    statusText: ORDER_STATUS[o.status] || o.status,
+    dateText: String(o.created_at || '').slice(0, 10)
+  }
+}
+
+async function listMyOrders() {
+  const res = await cloud.database
+    .from('merchant_enroll_orders')
+    .select('*')
+    .order('created_at', { ascending: false })
+    .limit(20)
+  return unwrap(res).map(decorateOrder)
+}
+
+/** 生成缴费订单；金额由数据库触发器按套餐表回写，前端无法改价 */
+async function createOrder(planId, merchantId) {
+  const uid = await currentUid()
+  if (!uid) throw new Error('请先登录')
+  if (!planId) throw new Error('请选择入驻套餐')
+  if (!merchantId) throw new Error('请先填写店铺资料')
+  const mine = await listMyOrders()
+  const pending = mine.filter((o) => o.status === 'pending' && String(o.merchant_id) === String(merchantId))[0]
+  if (pending) return pending
+  const d = new Date()
+  const ymd = `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}${String(d.getDate()).padStart(2, '0')}`
+  const orderNo = 'ME' + ymd + Math.random().toString(36).slice(2, 8).toUpperCase()
+  const res = await cloud.database.from('merchant_enroll_orders').insert({
+    order_no: orderNo,
+    owner_id: uid,
+    merchant_id: Number(merchantId),
+    plan_id: Number(planId),
+    plan_code: '',
+    plan_name: '',
+    amount_cents: 0,
+    period_days: 365,
+    status: 'pending'
+  }).select()
+  const rows = unwrap(res)
+  if (!rows.length) throw new Error('订单生成失败')
+  return decorateOrder(rows[0])
+}
+
+async function submitPayment(orderId, txn, remark, proofPath) {
+  const res = await cloud.database.from('merchant_enroll_orders').update({
+    transaction_id: String(txn || '').trim().slice(0, 80),
+    remark: String(remark || '').trim().slice(0, 200),
+    payment_proof_path: String(proofPath || '').trim(),
+    updated_at: new Date().toISOString()
+  }).eq('id', orderId).eq('status', 'pending').select()
+  const rows = unwrap(res)
+  if (!rows.length) throw new Error('提交失败，订单可能已审核')
+  return decorateOrder(rows[0])
+}
+
+/** 上传付款凭证截图，返回云存储路径 */
+async function uploadProof(tempFilePath) {
+  const uid = await currentUid()
+  const ext = (String(tempFilePath || '').match(/\.([a-z0-9]{2,5})$/i) || [])[1] || 'jpg'
+  const path = `shared/${uid || 'platform'}/merchant-enroll/${randomId()}.${ext.toLowerCase()}`
+  const buffer = await new Promise((resolve, reject) => {
+    wx.getFileSystemManager().readFile({
+      filePath: tempFilePath,
+      success: (r) => resolve(r.data),
+      fail: (e) => reject(new Error(e.errMsg || '图片读取失败'))
+    })
+  })
+  const res = await cloud.storage.upload(path, buffer, {
+    contentType: 'image/jpeg',
+    cacheControl: '3600',
+    upsert: false,
+    metadata: { purpose: 'merchant_enroll_proof' }
+  })
+  if (res && res.error) throw new Error(res.error.message || '凭证上传失败')
+  return path
+}
+
 module.exports = {
   listMerchants, getMerchant, listTasks, getTask,
   getMyMerchant, saveMerchant, saveTask, uploadVideo,
-  applyTask, listMyApplications, currentUid, resolveMedia
+  applyTask, listMyApplications, currentUid, resolveMedia,
+  fmtMoney, paidInfo, listPlans, getPayConfig,
+  listMyOrders, createOrder, submitPayment, uploadProof
 }

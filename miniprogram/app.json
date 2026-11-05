@@ -9,6 +9,7 @@
     "pages/groups/groups",
     "pages/group/group",
     "pages/merchants/merchants",
+    "pages/merchant-join/merchant-join",
     "pages/merchant/merchant",
     "pages/task/task",
     "pages/merchant-console/merchant-console",

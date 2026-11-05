@@ -38,3 +38,23 @@
   color: #0284C7;
 }
 .video-clear { margin-top: 12rpx; font-size: 23rpx; color: #DC2626; text-align: right; }
+
+/* 付费入驻 */
+.notice { margin: 28rpx; padding: 26rpx 28rpx; border-radius: 22rpx; background: #F3F8FF; border: 1rpx solid #DCE8FF; }
+.notice-title { font-size: 27rpx; font-weight: 760; color: #0B1F33; }
+.notice-text { margin-top: 10rpx; font-size: 23rpx; line-height: 1.8; color: #5C6F8C; }
+.link { margin-top: 22rpx; text-align: center; font-size: 23rpx; color: #4F7DF3; }
+.card-hint { margin-top: 14rpx; font-size: 21rpx; color: #8A9AAE; }
+.order-no { font-size: 26rpx; font-weight: 720; color: #2B4BC4; margin: 12rpx 0; }
+.pay-row { display: flex; justify-content: space-between; gap: 20rpx; padding: 14rpx 0; border-bottom: 1rpx dashed #E4ECF8; font-size: 23rpx; color: #7A8BA5; }
+.pay-row .b { color: #233B5D; font-weight: 650; text-align: right; word-break: break-all; }
+.pay-row.total { border-bottom: none; padding-top: 20rpx; }
+.pay-row.total .b { font-size: 34rpx; font-weight: 820; color: #2B4BC4; }
+.pay-note { margin-top: 16rpx; font-size: 21rpx; line-height: 1.8; color: #8A9AAE; }
+.order-item { display: flex; flex-direction: column; gap: 6rpx; padding: 16rpx 0; border-bottom: 1rpx solid #EDF2FA; font-size: 22rpx; color: #66799A; }
+.order-item:last-child { border-bottom: none; }
+.btn-soft { margin-top: 10rpx; background: #EEF4FF; color: #2B4BC4; font-size: 26rpx; font-weight: 700; border-radius: 16rpx; }
+.paid-bar { display: flex; align-items: center; gap: 20rpx; margin: 28rpx; padding: 24rpx; border-radius: 22rpx; background: linear-gradient(100deg, #F1FBF6, #F3F7FF); border: 1rpx solid #D6EFE3; }
+.paid-icon { width: 52rpx; height: 52rpx; flex-shrink: 0; display: flex; align-items: center; justify-content: center; border-radius: 50%; background: #16A34A; color: #FFFFFF; font-size: 28rpx; font-weight: 800; }
+.paid-title { font-size: 26rpx; font-weight: 740; color: #0B5135; }
+.paid-sub { margin-top: 6rpx; font-size: 21rpx; line-height: 1.6; color: #5C7A70; }

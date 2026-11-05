@@ -2310,9 +2310,10 @@ window.API = (function () {
       return rows[0]
     }
     const slug = 'm-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 6)
-    const res = await cloud.database.from('merchants').insert({ ...row, owner_id: uid, slug, status: 'active' }).select()
-    const rows = unwrap(res, '开通店铺失败')
-    if (!rows || !rows.length) throw new Error('开通店铺失败，请确认登录状态')
+    // 新店铺一律「待缴费」：由管理员确认收款后才会激活，前端传 active 也会被数据库触发器拦下
+    const res = await cloud.database.from('merchants').insert({ ...row, owner_id: uid, slug, status: 'pending_payment' }).select()
+    const rows = unwrap(res, '提交店铺资料失败')
+    if (!rows || !rows.length) throw new Error('提交店铺资料失败，请确认登录状态')
     return rows[0]
   }
 
@@ -2343,10 +2344,11 @@ window.API = (function () {
   }
 
   /** 上传参考视频到云存储，返回路径与文件信息；不负责写库 */
-  async function uploadTaskVideo(file, uid) {
+  async function uploadTaskVideo(file, uid, maxMb) {
     if (!file) return null
-    if (file.size > MAX_TASK_VIDEO_MB * 1024 * 1024) {
-      throw new Error(`参考视频不能超过 ${MAX_TASK_VIDEO_MB}MB（当前 ${(file.size / 1024 / 1024).toFixed(1)}MB）`)
+    const limitMb = Math.max(1, Number(maxMb) || MAX_TASK_VIDEO_MB)
+    if (file.size > limitMb * 1024 * 1024) {
+      throw new Error(`当前套餐参考视频上限 ${limitMb}MB（当前 ${(file.size / 1024 / 1024).toFixed(1)}MB），可升级入驻套餐`)
     }
     const ext = String(file.name || '').toLowerCase().split('.').pop()
     const safeExt = /^[a-z0-9]{2,5}$/.test(ext) ? ext : 'mp4'
@@ -2370,16 +2372,23 @@ window.API = (function () {
     if (!uid) throw new Error('请先登录后再发布任务')
     const shop = await getMyMerchant()
     if (!shop) throw new Error('请先开通店铺，再发布任务')
+    const pay = merchantPaidInfo(shop)
+    if (!pay.paid) throw new Error('店铺尚未完成入驻缴费，请先在工作台完成付款并等待平台确认')
     const p = payload || {}
     const title = String(p.title || '').trim()
     if (title.length < 4) throw new Error('任务标题至少 4 个字')
     if (title.length > 80) throw new Error('任务标题不能超过 80 字')
+    if (!p.id && pay.taskLimit > 0) {
+      const tRes = await cloud.database.from('merchant_tasks').select('id').eq('merchant_id', shop.id).limit(500)
+      const count = (unwrap(tRes, '') || []).length
+      if (count >= pay.taskLimit) throw new Error(`当前套餐每年最多发布 ${pay.taskLimit} 个任务，请升级套餐后再发布`)
+    }
 
     let videoPath = String(p.reference_video_path || '').trim()
     let videoName = String(p.reference_video_name || '').trim()
     let videoSize = Number(p.reference_video_size) || 0
     if (p.videoFile) {
-      const up = await uploadTaskVideo(p.videoFile, uid)
+      const up = await uploadTaskVideo(p.videoFile, uid, shop.video_limit_mb)
       if (up) { videoPath = up.path; videoName = up.name; videoSize = up.size }
     }
 
@@ -2541,9 +2550,300 @@ window.API = (function () {
     }
   }
 
+  /* ---------------- 企业商家 · 付费入驻 ---------------- */
+
+  const ENROLL_STATUS_TEXT = {
+    pending: '待审核', paid: '已收款', rejected: '已驳回', cancelled: '已取消'
+  }
+
+  /** 店铺是否处于有效缴费期。前端展示与发布任务校验共用同一判断 */
+  function merchantPaidInfo(shop) {
+    const s = shop || {}
+    const until = s.paid_until ? new Date(s.paid_until).getTime() : 0
+    const paid = s.payment_status === 'paid' && until > Date.now()
+    return {
+      paid,
+      expired: s.payment_status === 'paid' && until > 0 && until <= Date.now(),
+      status: s.payment_status || 'unpaid',
+      paidUntil: s.paid_until || '',
+      daysLeft: paid ? Math.ceil((until - Date.now()) / 86400000) : 0,
+      planCode: s.plan_code || '',
+      taskLimit: Number(s.task_limit) || 0
+    }
+  }
+
+  /** 入驻套餐（公开可见仅 status='on'；管理端可取下架套餐） */
+  async function listMerchantPlans(includeOff) {
+    let q = cloud.database.from('merchant_plans').select('*')
+    if (!includeOff) q = q.eq('status', 'on')
+    const res = await q.order('sort_order', { ascending: true }).limit(50)
+    return (unwrap(res, '入驻套餐加载失败') || []).map((p) => ({
+      ...p,
+      totalCents: Number(p.price_cents || 0) + Number(p.deposit_cents || 0) + Number(p.onboarding_fee_cents || 0),
+      benefits: Array.isArray(p.benefits) ? p.benefits : [],
+      totalText: '¥' + ((Number(p.price_cents || 0) + Number(p.deposit_cents || 0) + Number(p.onboarding_fee_cents || 0)) / 100).toLocaleString('zh-CN')
+    }))
+  }
+
+  /** 对公收款信息，管理端可维护 */
+  async function getMerchantPayConfig() {
+    const res = await cloud.database
+      .from('platform_settings')
+      .select('merchant_enroll_enabled,merchant_pay_name,merchant_pay_bank,merchant_pay_account,merchant_pay_note')
+      .eq('id', 1)
+      .maybeSingle()
+    const s = unwrap(res, '') || {}
+    return {
+      enabled: s.merchant_enroll_enabled !== false,
+      payName: s.merchant_pay_name || '',
+      payBank: s.merchant_pay_bank || '',
+      payAccount: s.merchant_pay_account || '',
+      payNote: s.merchant_pay_note || ''
+    }
+  }
+
+  async function adminSaveMerchantPayConfig(cfg) {
+    const c = cfg || {}
+    const res = await cloud.database.from('platform_settings').update({
+      merchant_enroll_enabled: c.enabled !== false,
+      merchant_pay_name: String(c.payName || '').trim().slice(0, 80),
+      merchant_pay_bank: String(c.payBank || '').trim().slice(0, 120),
+      merchant_pay_account: String(c.payAccount || '').trim().slice(0, 120),
+      merchant_pay_note: String(c.payNote || '').trim().slice(0, 300),
+      updated_at: new Date().toISOString()
+    }).eq('id', 1).select()
+    const rows = unwrap(res, '收款信息保存失败')
+    if (!rows || !rows.length) throw new Error('保存失败，请确认管理员权限')
+    return rows[0]
+  }
+
+  async function listMyEnrollOrders() {
+    const res = await cloud.database
+      .from('merchant_enroll_orders')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(20)
+    return unwrap(res, '') || []
+  }
+
+  /**
+   * 生成入驻缴费订单。
+   * 金额/套餐名/周期一律由数据库触发器按套餐表回写，前端传的金额不参与定价。
+   */
+  async function createMerchantEnrollOrder(planId, merchantId, remark) {
+    const uid = await currentUid()
+    if (!uid) throw new Error('请先登录后再提交入驻申请')
+    if (!merchantId) throw new Error('请先填写店铺资料')
+    if (!planId) throw new Error('请选择入驻套餐')
+    const mine = await listMyEnrollOrders()
+    const pending = mine.filter((o) => o.status === 'pending' && String(o.merchant_id) === String(merchantId))[0]
+    if (pending) return pending
+    const d = new Date()
+    const ymd = `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}${String(d.getDate()).padStart(2, '0')}`
+    const orderNo = `ME${ymd}${Math.random().toString(36).slice(2, 8).toUpperCase()}`
+    const res = await cloud.database.from('merchant_enroll_orders').insert({
+      order_no: orderNo,
+      owner_id: uid,
+      merchant_id: Number(merchantId),
+      plan_id: Number(planId),
+      plan_code: '',
+      plan_name: '',
+      amount_cents: 0,
+      period_days: 365,
+      status: 'pending',
+      remark: String(remark || '').trim().slice(0, 200)
+    }).select()
+    const rows = unwrap(res, '创建入驻订单失败')
+    if (!rows || !rows.length) throw new Error('创建入驻订单失败')
+    return rows[0]
+  }
+
+  /** 更换套餐（仅限待审核订单）：删掉旧订单重新生成，避免金额被前端改动 */
+  async function changeMerchantEnrollPlan(orderId, planId, merchantId) {
+    if (!orderId) return createMerchantEnrollOrder(planId, merchantId)
+    await cloud.database.from('merchant_enroll_orders').update({ status: 'cancelled' }).eq('id', orderId).eq('status', 'pending').select()
+    return createMerchantEnrollOrder(planId, merchantId)
+  }
+
+  /** 上传付款凭证（可选，失败时仍可只填流水号） */
+  async function uploadEnrollProof(file) {
+    if (!file) return ''
+    if (file.size > 8 * 1024 * 1024) throw new Error('凭证图片不能超过 8MB')
+    const uid = await currentUid()
+    const ext = String(file.name || '').toLowerCase().split('.').pop()
+    const safeExt = /^(jpg|jpeg|png|webp|pdf)$/.test(ext) ? ext : 'png'
+    const path = `shared/${uid || 'platform'}/merchant-enroll/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${safeExt}`
+    const res = await window.cloud.storage.upload(path, file, {
+      contentType: file.type || 'image/png',
+      cacheControl: '3600',
+      upsert: false,
+      metadata: { purpose: 'merchant_enroll_proof' }
+    })
+    if (res && res.error) throw new Error(res.error.message || '凭证上传失败')
+    return path
+  }
+
+  async function submitEnrollPayment(orderId, payload) {
+    const p = payload || {}
+    const res = await cloud.database.from('merchant_enroll_orders').update({
+      transaction_id: String(p.transactionId || '').trim().slice(0, 80),
+      payment_proof_path: String(p.proofPath || '').trim(),
+      remark: String(p.remark || '').trim().slice(0, 200),
+      updated_at: new Date().toISOString()
+    }).eq('id', orderId).eq('status', 'pending').select()
+    const rows = unwrap(res, '提交付款信息失败')
+    if (!rows || !rows.length) throw new Error('提交失败，订单可能已被审核')
+    return rows[0]
+  }
+
+  async function adminListEnrollOrders(status) {
+    let q = cloud.database.from('merchant_enroll_orders').select('*')
+    if (status && status !== 'all') q = q.eq('status', status)
+    const res = await q.order('created_at', { ascending: false }).limit(200)
+    return unwrap(res, '缴费订单加载失败') || []
+  }
+
+  async function adminSaveMerchantPlan(p) {
+    const plan = p || {}
+    const row = {
+      code: String(plan.code || '').trim().slice(0, 30),
+      name: String(plan.name || '').trim().slice(0, 40),
+      subtitle: String(plan.subtitle || '').trim().slice(0, 80),
+      price_cents: Math.max(0, Math.round(Number(plan.price_cents) || 0)),
+      deposit_cents: Math.max(0, Math.round(Number(plan.deposit_cents) || 0)),
+      onboarding_fee_cents: Math.max(0, Math.round(Number(plan.onboarding_fee_cents) || 0)),
+      period_days: Math.max(1, Math.round(Number(plan.period_days) || 365)),
+      max_tasks: Math.max(0, Math.round(Number(plan.max_tasks) || 0)),
+      max_video_mb: Math.max(1, Math.round(Number(plan.max_video_mb) || 100)),
+      priority_level: Math.max(0, Math.round(Number(plan.priority_level) || 0)),
+      benefits: Array.isArray(plan.benefits) ? plan.benefits.slice(0, 12) : String(plan.benefits || '').split(/[,\n，]/).map((x) => x.trim()).filter(Boolean).slice(0, 12),
+      description: String(plan.description || '').trim().slice(0, 300),
+      sort_order: Math.max(0, Math.round(Number(plan.sort_order) || 0)),
+      status: plan.status === 'off' ? 'off' : 'on'
+    }
+    if (!row.code || !row.name) throw new Error('套餐编码与名称不能为空')
+    const res = plan.id
+      ? await cloud.database.from('merchant_plans').update(row).eq('id', plan.id).select()
+      : await cloud.database.from('merchant_plans').insert(row).select()
+    const rows = unwrap(res, '套餐保存失败')
+    if (!rows || !rows.length) throw new Error('保存失败，请确认管理员权限')
+    return rows[0]
+  }
+
+  /**
+   * 审核入驻缴费：先激活店铺、再把订单置为已收款。
+   * 顺序保证「店铺已开通但订单仍待审」时可安全重试，不会重复叠加有效期。
+   */
+  async function adminReviewEnrollOrder(orderId, approve, note, transactionId) {
+    const uid = await currentUid()
+    if (!uid || !(await isStaff(uid))) throw new Error('没有管理权限')
+    const oRes = await cloud.database.from('merchant_enroll_orders').select('*').eq('id', orderId).maybeSingle()
+    const o = unwrap(oRes, '')
+    if (!o) throw new Error('订单不存在')
+    if (o.status === 'paid') throw new Error('该订单已确认收款')
+    if (o.status === 'rejected' || o.status === 'cancelled') throw new Error('该订单已关闭')
+    const now = new Date().toISOString()
+    const reviewRow = {
+      review_note: String(note || '').trim().slice(0, 200),
+      reviewed_by: uid,
+      reviewed_at: now,
+      updated_at: now
+    }
+    if (!approve) {
+      const res = await cloud.database.from('merchant_enroll_orders')
+        .update({ ...reviewRow, status: 'rejected' }).eq('id', o.id).select()
+      const rows = unwrap(res, '驳回失败')
+      if (!rows || !rows.length) throw new Error('驳回失败')
+      return rows[0]
+    }
+    const [planRes, shopRes] = await Promise.all([
+      cloud.database.from('merchant_plans').select('*').eq('id', o.plan_id).maybeSingle(),
+      cloud.database.from('merchants').select('*').eq('id', o.merchant_id).maybeSingle()
+    ])
+    const plan = unwrap(planRes, '')
+    const shop = unwrap(shopRes, '')
+    if (!plan) throw new Error('关联套餐不存在，无法开通')
+    if (!shop) throw new Error('关联店铺不存在，无法开通')
+    const days = Number(o.period_days || plan.period_days || 365)
+    const baseUntil = shop.paid_until ? new Date(shop.paid_until).getTime() : 0
+    const base = shop.payment_status === 'paid' && baseUntil > Date.now() ? baseUntil : Date.now()
+    const paidUntil = new Date(base + days * 86400000).toISOString()
+    const amount = Number(plan.price_cents || 0) + Number(plan.deposit_cents || 0) + Number(plan.onboarding_fee_cents || 0)
+    const sRes = await cloud.database.from('merchants').update({
+      status: 'active',
+      payment_status: 'paid',
+      paid_until: paidUntil,
+      paid_at: now,
+      plan_id: plan.id,
+      plan_code: plan.code,
+      task_limit: Number(plan.max_tasks) || 0,
+      video_limit_mb: Number(plan.max_video_mb) || 100,
+      enroll_order_id: o.id,
+      is_verified: Number(plan.priority_level) > 0 ? true : !!shop.is_verified,
+      updated_at: now
+    }).eq('id', shop.id).select()
+    const shopRows = unwrap(sRes, '开通店铺失败')
+    if (!shopRows || !shopRows.length) throw new Error('开通店铺失败，请确认管理员权限')
+    const res = await cloud.database.from('merchant_enroll_orders').update({
+      ...reviewRow,
+      status: 'paid',
+      amount_cents: amount,
+      pay_method: 'bank_transfer',
+      transaction_id: String(transactionId || o.transaction_id || '').slice(0, 80),
+      paid_at: now
+    }).eq('id', o.id).select()
+    const rows = unwrap(res, '订单状态更新失败')
+    if (!rows || !rows.length) throw new Error('店铺已开通，但订单状态未更新，请重试一次确认')
+    return rows[0]
+  }
+
+  /** 管理员线下收款后手动开通 / 手动停用（不经过缴费订单） */
+  async function adminSetMerchantPayment(id, paid, days) {
+    const uid = await currentUid()
+    if (!uid || !(await isStaff(uid))) throw new Error('没有管理权限')
+    const now = new Date()
+    const row = paid
+      ? {
+        status: 'active', payment_status: 'paid',
+        paid_until: new Date(now.getTime() + (Number(days) || 365) * 86400000).toISOString(),
+        paid_at: now.toISOString(), updated_at: now.toISOString()
+      }
+      : { status: 'suspended', payment_status: 'unpaid', paid_until: null, paid_at: null, updated_at: now.toISOString() }
+    const res = await cloud.database.from('merchants').update(row).eq('id', id).select()
+    const rows = unwrap(res, '操作失败')
+    if (!rows || !rows.length) throw new Error('操作失败，请确认管理员权限')
+    return rows[0]
+  }
+
+  async function merchantBillingStats() {
+    const [oRes, mRes] = await Promise.all([
+      cloud.database.from('merchant_enroll_orders').select('id,status,amount_cents,plan_code').limit(500),
+      cloud.database.from('merchants').select('id,status,payment_status,paid_until,plan_code').limit(500)
+    ])
+    const orders = unwrap(oRes, '') || []
+    const shops = unwrap(mRes, '') || []
+    const now = Date.now()
+    const paid = orders.filter((o) => o.status === 'paid')
+    const pending = orders.filter((o) => o.status === 'pending')
+    const unpaidShops = shops.filter((s) => s.payment_status !== 'paid' || !s.paid_until || new Date(s.paid_until).getTime() <= now)
+    const expiring = shops.filter((s) => {
+      const t = s.paid_until ? new Date(s.paid_until).getTime() : 0
+      return t > now && t - now <= 30 * 86400000
+    })
+    return {
+      paidAmount: paid.reduce((n, o) => n + Number(o.amount_cents || 0), 0),
+      pendingAmount: pending.reduce((n, o) => n + Number(o.amount_cents || 0), 0),
+      paidOrders: paid.length,
+      pendingOrders: pending.length,
+      paidShops: shops.length - unpaidShops.length,
+      unpaidShops: unpaidShops.length,
+      expiringSoon: expiring.length
+    }
+  }
+
   /* ---------------- 平台公告 ---------------- */
 
-  const ANNOUNCEMENT_FIELDS = 'id,title,content,tag,level,link,sort_order,is_pinned,is_active,starts_at,ends_at,created_at,updated_at'
+  const ANNOUNCEMENT_FIELDS ='id,title,content,tag,level,link,sort_order,is_pinned,is_active,starts_at,ends_at,created_at,updated_at'
   const ANNOUNCEMENT_LEVELS = ['info', 'activity', 'important']
 
   /** 排序：置顶优先 → 权重降序 → 新的在前 */
@@ -2696,6 +2996,12 @@ window.API = (function () {
     setMerchantTaskStatus, deleteMerchantTask,
     applyMerchantTask, listMyApplications, listMerchantApplications, setApplicationStatus,
     adminListMerchants, adminListMerchantTasks, setMerchantStatus, setMerchantVerified, merchantStats,
+    // 企业商家 · 付费入驻
+    ENROLL_STATUS_TEXT, merchantPaidInfo, listMerchantPlans, getMerchantPayConfig,
+    adminSaveMerchantPayConfig, listMyEnrollOrders, createMerchantEnrollOrder,
+    changeMerchantEnrollPlan, uploadEnrollProof, submitEnrollPayment,
+    adminListEnrollOrders, adminSaveMerchantPlan, adminReviewEnrollOrder,
+    adminSetMerchantPayment, merchantBillingStats,
     // 平台公告
     listAnnouncements, adminListAnnouncements, createAnnouncement, updateAnnouncement,
     deleteAnnouncement, setAnnouncementActive, setAnnouncementPinned,

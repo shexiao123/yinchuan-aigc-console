@@ -36,6 +36,7 @@
     services: '服务与分类',
     content: '首页与内容',
     merchants: '商家管理',
+    billing: '商家收费',
     notice: '公告管理',
     settings: '平台设置',
     members: '会员管理',
@@ -294,7 +295,20 @@
 
   const VIEWS = {}
 
+  let lastBillingBadgeAt = 0
+  function refreshBillingBadge() {
+    const el = $('#badgeBilling')
+    if (!el || Date.now() - lastBillingBadgeAt < 30000) return
+    lastBillingBadgeAt = Date.now()
+    API.adminListEnrollOrders('pending').then((rows) => {
+      const n = (rows || []).length
+      el.textContent = n
+      el.hidden = n === 0
+    }).catch(() => {})
+  }
+
   function render() {
+    refreshBillingBadge()
     content.innerHTML = '<div class="loading">加载中…</div>'
     Promise.resolve(VIEWS[S.page]())
       .then((html) => {
@@ -1489,10 +1503,21 @@
     S.merchantTasks = tasks
     const shopMap = {}
     shops.forEach((m) => { shopMap[m.id] = m })
+    const nowTs = Date.now()
+    const payOf = (m) => {
+      const until = m.paid_until ? new Date(m.paid_until).getTime() : 0
+      const ok = m.payment_status === 'paid' && until > nowTs
+      return {
+        ok,
+        label: ok ? '已缴费' : m.payment_status === 'paid' ? '已到期' : '未缴费',
+        until: String(m.paid_until || '').slice(0, 10)
+      }
+    }
+    const paidShops = shops.filter((m) => payOf(m).ok).length
     const cards = [
       ['入驻商家', stats.merchants, '家'], ['启用中', stats.active, '家'],
-      ['发布任务', stats.tasks, '条'], ['招募中', stats.open, '条'],
-      ['收到报名', stats.applications, '条'], ['已选定', stats.selected, '条']
+      ['已缴费', paidShops, '家'], ['发布任务', stats.tasks, '条'],
+      ['招募中', stats.open, '条'], ['收到报名', stats.applications, '条']
     ].map(([label, val, unit]) => `
       <div class="card card-pad" style="padding:16px 18px">
         <div style="font-size:12px;color:#61738A;margin-bottom:8px">${label}</div>
@@ -1506,7 +1531,7 @@
         <div class="card-head"><div><div class="card-title">商家店铺</div><div class="card-sub">共 ${shops.length} 家 · 可认证、停用；停用后店铺与其任务对用户端不可见</div></div>
           <button class="btn btn-ghost btn-sm" id="mcAdmRefresh">刷新</button></div>
         <div class="table-wrap"><table class="data">
-          <thead><tr><th>店铺</th><th>店主</th><th>分类 / 城市</th><th>认证</th><th>状态</th><th>开通时间</th><th>操作</th></tr></thead>
+          <thead><tr><th>店铺</th><th>店主</th><th>分类 / 城市</th><th>认证</th><th>缴费</th><th>状态</th><th>开通时间</th><th>操作</th></tr></thead>
           <tbody>
             ${shops.length ? shops.map((m) => `
               <tr>
@@ -1514,6 +1539,7 @@
                 <td class="muted ellipsis" style="max-width:150px">${esc(m.owner_id || '')}</td>
                 <td class="muted">${esc(m.category_slug || '—')} / ${esc(m.city || '—')}</td>
                 <td style="white-space:nowrap"><span class="badge ${m.is_verified ? '' : 'badge-pending'}">${m.is_verified ? '已认证' : '待认证'}</span></td>
+                <td style="white-space:nowrap"><span class="badge ${payOf(m).ok ? '' : 'badge-pending'}">${payOf(m).label}</span><div class="muted" style="font-size:11px;margin-top:4px">${payOf(m).until ? '至 ' + esc(payOf(m).until) : '未开通'}</div></td>
                 <td style="white-space:nowrap"><span class="badge ${m.status === 'active' ? '' : 'badge-cancelled'}">${m.status === 'active' ? '启用中' : '已停用'}</span></td>
                 <td class="muted" style="white-space:nowrap">${fromNow(m.created_at)}</td>
                 <td style="white-space:nowrap">
@@ -1521,7 +1547,7 @@
                   <button class="btn btn-ghost btn-sm" data-mc-shop-status="${m.id}" data-next="${m.status === 'active' ? 'suspended' : 'active'}">${m.status === 'active' ? '停用' : '启用'}</button>
                 </td>
               </tr>`).join('')
-              : '<tr><td colspan="7"><div class="empty"><span class="empty-text">还没有商家入驻</span></div></td></tr>'}
+              : '<tr><td colspan="8"><div class="empty"><span class="empty-text">还没有商家入驻</span></div></td></tr>'}
           </tbody>
         </table></div>
       </div>
@@ -1580,6 +1606,316 @@
         try {
           await API.setMerchantTaskStatus(Number(btn.dataset.mcTaskStatus), btn.dataset.next)
           toast(btn.dataset.next === 'open' ? '任务已恢复' : '任务已下架')
+          render()
+        } catch (e) { toast(API.friendlyError(e)) } finally { btn.disabled = false }
+      })
+    })
+  }
+
+  /* ---------------- 商家收费管理 ---------------- */
+
+  function billPlanFormHtml(p) {
+    const v = p || {}
+    const benefits = Array.isArray(v.benefits) ? v.benefits.join('\n') : ''
+    const money = (c) => (Number(c || 0) / 100)
+    return `
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div><label class="field-label">套餐编码（唯一） <span style="color:#DC2626">*</span></label><input class="input" id="bpCode" maxlength="30" value="${esc(v.code || '')}" placeholder="例：pro"></div>
+        <div><label class="field-label">套餐名称 <span style="color:#DC2626">*</span></label><input class="input" id="bpName" maxlength="40" value="${esc(v.name || '')}" placeholder="例：标准入驻"></div>
+      </div>
+      <label class="field-label" style="margin-top:10px">副标题</label>
+      <input class="input" id="bpSubtitle" maxlength="80" value="${esc(v.subtitle || '')}" placeholder="例：稳定发布需求 · 最受欢迎">
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:10px">
+        <div><label class="field-label">入驻服务费（元）</label><input class="input" id="bpPrice" type="number" min="0" step="1" value="${money(v.price_cents)}"></div>
+        <div><label class="field-label">一次性开店费（元）</label><input class="input" id="bpOnboard" type="number" min="0" step="1" value="${money(v.onboarding_fee_cents)}"></div>
+        <div><label class="field-label">可退保证金（元）</label><input class="input" id="bpDeposit" type="number" min="0" step="1" value="${money(v.deposit_cents)}"></div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:10px">
+        <div><label class="field-label">服务周期（天）</label><input class="input" id="bpPeriod" type="number" min="1" value="${Number(v.period_days || 365)}"></div>
+        <div><label class="field-label">每年任务上限（0 不限）</label><input class="input" id="bpTasks" type="number" min="0" value="${Number(v.max_tasks || 0)}"></div>
+        <div><label class="field-label">视频上限（MB）</label><input class="input" id="bpVideo" type="number" min="1" value="${Number(v.max_video_mb || 100)}"></div>
+        <div><label class="field-label">排序权重</label><input class="input" id="bpSort" type="number" min="0" value="${Number(v.sort_order || 0)}"></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:10px">
+        <div><label class="field-label">推荐优先级（&gt;0 自动认证）</label><input class="input" id="bpPriority" type="number" min="0" value="${Number(v.priority_level || 0)}"></div>
+        <div><label class="field-label">状态</label><select class="input" id="bpStatus"><option value="on" ${v.status !== 'off' ? 'selected' : ''}>上架销售</option><option value="off" ${v.status === 'off' ? 'selected' : ''}>下架停售</option></select></div>
+      </div>
+      <label class="field-label" style="margin-top:10px">套餐权益（每行一条）</label>
+      <textarea class="input" id="bpBenefits" rows="5" placeholder="独立店铺主页&#10;每年 30 个制作任务">${esc(benefits)}</textarea>
+      <label class="field-label" style="margin-top:10px">费用说明</label>
+      <textarea class="input" id="bpDesc" rows="2" maxlength="300" placeholder="入驻服务费 ¥2,980/年 + 开店服务费 ¥500 + 可退保证金 ¥1,000">${esc(v.description || '')}</textarea>
+      <p class="muted" style="margin-top:10px;font-size:12px;line-height:1.7">金额以「分」存入数据库，由服务端按套餐表回写订单金额，客户端无法改价。</p>`
+  }
+
+  function billReadPlanForm() {
+    const val = (id) => (document.getElementById(id) || {}).value || ''
+    return {
+      code: val('bpCode').trim(),
+      name: val('bpName').trim(),
+      subtitle: val('bpSubtitle').trim(),
+      price_cents: Math.round(Number(val('bpPrice') || 0) * 100),
+      onboarding_fee_cents: Math.round(Number(val('bpOnboard') || 0) * 100),
+      deposit_cents: Math.round(Number(val('bpDeposit') || 0) * 100),
+      period_days: Number(val('bpPeriod') || 365),
+      max_tasks: Number(val('bpTasks') || 0),
+      max_video_mb: Number(val('bpVideo') || 100),
+      sort_order: Number(val('bpSort') || 0),
+      priority_level: Number(val('bpPriority') || 0),
+      status: val('bpStatus'),
+      benefits: val('bpBenefits'),
+      description: val('bpDesc')
+    }
+  }
+
+  VIEWS.billing = async function () {
+    const [orders, plans, stats, shops, cfg] = await Promise.all([
+      API.adminListEnrollOrders('all').catch(() => []),
+      API.listMerchantPlans(true).catch(() => []),
+      API.merchantBillingStats().catch(() => ({})),
+      API.adminListMerchants().catch(() => []),
+      API.getMerchantPayConfig().catch(() => ({}))
+    ])
+    S.billOrders = orders
+    S.billPlans = plans
+    S.billShops = shops
+    const shopMap = {}
+    shops.forEach((s) => { shopMap[s.id] = s })
+    const now = Date.now()
+    const yuan0 = (c) => '¥' + (Number(c || 0) / 100).toLocaleString('zh-CN', { maximumFractionDigits: 0 })
+    const cards = [
+      ['累计实收', yuan0(stats.paidAmount), '已确认到账'],
+      ['待收款', yuan0(stats.pendingAmount), stats.pendingOrders + ' 笔待审核'],
+      ['付费有效商家', (stats.paidShops || 0) + ' 家', '服务期内'],
+      ['欠费 / 到期', (stats.unpaidShops || 0) + ' 家', '已停止对外展示'],
+      ['30 天内到期', (stats.expiringSoon || 0) + ' 家', '建议提醒续费']
+    ].map(([label, value, sub]) => `
+      <div class="card card-pad" style="padding:16px 18px">
+        <div style="font-size:12px;color:#61738A;margin-bottom:8px">${label}</div>
+        <div style="font-size:24px;font-weight:800;color:#0B1F33;line-height:1.1">${value}</div>
+        <div style="font-size:11px;color:#8A9AAE;margin-top:6px">${sub}</div>
+      </div>`).join('')
+
+    return `
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(165px,1fr));gap:12px;margin-bottom:18px">${cards}</div>
+
+      <div class="card">
+        <div class="card-head">
+          <div><div class="card-title">入驻缴费订单</div>
+            <div class="card-sub">共 ${orders.length} 笔 · 待审核 ${orders.filter((o) => o.status === 'pending').length} 笔 · 确认收款后自动激活店铺并写入服务期</div></div>
+          <button class="btn btn-ghost btn-sm" id="billRefresh">刷新</button>
+        </div>
+        <div class="table-wrap"><table class="data">
+          <thead><tr><th>订单号</th><th>店铺</th><th>套餐</th><th>应付</th><th>付款信息</th><th>状态</th><th>提交时间</th><th>操作</th></tr></thead>
+          <tbody>
+            ${orders.length ? orders.map((o) => {
+              const s = shopMap[o.merchant_id] || {}
+              return `<tr>
+                <td class="td-strong" style="white-space:nowrap">${esc(o.order_no)}</td>
+                <td>${esc(s.name || '店铺已删除')}</td>
+                <td>${esc(o.plan_name || o.plan_code || '—')}</td>
+                <td class="td-strong" style="white-space:nowrap">${yuan0(o.amount_cents)}</td>
+                <td class="muted ellipsis" style="max-width:190px">
+                  ${esc(o.transaction_id || '—')}
+                  ${o.payment_proof_path ? `<button class="btn btn-ghost btn-sm" style="margin-left:6px" data-bill-proof="${esc(o.payment_proof_path)}">看凭证</button>` : ''}
+                </td>
+                <td style="white-space:nowrap"><span class="badge ${o.status === 'paid' ? '' : o.status === 'pending' ? 'badge-pending' : 'badge-cancelled'}">${API.ENROLL_STATUS_TEXT[o.status] || esc(o.status)}</span></td>
+                <td class="muted" style="white-space:nowrap">${fromNow(o.created_at)}</td>
+                <td style="white-space:nowrap">
+                  ${o.status === 'pending'
+                    ? `<button class="btn btn-primary btn-sm" data-bill-approve="${o.id}">确认收款</button>
+                       <button class="btn btn-ghost btn-sm" data-bill-reject="${o.id}" style="color:#B42318">驳回</button>`
+                    : `<span class="muted">${esc(o.review_note || '—')}</span>`}
+                </td>
+              </tr>`
+            }).join('') : '<tr><td colspan="8"><div class="empty"><span class="empty-text">还没有入驻缴费订单</span></div></td></tr>'}
+          </tbody>
+        </table></div>
+      </div>
+
+      <div class="card" style="margin-top:18px">
+        <div class="card-head">
+          <div><div class="card-title">入驻套餐与定价</div><div class="card-sub">共 ${plans.length} 档 · 改价立即影响新订单，已生成订单按提交时套餐结算</div></div>
+          <button class="btn btn-soft btn-sm" id="billAddPlan">＋ 新增套餐</button>
+        </div>
+        <div class="table-wrap"><table class="data">
+          <thead><tr><th>套餐</th><th>年费</th><th>开店费</th><th>保证金</th><th>首期合计</th><th>周期 / 任务 / 视频</th><th>状态</th><th>操作</th></tr></thead>
+          <tbody>
+            ${plans.length ? plans.map((p) => `<tr>
+              <td class="td-strong">${esc(p.name)}<div class="muted" style="font-size:11px;font-weight:400">${esc(p.code)}</div></td>
+              <td>${yuan0(p.price_cents)}</td>
+              <td>${yuan0(p.onboarding_fee_cents)}</td>
+              <td>${yuan0(p.deposit_cents)}</td>
+              <td class="td-strong">${yuan0(p.totalCents)}</td>
+              <td class="muted">${Number(p.period_days || 365)} 天 / ${Number(p.max_tasks) > 0 ? p.max_tasks + ' 个' : '不限'} / ${p.max_video_mb || 100}MB</td>
+              <td style="white-space:nowrap"><span class="badge ${p.status === 'on' ? '' : 'badge-cancelled'}">${p.status === 'on' ? '销售中' : '已下架'}</span></td>
+              <td style="white-space:nowrap">
+                <button class="btn btn-soft btn-sm" data-plan-edit="${p.id}">编辑</button>
+                <button class="btn btn-ghost btn-sm" data-plan-toggle="${p.id}" data-next="${p.status === 'on' ? 'off' : 'on'}">${p.status === 'on' ? '下架' : '上架'}</button>
+              </td>
+            </tr>`).join('') : '<tr><td colspan="8"><div class="empty"><span class="empty-text">还没有配置入驻套餐</span></div></td></tr>'}
+          </tbody>
+        </table></div>
+      </div>
+
+      <div class="card card-pad" style="margin-top:18px;max-width:760px">
+        <div class="card-title">对公收款账户</div>
+        <div class="card-sub" style="margin-bottom:14px">展示在用户端入驻页与缴费面板；请勿填写私人账户</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div><label class="field-label">户名</label><input class="input" id="billPayName" maxlength="80" value="${esc(cfg.payName || '')}"></div>
+          <div><label class="field-label">开户行</label><input class="input" id="billPayBank" maxlength="120" value="${esc(cfg.payBank || '')}"></div>
+        </div>
+        <label class="field-label" style="margin-top:10px">对公账号</label>
+        <input class="input" id="billPayAccount" maxlength="120" value="${esc(cfg.payAccount || '')}" placeholder="企业银行账号">
+        <label class="field-label" style="margin-top:10px">转账说明</label>
+        <textarea class="input" id="billPayNote" rows="2" maxlength="300">${esc(cfg.payNote || '')}</textarea>
+        <button class="btn btn-primary btn-sm" id="billPaySave" style="margin-top:12px">保存收款信息</button>
+      </div>
+
+      <div class="card" style="margin-top:18px">
+        <div class="card-head"><div><div class="card-title">商家缴费台账</div>
+          <div class="card-sub">共 ${shops.length} 家 · 欠费或到期店铺自动对用户端隐藏，且无法发布任务</div></div></div>
+        <div class="table-wrap"><table class="data">
+          <thead><tr><th>店铺</th><th>套餐</th><th>缴费状态</th><th>服务到期</th><th>剩余</th><th>店铺状态</th><th>操作</th></tr></thead>
+          <tbody>
+            ${shops.length ? shops.map((s) => {
+              const until = s.paid_until ? new Date(s.paid_until).getTime() : 0
+              const valid = s.payment_status === 'paid' && until > now
+              const days = valid ? Math.ceil((until - now) / 86400000) : 0
+              return `<tr>
+                <td class="td-strong">${esc(s.name)}</td>
+                <td class="muted">${esc(s.plan_code || '—')}</td>
+                <td style="white-space:nowrap"><span class="badge ${valid ? '' : 'badge-pending'}">${valid ? '已缴费' : s.payment_status === 'paid' ? '已到期' : '未缴费'}</span></td>
+                <td class="muted" style="white-space:nowrap">${esc(String(s.paid_until || '').slice(0, 10)) || '—'}</td>
+                <td class="muted" style="white-space:nowrap">${valid ? days + ' 天' : '—'}</td>
+                <td style="white-space:nowrap">${s.status === 'active' ? '启用中' : '已停用'}</td>
+                <td style="white-space:nowrap">
+                  <button class="btn btn-soft btn-sm" data-bill-activate="${s.id}">标记已收款（1 年）</button>
+                  <button class="btn btn-ghost btn-sm" data-bill-suspend="${s.id}" style="color:#B42318">停用</button>
+                </td>
+              </tr>`
+            }).join('') : '<tr><td colspan="7"><div class="empty"><span class="empty-text">还没有商家入驻</span></div></td></tr>'}
+          </tbody>
+        </table></div>
+      </div>
+    `
+  }
+
+  BINDS.billing = function () {
+    const refresh = $('#billRefresh')
+    if (refresh) refresh.addEventListener('click', () => render())
+
+    document.querySelectorAll('[data-bill-approve]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const order = (S.billOrders || []).filter((o) => String(o.id) === String(btn.dataset.billApprove))[0]
+        if (!order) return
+        openAction(
+          '确认收款 · ' + order.order_no,
+          `<p class="muted" style="line-height:1.8;margin-bottom:14px">确认后系统会把订单置为「已收款」，同时激活关联店铺、写入 ${Number(order.period_days || 365)} 天服务期与套餐权益。请务必先核实对公账户已到账。</p>
+           <label class="field-label">银行流水号（可选）</label>
+           <input class="input" id="billTxn" maxlength="80" value="${esc(order.transaction_id || '')}" placeholder="例：20261105 对公转账">
+           <label class="field-label" style="margin-top:10px">审核备注（可选）</label>
+           <textarea class="input" id="billNote" rows="2" maxlength="200" placeholder="例：已核对到账，金额一致"></textarea>`,
+          async () => {
+            await API.adminReviewEnrollOrder(Number(order.id), true, (document.getElementById('billNote') || {}).value, (document.getElementById('billTxn') || {}).value)
+            toast('已确认收款，店铺已开通')
+            render()
+          },
+          '确认收款并开通'
+        )
+      })
+    })
+
+    document.querySelectorAll('[data-bill-reject]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        openAction(
+          '驳回缴费订单',
+          `<label class="field-label">驳回原因（用户可见）</label>
+           <textarea class="input" id="billNote" rows="3" maxlength="200" placeholder="例：未查询到该笔到账，请核对金额与订单号后重新上传凭证"></textarea>`,
+          async () => {
+            await API.adminReviewEnrollOrder(Number(btn.dataset.billReject), false, (document.getElementById('billNote') || {}).value, '')
+            toast('订单已驳回，商家可重新提交')
+            render()
+          },
+          '确认驳回'
+        )
+      })
+    })
+
+    document.querySelectorAll('[data-bill-proof]').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const url = await API.resolveMedia(btn.dataset.billProof)
+        openAction('付款凭证', url
+          ? `<a href="${esc(url)}" target="_blank" rel="noopener"><img src="${esc(url)}" alt="付款凭证" style="max-width:100%;border-radius:10px;border:1px solid #E1EAFB"></a><p class="muted" style="margin-top:10px;font-size:12px">点图片可打开原图</p>`
+          : '<p class="muted">凭证地址已过期或无法生成访问链接，请让商家重新上传。</p>', null)
+      })
+    })
+
+    document.querySelectorAll('[data-plan-edit]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const p = (S.billPlans || []).filter((x) => String(x.id) === String(btn.dataset.planEdit))[0]
+        if (!p) return
+        openAction('编辑入驻套餐', billPlanFormHtml(p), async () => {
+          await API.adminSaveMerchantPlan({ ...billReadPlanForm(), id: p.id })
+          toast('套餐已保存')
+          render()
+        }, '保存套餐')
+      })
+    })
+
+    const addBtn = $('#billAddPlan')
+    if (addBtn) addBtn.addEventListener('click', () => {
+      openAction('新增入驻套餐', billPlanFormHtml({ period_days: 365, max_video_mb: 100, sort_order: (S.billPlans || []).length + 1, status: 'on' }), async () => {
+        await API.adminSaveMerchantPlan(billReadPlanForm())
+        toast('套餐已创建')
+        render()
+      }, '创建套餐')
+    })
+
+    document.querySelectorAll('[data-plan-toggle]').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const p = (S.billPlans || []).filter((x) => String(x.id) === String(btn.dataset.planToggle))[0]
+        if (!p) return
+        btn.disabled = true
+        try {
+          await API.adminSaveMerchantPlan({ ...p, status: btn.dataset.next })
+          toast(btn.dataset.next === 'on' ? '套餐已上架' : '套餐已下架')
+          render()
+        } catch (e) { toast(API.friendlyError(e)) } finally { btn.disabled = false }
+      })
+    })
+
+    const paySave = $('#billPaySave')
+    if (paySave) paySave.addEventListener('click', async () => {
+      paySave.disabled = true
+      try {
+        await API.adminSaveMerchantPayConfig({
+          enabled: true,
+          payName: ($('#billPayName') || {}).value,
+          payBank: ($('#billPayBank') || {}).value,
+          payAccount: ($('#billPayAccount') || {}).value,
+          payNote: ($('#billPayNote') || {}).value
+        })
+        toast('收款信息已保存，用户端即时生效')
+      } catch (e) { toast(API.friendlyError(e)) } finally { paySave.disabled = false }
+    })
+
+    document.querySelectorAll('[data-bill-activate]').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        btn.disabled = true
+        try {
+          await API.adminSetMerchantPayment(Number(btn.dataset.billActivate), true, 365)
+          toast('已标记收款并开通 1 年服务期')
+          render()
+        } catch (e) { toast(API.friendlyError(e)) } finally { btn.disabled = false }
+      })
+    })
+
+    document.querySelectorAll('[data-bill-suspend]').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        btn.disabled = true
+        try {
+          await API.adminSetMerchantPayment(Number(btn.dataset.billSuspend), false)
+          toast('店铺已停用并标记为欠费')
           render()
         } catch (e) { toast(API.friendlyError(e)) } finally { btn.disabled = false }
       })

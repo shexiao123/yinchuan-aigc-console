@@ -9,6 +9,21 @@ Page({
     tasks: [],
     categories: [],
     catIndex: 0,
+    // 付费入驻
+    plans: [],
+    planNames: [],
+    planIndex: 0,
+    payCfg: {},
+    orders: [],
+    pendingOrder: null,
+    paid: false,
+    payInfo: {},
+    videoLimit: 100,
+    payTxn: '',
+    payRemark: '',
+    proofTempPath: '',
+    proofName: '',
+    // 店铺 / 任务表单
     form: {
       shopName: '', city: '银川', intro: '', contact: '', phone: '',
       title: '', budget: '', deadline: '', desc: '', videoUrl: ''
@@ -23,28 +38,59 @@ Page({
     this.init()
   },
 
+  onShow() {
+    if (this._loaded) this.init()
+    this._loaded = true
+  },
+
   onPullDownRefresh() {
     this.init().finally(() => wx.stopPullDownRefresh())
   },
 
   async init() {
     try {
-      const [uid, cats] = await Promise.all([
+      const [uid, cats, plans, payCfg, orders] = await Promise.all([
         merchant.currentUid(),
-        api.listCategories().catch(() => [])
+        api.listCategories().catch(() => []),
+        merchant.listPlans().catch(() => []),
+        merchant.getPayConfig().catch(() => ({})),
+        merchant.listMyOrders().catch(() => [])
       ])
-      this.setData({ logged: !!uid, categories: cats || [], loading: false })
-      if (!uid) return
-      const shop = await merchant.getMyMerchant()
-      this.setData({ shop })
-      if (shop) {
-        const tasks = await merchant.listTasks({ merchantId: shop.id })
-        this.setData({ tasks })
-      }
+      const shop = uid ? await merchant.getMyMerchant() : null
+      const info = merchant.paidInfo(shop)
+      const planList = plans || []
+      const orderList = orders || []
+      const preferred = planList.findIndex((p) => p.code === 'pro')
+      const pendingOrder = orderList.filter((o) => o.status === 'pending')[0] || null
+      let tasks = []
+      if (shop && info.paid) tasks = await merchant.listTasks({ merchantId: shop.id })
+      this.setData({
+        logged: !!uid,
+        shop,
+        tasks,
+        categories: cats || [],
+        plans: planList,
+        planNames: planList.map((p) => p.name + ' · ' + p.totalText),
+        planIndex: preferred >= 0 ? preferred : 0,
+        payCfg: payCfg || {},
+        orders: orderList,
+        pendingOrder,
+        paid: info.paid,
+        payInfo: info,
+        videoLimit: (shop && shop.video_limit_mb) || 100,
+        payTxn: pendingOrder ? (pendingOrder.transaction_id || '') : '',
+        payRemark: pendingOrder ? (pendingOrder.remark || '') : '',
+        loading: false
+      })
     } catch (e) {
       this.setData({ loading: false })
       wx.showToast({ title: e.message || '加载失败', icon: 'none' })
     }
+  },
+
+  currentPlanId() {
+    const p = this.data.plans[this.data.planIndex]
+    return p ? p.id : 0
   },
 
   onInput(e) {
@@ -56,8 +102,20 @@ Page({
     this.setData({ catIndex: Number(e.detail.value) })
   },
 
+  onJoinPlan(e) {
+    this.setData({ planIndex: Number(e.detail.value) })
+  },
+
   onDate(e) {
     this.setData({ 'form.deadline': e.detail.value })
+  },
+
+  onPayTxn(e) {
+    this.setData({ payTxn: e.detail.value })
+  },
+
+  onPayRemark(e) {
+    this.setData({ payRemark: e.detail.value })
   },
 
   onChooseVideo() {
@@ -70,8 +128,8 @@ Page({
         const f = (r.tempFiles || [])[0]
         if (!f) return
         const size = Number(f.size) || 0
-        if (size > 100 * 1024 * 1024) {
-          wx.showToast({ title: '视频不能超过 100MB', icon: 'none' })
+        if (size > this.data.videoLimit * 1024 * 1024) {
+          wx.showToast({ title: `视频不能超过 ${this.data.videoLimit}MB`, icon: 'none' })
           return
         }
         this.setData({
@@ -88,16 +146,35 @@ Page({
     this.setData({ videoTempPath: '', videoSize: 0, videoName: '' })
   },
 
+  onChooseProof() {
+    wx.chooseMedia({
+      count: 1,
+      mediaType: ['image'],
+      sourceType: ['album', 'camera'],
+      success: (r) => {
+        const f = (r.tempFiles || [])[0]
+        if (!f) return
+        this.setData({ proofTempPath: f.tempFilePath, proofName: '已选择付款凭证' })
+      },
+      fail: () => {}
+    })
+  },
+
   async onOpenShop() {
     const f = this.data.form
     if (String(f.shopName || '').trim().length < 2) {
       wx.showToast({ title: '请填写店铺名称', icon: 'none' })
       return
     }
+    const planId = this.currentPlanId()
+    if (!planId) {
+      wx.showToast({ title: '请先选择入驻套餐', icon: 'none' })
+      return
+    }
     this.setData({ submitting: true })
-    wx.showLoading({ title: '开通中' })
+    wx.showLoading({ title: '提交中' })
     try {
-      await merchant.saveMerchant({
+      const shop = await merchant.saveMerchant({
         name: f.shopName,
         city: f.city,
         intro: f.intro,
@@ -105,14 +182,90 @@ Page({
         contact_phone: f.phone,
         category_slug: (this.data.categories[this.data.catIndex] || {}).slug || ''
       })
+      await merchant.createOrder(planId, shop.id)
       wx.hideLoading()
-      wx.showToast({ title: '店铺已开通', icon: 'success' })
+      wx.showToast({ title: '资料已提交，订单已生成', icon: 'none' })
       this.init()
     } catch (e) {
       wx.hideLoading()
-      wx.showToast({ title: e.message || '开通失败', icon: 'none' })
+      wx.showToast({ title: e.message || '提交失败', icon: 'none' })
     } finally {
       this.setData({ submitting: false })
+    }
+  },
+
+  async onCreateOrder() {
+    const planId = this.currentPlanId()
+    if (!planId || !this.data.shop) {
+      wx.showToast({ title: '请先选择入驻套餐', icon: 'none' })
+      return
+    }
+    this.setData({ submitting: true })
+    wx.showLoading({ title: '生成订单' })
+    try {
+      await merchant.createOrder(planId, this.data.shop.id)
+      wx.hideLoading()
+      wx.showToast({ title: '缴费订单已生成', icon: 'success' })
+      this.init()
+    } catch (e) {
+      wx.hideLoading()
+      wx.showToast({ title: e.message || '生成失败', icon: 'none' })
+    } finally {
+      this.setData({ submitting: false })
+    }
+  },
+
+  async onPaySubmit() {
+    const o = this.data.pendingOrder
+    if (!o) return
+    const txn = String(this.data.payTxn || '').trim()
+    if (!txn && !this.data.proofTempPath && !o.payment_proof_path) {
+      wx.showToast({ title: '请填写流水号或上传凭证', icon: 'none' })
+      return
+    }
+    this.setData({ submitting: true })
+    wx.showLoading({ title: '提交中' })
+    try {
+      let proofPath = o.payment_proof_path || ''
+      if (this.data.proofTempPath) {
+        try {
+          proofPath = await merchant.uploadProof(this.data.proofTempPath)
+        } catch (e) {
+          wx.showToast({ title: '凭证上传失败，已提交文字信息', icon: 'none' })
+        }
+      }
+      await merchant.submitPayment(o.id, txn, this.data.payRemark, proofPath)
+      wx.hideLoading()
+      wx.showToast({ title: '已提交，等待平台确认', icon: 'success' })
+      this.setData({ proofTempPath: '', proofName: '' })
+      this.init()
+    } catch (e) {
+      wx.hideLoading()
+      wx.showToast({ title: e.message || '提交失败', icon: 'none' })
+    } finally {
+      this.setData({ submitting: false })
+    }
+  },
+
+  async onRenew() {
+    if (this.data.pendingOrder) {
+      wx.showToast({ title: '已有待审核的缴费订单', icon: 'none' })
+      return
+    }
+    const planId = this.currentPlanId()
+    if (!planId || !this.data.shop) {
+      wx.showToast({ title: '请先选择入驻套餐', icon: 'none' })
+      return
+    }
+    wx.showLoading({ title: '生成订单' })
+    try {
+      await merchant.createOrder(planId, this.data.shop.id)
+      wx.hideLoading()
+      wx.showToast({ title: '续费订单已生成', icon: 'none' })
+      this.init()
+    } catch (e) {
+      wx.hideLoading()
+      wx.showToast({ title: e.message || '生成失败', icon: 'none' })
     }
   },
 
@@ -153,6 +306,10 @@ Page({
 
   onLogin() {
     wx.navigateTo({ url: '/pages/login/login' })
+  },
+
+  onJoin() {
+    wx.navigateTo({ url: '/pages/merchant-join/merchant-join' })
   },
 
   onShopPage() {

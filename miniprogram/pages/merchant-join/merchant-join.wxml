@@ -1,0 +1,45 @@
+<view class="page">
+  <view class="join-hero">
+    <text class="eyebrow">企业商家 · 付费入驻</text>
+    <text class="title">开通专属店铺，按年付费</text>
+    <text class="desc">企业商家店铺属于平台增值服务：除平台基础服务外，需缴纳入驻服务费、一次性开店服务费，部分套餐另收可退履约保证金。费用公开、一店一档、到期续费。</text>
+    <view class="hero-stats">
+      <view><text class="num">{{plans.length}}</text><text class="cap">档入驻套餐</text></view>
+      <view><text class="num">1 年</text><text class="cap">标准服务周期</text></view>
+      <view><text class="num">1 天</text><text class="cap">到账审核时限</text></view>
+    </view>
+    <button class="btn-primary" bindtap="onConsole">填写资料并开通</button>
+    <view class="hero-link" bindtap="onMerchants">先看看已入驻商家 ›</view>
+  </view>
+
+  <view class="section-head"><text>入驻费用</text><text class="section-sub">明细全部公开</text></view>
+  <view class="plan {{item.isHot ? 'hot' : ''}}" wx:for="{{plans}}" wx:key="id">
+    <view class="plan-tag" wx:if="{{item.isHot}}">最受欢迎</view>
+    <view class="plan-name">{{item.name}}</view>
+    <view class="plan-sub">{{item.subtitle}}</view>
+    <view class="plan-price"><text class="big">{{item.totalText}}</text><text class="unit">首期合计 · {{item.period_days}} 天</text></view>
+    <view class="fee"><text>入驻服务费（年）</text><text class="b">{{item.priceText}}</text></view>
+    <view class="fee"><text>一次性开店服务费</text><text class="b">{{item.onboardText}}</text></view>
+    <view class="fee"><text>履约保证金（可退）</text><text class="b">{{item.depositText}}</text></view>
+    <view class="divider"></view>
+    <view class="perk" wx:for="{{item.benefits}}" wx:for-item="perk" wx:key="*this"><text class="tick">✓</text>{{perk}}</view>
+  </view>
+  <view class="fineprint">※ 保证金在商家退出平台且无未结纠纷时原路退还；入驻服务费与开店服务费为平台技术服务与店铺搭建费用，一经开通不予退还。</view>
+
+  <view class="section-head"><text>入驻流程</text></view>
+  <view class="flow">
+    <view><text class="flow-no">01</text><text class="flow-title">提交店铺资料</text><text class="flow-desc">店名、分类、联系人，一账号一店</text></view>
+    <view><text class="flow-no">02</text><text class="flow-title">选套餐生成订单</text><text class="flow-desc">系统按套餐算应付金额，不支持改价</text></view>
+    <view><text class="flow-no">03</text><text class="flow-title">对公转账传凭证</text><text class="flow-desc">备注订单号，回填流水号与截图</text></view>
+    <view><text class="flow-no">04</text><text class="flow-title">平台确认开通</text><text class="flow-desc">核实到账后激活店铺与发布权限</text></view>
+  </view>
+
+  <view class="section-head"><text>对公收款账户</text></view>
+  <view class="card pay-card">
+    <view class="pay-row"><text>户　名</text><text class="b">{{payCfg.payName || '待平台填写'}}</text></view>
+    <view class="pay-row"><text>开户行</text><text class="b">{{payCfg.payBank || '待平台填写'}}</text></view>
+    <view class="pay-row"><text>账　号</text><text class="b">{{payCfg.payAccount || '待平台填写'}}</text></view>
+    <view class="pay-note">{{payCfg.payNote || '转账备注请填写订单号'}}</view>
+  </view>
+  <view class="fineprint">未缴费或已到期的店铺不会对外展示，也不能发布任务；平台不提供个人收款，请勿向私人账户转账。</view>
+</view>

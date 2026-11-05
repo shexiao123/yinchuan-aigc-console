@@ -498,7 +498,7 @@
   }
 
   function setActiveNav(route) {
-    const map = { home: 'home', services: 'services', hall: 'hall', groups: 'groups', group: 'groups', orders: 'orders', studio: 'studio', admin: 'studio', merchants: 'merchants', merchant: 'merchants', tasks: 'merchants', task: 'merchants', 'merchant-console': 'merchants' }
+    const map = { home: 'home', services: 'services', hall: 'hall', groups: 'groups', group: 'groups', orders: 'orders', studio: 'studio', admin: 'studio', merchants: 'merchants', merchant: 'merchants', tasks: 'merchants', task: 'merchants', 'merchant-console': 'merchants', 'merchant-join': 'merchants' }
     const key = map[route] || 'home'
     document.querySelectorAll('.nav-link').forEach((n) => {
       n.classList.toggle('active', n.dataset.route === key)
@@ -757,7 +757,7 @@
                 </a>`).join('') || '<div class="hm-empty">暂时没有在招任务</div>'}
             </div>
           </div>
-          <a class="hm-cta" href="#/merchant-console">🏬 我是企业商家 · 开通专属店铺、发布任务并上传参考视频 ›</a>
+          <a class="hm-cta" href="#/merchant-join">🏬 我是企业商家 · 查看入驻套餐与费用，开通专属店铺、发布任务 ›</a>
         </section>
 
         <section class="home-section">
@@ -877,6 +877,182 @@
       </a>`
   }
 
+  /* ---------- 企业商家 · 付费入驻组件 ---------- */
+
+  function mcYuan(cents) {
+    return '¥' + (Number(cents || 0) / 100).toLocaleString('zh-CN', { maximumFractionDigits: 0 })
+  }
+
+  /** 套餐卡片。radio 名称统一 mcPlan，便于工作台与入驻页共用读取逻辑 */
+  function mcPlanCard(p, selectedId, withPick) {
+    const chosen = String(selectedId || '') === String(p.id)
+    return `
+      <div class="mjoin-plan ${chosen ? 'is-selected' : ''} ${p.code === 'pro' ? 'is-hot' : ''}" data-mc-plan-card="${p.id}">
+        ${p.code === 'pro' ? '<span class="mjoin-hot">最受欢迎</span>' : ''}
+        <div class="mjoin-plan-head">
+          <span class="mjoin-plan-name">${API.esc(p.name)}</span>
+          <span class="mjoin-plan-sub">${API.esc(p.subtitle || '')}</span>
+        </div>
+        <div class="mjoin-plan-price"><b>${mcYuan(p.totalCents)}</b><span>首期合计 · ${Number(p.period_days || 365)} 天</span></div>
+        <div class="mjoin-plan-fees">
+          <div><span>入驻服务费（年）</span><b>${mcYuan(p.price_cents)}</b></div>
+          <div><span>一次性开店服务费</span><b>${mcYuan(p.onboarding_fee_cents)}</b></div>
+          <div><span>履约保证金（可退）</span><b>${mcYuan(p.deposit_cents)}</b></div>
+        </div>
+        <ul class="mjoin-plan-perks">${(p.benefits || []).map((b) => `<li>${API.esc(b)}</li>`).join('')}</ul>
+        ${withPick ? `<label class="mjoin-pick"><input type="radio" name="mcPlan" value="${p.id}" ${chosen ? 'checked' : ''}><span>${chosen ? '已选择此套餐' : '选择此套餐'}</span></label>` : ''}
+      </div>`
+  }
+
+  function mcPlanGrid(plans, selectedId, withPick) {
+    if (!plans || !plans.length) return '<div class="empty"><span class="empty-text">平台暂未开放入驻套餐，请联系客服</span></div>'
+    return `<div class="mjoin-plans">${plans.map((p) => mcPlanCard(p, selectedId, withPick)).join('')}</div>`
+  }
+
+  function mcPayBox(cfg) {
+    const c = cfg || {}
+    return `
+      <div class="mjoin-paybox">
+        <div class="mjoin-payrow"><span>户　名</span><b>${API.esc(c.payName || '待平台填写')}</b></div>
+        <div class="mjoin-payrow"><span>开户行</span><b>${API.esc(c.payBank || '待平台填写')}</b></div>
+        <div class="mjoin-payrow"><span>账　号</span><b>${API.esc(c.payAccount || '待平台填写')}</b></div>
+        <p class="mjoin-paynote">${API.esc(c.payNote || '转账备注请填写订单号，付款后上传凭证等待平台确认。')}</p>
+      </div>`
+  }
+
+  function mcOrderHistory(orders) {
+    if (!orders || !orders.length) return ''
+    return `
+      <div class="card" style="margin-top:18px">
+        <div class="card-head"><div><div class="card-title">我的缴费订单</div><div class="card-sub">共 ${orders.length} 笔 · 到账确认后自动开通或顺延服务期</div></div></div>
+        <div class="table-wrap"><table class="data">
+          <thead><tr><th>订单号</th><th>套餐</th><th>金额</th><th>状态</th><th>时间</th><th>平台备注</th></tr></thead>
+          <tbody>${orders.map((o) => `
+            <tr>
+              <td class="td-strong">${API.esc(o.order_no)}</td>
+              <td>${API.esc(o.plan_name || '—')}</td>
+              <td class="td-strong">${mcYuan(o.amount_cents)}</td>
+              <td style="white-space:nowrap"><span class="badge ${o.status === 'paid' ? '' : o.status === 'pending' ? 'badge-pending' : 'badge-cancelled'}">${API.ENROLL_STATUS_TEXT[o.status] || o.status}</span></td>
+              <td class="muted" style="white-space:nowrap">${API.fromNow(o.created_at)}</td>
+              <td class="muted">${API.esc(o.review_note || o.transaction_id || '—')}</td>
+            </tr>`).join('')}</tbody>
+        </table></div>
+      </div>`
+  }
+
+  /** 待缴费工作台主面板：订单明细 + 对公账户 + 付款信息提交 */
+  function mcEnrollPanel(shop, plans, order, cfg, expired) {
+    const p = plans.filter((x) => String(x.id) === String(order.plan_id))[0] || {}
+    let fee = {}
+    try { fee = JSON.parse(order.fee_breakdown || '{}') || {} } catch (e) { fee = {} }
+    return `
+      <div class="mjoin-status">
+        <span class="mjoin-status-icon">${expired ? '⌛' : '⏳'}</span>
+        <div>
+          <b>${expired ? '入驻服务已到期，续费后恢复展示' : '资料已提交，等待缴费与平台审核'}</b>
+          <p>店铺「${API.esc(shop.name)}」${expired ? '已暂停对外展示' : '暂未对外展示'}。完成缴费并经平台确认后，立即开通店铺、任务发布与参考视频权限。</p>
+        </div>
+      </div>
+      <div class="mjoin-order">
+        <div class="mjoin-order-head"><span>缴费订单 <b>${API.esc(order.order_no)}</b></span><span class="badge badge-pending">${API.ENROLL_STATUS_TEXT[order.status] || order.status}</span></div>
+        <div class="mjoin-order-grid">
+          <div><span>入驻套餐</span><b>${API.esc(order.plan_name || p.name || '—')}</b></div>
+          <div><span>服务周期</span><b>${Number(order.period_days || p.period_days || 365)} 天</b></div>
+          <div><span>入驻服务费</span><b>${mcYuan(fee.service != null ? fee.service : p.price_cents)}</b></div>
+          <div><span>开店服务费</span><b>${mcYuan(fee.onboarding != null ? fee.onboarding : p.onboarding_fee_cents)}</b></div>
+          <div><span>可退保证金</span><b>${mcYuan(fee.deposit != null ? fee.deposit : p.deposit_cents)}</b></div>
+          <div class="is-total"><span>应付合计</span><b>${mcYuan(order.amount_cents)}</b></div>
+        </div>
+        ${order.review_note ? `<p class="mjoin-reject">平台备注：${API.esc(order.review_note)}</p>` : ''}
+      </div>
+      <div class="mjoin-cols">
+        <div class="card card-pad">
+          <div class="block-title">① 按订单金额对公转账</div>
+          <p class="mc-hint">转账时请在备注里填写订单号 <b>${API.esc(order.order_no)}</b>，便于平台对账。</p>
+          ${mcPayBox(cfg)}
+        </div>
+        <div class="card card-pad">
+          <div class="block-title">② 提交付款信息</div>
+          <label class="field-label">银行流水号 / 转账备注</label>
+          <input class="input" id="mcPayTxn" maxlength="80" value="${API.esc(order.transaction_id || '')}" placeholder="例：20261105 对公转账 ¥4,480">
+          <label class="field-label" style="margin-top:10px">付款凭证（图片 / PDF，≤8MB，可选）</label>
+          <input class="input" id="mcPayProof" type="file" accept="image/png,image/jpeg,image/webp,application/pdf">
+          ${order.payment_proof_path ? '<p class="mc-hint" style="margin-top:6px">✓ 已上传过凭证，可重新选择覆盖</p>' : ''}
+          <label class="field-label" style="margin-top:10px">给平台的备注</label>
+          <textarea class="input" id="mcPayRemark" rows="2" maxlength="200" placeholder="例：已按订单号备注，请尽快审核">${API.esc(order.remark || '')}</textarea>
+          <button class="btn btn-primary btn-block" id="mcPaySubmit" style="margin-top:14px">提交付款信息</button>
+          <p class="mc-hint" style="margin-top:8px">平台核实到账后 1 个工作日内开通，结果在本页与订单记录中同步。</p>
+        </div>
+      </div>
+      <div class="mjoin-switch"><span>需要换套餐或改价格？</span><button class="btn btn-ghost btn-sm" id="mcPlanSwitch">更换入驻套餐</button></div>`
+  }
+
+  /** 已缴费工作台顶部的套餐状态条 */
+  function mcActiveBar(shop, payInfo, plans) {
+    const p = plans.filter((x) => x.code === payInfo.planCode)[0] || {}
+    return `
+      <div class="mjoin-active">
+        <span class="mjoin-active-icon">✓</span>
+        <div class="mjoin-active-copy">
+          <b>${API.esc(p.name || (payInfo.planCode === 'legacy' ? '历史入驻商家' : '企业商家入驻'))} · 服务中</b>
+          <span>有效期至 ${API.esc(String(payInfo.paidUntil).slice(0, 10))} · 剩余 ${payInfo.daysLeft} 天 · 每年任务 ${payInfo.taskLimit > 0 ? payInfo.taskLimit + ' 个' : '不限'} · 参考视频 ${shop.video_limit_mb || 100}MB</span>
+        </div>
+        <button class="btn btn-soft btn-sm" id="mcRenewBtn">续费 / 升级套餐</button>
+      </div>`
+  }
+
+  /** 独立入驻说明页：费用公开、流程清楚 */
+  VIEWS['merchant-join'] = async function () {
+    const [plans, cfg] = await Promise.all([
+      API.listMerchantPlans().catch(() => []),
+      API.getMerchantPayConfig().catch(() => null)
+    ])
+    const logged = !!(S.session && S.session.user)
+    S.__mcPlans = plans
+    return `
+      <div class="mjoin-hero">
+        <div class="mjoin-hero-copy">
+          <span class="mc-hero-eyebrow">企业商家 · 付费入驻</span>
+          <h1>开通专属店铺，按年付费</h1>
+          <p>企业商家店铺属于平台增值服务：除平台基础服务外，需缴纳<strong>入驻服务费、一次性开店服务费</strong>，部分套餐另收<strong>可退履约保证金</strong>。费用公开、一店一档、到期续费。</p>
+          <div class="mjoin-hero-cta">
+            <a class="btn btn-primary" href="#/merchant-console">${logged ? '填写资料并开通' : '登录后开通店铺'}</a>
+            <a class="btn btn-ghost" href="#/merchants">先看看已入驻商家 ›</a>
+          </div>
+        </div>
+        <div class="mjoin-hero-kpis">
+          <div><b>${plans.length}</b><span>档入驻套餐</span></div>
+          <div><b>1 年</b><span>标准服务周期</span></div>
+          <div><b>1 天</b><span>到账审核时限</span></div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-head">
+          <span class="section-title">入驻费用<span class="count">费用明细全部公开</span></span>
+        </div>
+        ${mcPlanGrid(plans, (plans.filter((p) => p.code === 'pro')[0] || plans[0] || {}).id, false)}
+        <p class="mjoin-fineprint">※ 保证金在商家退出平台且无未结纠纷时原路退还；入驻服务费与开店服务费为平台技术服务与店铺搭建费用，一经开通不予退还。套餐价格以提交订单时平台公示为准。</p>
+      </div>
+
+      <div class="section">
+        <div class="section-head"><span class="section-title">入驻流程</span></div>
+        <div class="mjoin-flow">
+          <div><b>01</b><span class="mjoin-flow-title">提交店铺资料</span><span class="mjoin-flow-desc">店名、分类、联系人，一个账号对应一家店铺</span></div>
+          <div><b>02</b><span class="mjoin-flow-title">选套餐生成订单</span><span class="mjoin-flow-desc">系统按套餐自动计算应付金额，不支持私下改价</span></div>
+          <div><b>03</b><span class="mjoin-flow-title">对公转账并上传凭证</span><span class="mjoin-flow-desc">备注订单号，回填流水号与付款截图</span></div>
+          <div><b>04</b><span class="mjoin-flow-title">平台确认并开通</span><span class="mjoin-flow-desc">核实到账后自动激活店铺与任务发布权限</span></div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-head"><span class="section-title">对公收款账户</span></div>
+        <div class="card card-pad" style="max-width:760px">${mcPayBox(cfg)}</div>
+        <p class="mjoin-fineprint">未缴费或已到期的店铺不会对外展示，也不能发布任务；平台不提供个人收款，请勿向私人账户转账。</p>
+      </div>
+    `
+  }
+
   /** 商家街：店铺列表 + 开通入口 */
   VIEWS.merchants = async function () {
     await mcLoadCategories()
@@ -884,11 +1060,12 @@
     return `
       <div class="mc-hero">
         <div class="mc-hero-copy">
-          <span class="mc-hero-eyebrow">企业商家 · 任务协作</span>
+          <span class="mc-hero-eyebrow">企业商家 · 付费入驻</span>
           <h1 class="mc-hero-title">每个商家，都有自己的店铺</h1>
-          <p class="mc-hero-sub">开通店铺即可发布制作任务、上传参考视频，让服务者一眼看懂你要什么。</p>
+          <p class="mc-hero-sub">企业店铺为付费增值服务：按年缴纳入驻服务费并审核通过后，即可发布制作任务、上传参考视频。</p>
           <div class="mc-hero-cta">
-            <a class="btn btn-primary" href="#/merchant-console">开通 / 管理我的店铺</a>
+            <a class="btn btn-primary" href="#/merchant-join">查看入驻套餐与费用</a>
+            <a class="btn btn-ghost" href="#/merchant-console">开通 / 管理我的店铺</a>
             <a class="btn btn-ghost" href="#/tasks">浏览任务广场 ›</a>
           </div>
         </div>
@@ -1062,7 +1239,7 @@
     })
   }
 
-  /** 商家工作台：开通店铺 / 编辑店铺 / 发布任务（含视频上传）/ 报名管理 */
+  /** 商家工作台：付费入驻 / 缴费 / 编辑店铺 / 发布任务（含视频上传）/ 报名管理 */
   VIEWS['merchant-console'] = async function () {
     await mcLoadCategories()
     const logged = !!(S.session && S.session.user)
@@ -1073,9 +1250,31 @@
         <button class="btn btn-primary" id="mcLoginBtn" style="margin-top:16px">登录 / 注册</button></div></div>`
     }
     const shop = await API.getMyMerchant()
+    const [plans, orders, cfg] = await Promise.all([
+      API.listMerchantPlans().catch(() => []),
+      API.listMyEnrollOrders().catch(() => []),
+      API.getMerchantPayConfig().catch(() => null)
+    ])
+    const payCfg = cfg || { payName: '', payBank: '', payAccount: '', payNote: '' }
+    S.__mcPlans = plans
+    S.__mcOrders = orders
+    S.__mcPayCfg = payCfg
+    S.__mcShop = shop
+    const payInfo = API.merchantPaidInfo(shop)
+    const pendingOrder = (orders || []).filter((o) => o.status === 'pending')[0] || null
+    const defaultPlan = (plans.filter((p) => p.code === 'pro')[0] || plans[0] || {}).id
+
     if (!shop) {
       return `
-        <div class="page-head"><div class="page-title">开通企业店铺</div><div class="page-sub">一个账号对应一家店铺，开通后即可发布任务、上传参考视频</div></div>
+        <div class="page-head">
+          <div class="page-title">开通企业店铺</div>
+          <div class="page-sub">一个账号对应一家店铺 · 提交资料后按所选套餐缴费，平台确认到账即可开通</div>
+        </div>
+        <div class="mjoin-status is-info">
+          <span class="mjoin-status-icon">¥</span>
+          <div><b>企业商家入驻需缴纳额外费用</b>
+            <p>费用 = 入驻服务费（年）＋ 一次性开店服务费 ＋ 可退履约保证金。<a href="#/merchant-join" style="color:#3B5BDB">查看完整费用说明 ›</a></p></div>
+        </div>
         <div class="card card-pad" style="max-width:680px">
           <div class="mc-form">
             <label class="field-label">店铺名称 <span style="color:#DC2626">*</span></label>
@@ -1094,9 +1293,40 @@
               <div><label class="field-label">店铺 Logo 地址（可选）</label><input class="input" id="mcShopLogo" placeholder="https://..."></div>
               <div><label class="field-label">店铺封面地址（可选）</label><input class="input" id="mcShopCover" placeholder="https://..."></div>
             </div>
-            <button class="btn btn-primary" id="mcShopSubmit">开通店铺</button>
           </div>
+        </div>
+        <div class="section" style="margin-top:22px">
+          <div class="section-head"><span class="section-title">选择入驻套餐<span class="count">提交资料后生成对应缴费订单</span></span></div>
+          ${mcPlanGrid(plans, defaultPlan, true)}
+        </div>
+        <div class="mjoin-submit-bar">
+          <div><b>下一步：提交资料 → 生成缴费订单 → 对公转账</b><span>未缴费的店铺不会对外展示，也不能发布任务</span></div>
+          <button class="btn btn-primary" id="mcShopSubmit">提交资料并生成缴费订单</button>
         </div>`
+    }
+
+    if (!payInfo.paid) {
+      return `
+        <div class="page-head">
+          <div class="page-title">商家工作台 · 入驻缴费</div>
+          <div class="page-sub">完成缴费并经平台确认后，店铺与任务发布权限即时生效</div>
+        </div>
+        ${pendingOrder
+          ? mcEnrollPanel(shop, plans, pendingOrder, payCfg, payInfo.expired)
+          : `<div class="card card-pad">
+               <div class="empty"><div class="empty-icon">🧾</div>
+                 <span class="empty-text">${orders.length ? '上一笔订单已关闭，请重新选择套餐生成缴费订单' : '还没有缴费订单，请选择入驻套餐'}</span></div>
+               <div class="section-head" style="margin-top:16px"><span class="section-title">选择入驻套餐</span></div>
+               ${mcPlanGrid(plans, defaultPlan, true)}
+               <button class="btn btn-primary" id="mcCreateOrderBtn" style="margin-top:16px">生成缴费订单</button>
+             </div>`}
+        <div class="card" style="margin-top:18px">
+          <div class="card-head">
+            <div><div class="card-title">店铺资料</div><div class="card-sub">${API.esc(shop.name)} · ${payInfo.expired ? '服务已到期' : '待开通'} · 缴费期间可继续完善资料</div></div>
+            <button class="btn btn-ghost btn-sm" id="mcShopEdit">编辑资料</button>
+          </div>
+        </div>
+        ${mcOrderHistory(orders)}`
     }
 
     const [tasks, apps] = await Promise.all([
@@ -1113,6 +1343,8 @@
         <div class="page-title">商家工作台</div>
         <div class="page-sub">管理你的店铺、任务与收到的报名</div>
       </div>
+
+      ${mcActiveBar(shop, payInfo, plans)}
 
       <div class="mc-console-head">
         <div class="mc-console-shop">
@@ -1182,6 +1414,8 @@
           </table>
         </div>
       </div>
+
+      ${mcOrderHistory(orders)}
     `
   }
 
@@ -1247,7 +1481,7 @@
         <input class="input" id="mcTaskDeadline" type="date" value="${API.esc(task ? task.deadline || '' : '')}">
         <label class="field-label">需求说明</label>
         <textarea class="input" id="mcTaskDesc" rows="4" maxlength="2000" placeholder="交付物、规格、风格、时间节点写清楚，服务者更好报价">${API.esc(task ? task.description || '' : '')}</textarea>
-        <label class="field-label">上传参考视频（mp4 / mov / webm，≤100MB）</label>
+        <label class="field-label">上传参考视频（mp4 / mov / webm，≤${(S.__mcShop && S.__mcShop.video_limit_mb) || 100}MB）</label>
         <input class="input" id="mcTaskVideo" type="file" accept="video/mp4,video/quicktime,video/x-m4v,video/webm">
         <label class="field-label">或粘贴参考视频链接（http/https）</label>
         <input class="input" id="mcTaskVideoUrl" value="${task && /^https?:/i.test(task.reference_video_path || '') ? API.esc(task.reference_video_path) : ''}" placeholder="https://.../reference.mp4">
@@ -1278,18 +1512,125 @@
     )
   }
 
+  /** 当前选中的入驻套餐 id */
+  function mcSelectedPlanId() {
+    const el = document.querySelector('input[name="mcPlan"]:checked')
+    if (el) return Number(el.value)
+    const first = (S.__mcPlans || [])[0]
+    return first ? Number(first.id) : 0
+  }
+
+  /** 点整张套餐卡片也能选中 */
+  function mcBindPlanCards() {
+    document.querySelectorAll('[data-mc-plan-card]').forEach((card) => {
+      if (card.dataset.mcPlanBound) return
+      card.dataset.mcPlanBound = '1'
+      card.addEventListener('click', () => {
+        const radio = card.querySelector('input[type="radio"]')
+        if (!radio) return
+        radio.checked = true
+        document.querySelectorAll('.mjoin-plan').forEach((c) => {
+          const on = c === card
+          c.classList.toggle('is-selected', on)
+          const label = c.querySelector('.mjoin-pick span')
+          if (label) label.textContent = on ? '已选择此套餐' : '选择此套餐'
+        })
+      })
+    })
+  }
+
+  /** 更换套餐 / 续费：重新生成缴费订单，原待审订单作废 */
+  function mcOpenPlanPicker(title, currentOrderId, shopId) {
+    const plans = S.__mcPlans || []
+    const preferred = (plans.filter((p) => p.code === 'pro')[0] || plans[0] || {}).id
+    openAction(
+      title,
+      `<p class="mc-hint" style="margin-bottom:12px">选择后按新套餐重新生成缴费订单，金额由平台套餐表计算；原待审核订单自动作废。</p>
+       ${mcPlanGrid(plans, preferred, true)}`,
+      async () => {
+        const planId = mcSelectedPlanId()
+        if (!planId) throw new Error('请先选择入驻套餐')
+        if (currentOrderId) await API.changeMerchantEnrollPlan(currentOrderId, planId, shopId)
+        else await API.createMerchantEnrollOrder(planId, shopId)
+        toast('新缴费订单已生成，请按订单金额转账')
+        render()
+      },
+      '生成缴费订单'
+    )
+    setTimeout(mcBindPlanCards, 0)
+  }
+
+  BINDINGS['merchant-join'] = function () {
+    document.querySelectorAll('.mjoin-plan').forEach((card) => {
+      card.addEventListener('click', () => { location.hash = '#/merchant-console' })
+    })
+  }
+
   BINDINGS['merchant-console'] = function () {
     const loginBtn = document.getElementById('mcLoginBtn')
     if (loginBtn) loginBtn.addEventListener('click', () => document.getElementById('loginModal').classList.add('show'))
+    mcBindPlanCards()
 
     const shopSubmit = document.getElementById('mcShopSubmit')
     if (shopSubmit) shopSubmit.addEventListener('click', async () => {
+      const planId = mcSelectedPlanId()
+      if (!planId) { toast('请先选择入驻套餐'); return }
       shopSubmit.disabled = true
       try {
-        await API.saveMerchant(mcReadShopForm(null))
-        toast('店铺已开通，现在可以发布任务了')
+        const shop = await API.saveMerchant(mcReadShopForm(null))
+        await API.createMerchantEnrollOrder(planId, shop.id)
+        toast('资料已提交，缴费订单已生成')
         render()
       } catch (e) { toast(API.friendlyError(e)) } finally { shopSubmit.disabled = false }
+    })
+
+    const createOrderBtn = document.getElementById('mcCreateOrderBtn')
+    if (createOrderBtn) createOrderBtn.addEventListener('click', async () => {
+      const planId = mcSelectedPlanId()
+      if (!planId) { toast('请先选择入驻套餐'); return }
+      createOrderBtn.disabled = true
+      try {
+        await API.createMerchantEnrollOrder(planId, S.__mcShop.id)
+        toast('缴费订单已生成')
+        render()
+      } catch (e) { toast(API.friendlyError(e)) } finally { createOrderBtn.disabled = false }
+    })
+
+    const payBtn = document.getElementById('mcPaySubmit')
+    if (payBtn) payBtn.addEventListener('click', async () => {
+      const order = (S.__mcOrders || []).filter((o) => o.status === 'pending')[0]
+      if (!order) { toast('没有待审核的缴费订单'); return }
+      const txn = (document.getElementById('mcPayTxn') || {}).value || ''
+      const remark = (document.getElementById('mcPayRemark') || {}).value || ''
+      const fileInput = document.getElementById('mcPayProof')
+      const file = fileInput && fileInput.files && fileInput.files[0]
+      if (!txn.trim() && !file && !order.payment_proof_path) { toast('请填写流水号或上传付款凭证'); return }
+      payBtn.disabled = true
+      try {
+        let proofPath = order.payment_proof_path || ''
+        if (file) {
+          try { proofPath = await API.uploadEnrollProof(file) }
+          catch (e) { toast('凭证上传失败，已先提交文字信息') }
+        }
+        await API.submitEnrollPayment(order.id, { transactionId: txn, remark, proofPath })
+        toast('付款信息已提交，等待平台确认到账')
+        render()
+      } catch (e) { toast(API.friendlyError(e)) } finally { payBtn.disabled = false }
+    })
+
+    const switchBtn = document.getElementById('mcPlanSwitch')
+    if (switchBtn) switchBtn.addEventListener('click', () => {
+      const order = (S.__mcOrders || []).filter((o) => o.status === 'pending')[0]
+      mcOpenPlanPicker('更换入驻套餐', order ? order.id : null, S.__mcShop.id)
+    })
+
+    const renewBtn = document.getElementById('mcRenewBtn')
+    if (renewBtn) renewBtn.addEventListener('click', () => {
+      if ((S.__mcOrders || []).some((o) => o.status === 'pending')) {
+        toast('已有待审核的缴费订单，请先完成付款或联系平台')
+        return
+      }
+      mcOpenPlanPicker('续费 / 升级入驻套餐', null, S.__mcShop.id)
     })
 
     const shopEdit = document.getElementById('mcShopEdit')

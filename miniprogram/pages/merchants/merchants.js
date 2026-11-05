@@ -47,6 +47,10 @@ Page({
     wx.navigateTo({ url: '/pages/task/task?id=' + e.currentTarget.dataset.id })
   },
 
+  onJoin() {
+    wx.navigateTo({ url: '/pages/merchant-join/merchant-join' })
+  },
+
   onConsole() {
     wx.navigateTo({ url: '/pages/merchant-console/merchant-console' })
   }

@@ -1,9 +1,10 @@
 <view class="page">
   <view class="mc-hero">
-    <text class="mc-hero-eyebrow">企业商家 · 任务协作</text>
+    <text class="mc-hero-eyebrow">企业商家 · 付费入驻</text>
     <text class="mc-hero-title">每个商家，都有自己的店铺</text>
-    <text class="mc-hero-sub">发布制作任务、上传参考视频，让服务者一眼看懂你要什么</text>
-    <view class="mc-hero-btn" bindtap="onConsole">开通 / 管理我的店铺 ›</view>
+    <text class="mc-hero-sub">企业店铺为付费增值服务：按年缴纳入驻服务费并审核通过后，即可发布任务与参考视频</text>
+    <view class="mc-hero-btn" bindtap="onJoin">查看入驻套餐与费用 ›</view>
+    <view style="margin-top:18rpx;text-align:center;font-size:23rpx;color:#4F7DF3" bindtap="onConsole">开通 / 管理我的店铺</view>
   </view>
 
   <view class="tabs">
