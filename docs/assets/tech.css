@@ -982,7 +982,7 @@ body .cat-img-wrap { aspect-ratio: 16 / 10; }
 .group-card-foot span:last-child { color: var(--g-accent, #0EA5E9); font-weight: 700; }
 
 /* 建群弹层 */
-.group-modal-mask { position: fixed; inset: 0; z-index: 300; display: flex; align-items: center; justify-content: center; padding: 20px; background: #112137; backdrop-filter: blur(4px); }
+.group-modal-mask { position: fixed; inset: 0; z-index: 300; display: flex; align-items: center; justify-content: center; padding: 20px; background: #A9B8CC; backdrop-filter: none; }
 .group-modal-mask[hidden] { display: none; }
 .group-modal { width: min(440px, 100%); border-radius: 20px; box-shadow: 0 30px 80px -30px rgba(11,31,51,.6); }
 .group-modal-title { font-size: 19px; font-weight: 700; color: #0B1F33; }
@@ -1173,7 +1173,7 @@ body .cat-img-wrap { aspect-ratio: 16 / 10; }
 .notice-modal-mask {
   position: fixed; inset: 0; z-index: 400; display: none;
   align-items: center; justify-content: center; padding: 20px;
-  background: #131E34; backdrop-filter: blur(4px);
+  background: #A9B8CC; backdrop-filter: none;
 }
 .notice-modal-mask.show { display: flex; }
 .notice-modal {
