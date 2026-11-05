@@ -2658,11 +2658,21 @@ window.API = (function () {
     return rows[0]
   }
 
-  /** 更换套餐（仅限待审核订单）：删掉旧订单重新生成，避免金额被前端改动 */
+  /**
+   * 更换套餐：待审核订单直接改 plan_id，由数据库触发器按新套餐重算金额；
+   * 已驳回 / 已关闭的订单则重新生成，避免留下多笔待审订单。
+   */
   async function changeMerchantEnrollPlan(orderId, planId, merchantId) {
     if (!orderId) return createMerchantEnrollOrder(planId, merchantId)
-    await cloud.database.from('merchant_enroll_orders').update({ status: 'cancelled' }).eq('id', orderId).eq('status', 'pending').select()
-    return createMerchantEnrollOrder(planId, merchantId)
+    const cur = await cloud.database.from('merchant_enroll_orders').select('id,status').eq('id', orderId).maybeSingle()
+    const o = unwrap(cur, '')
+    if (!o || o.status !== 'pending') return createMerchantEnrollOrder(planId, merchantId)
+    const res = await cloud.database.from('merchant_enroll_orders')
+      .update({ plan_id: Number(planId), updated_at: new Date().toISOString() })
+      .eq('id', orderId).eq('status', 'pending').select()
+    const rows = unwrap(res, '更换套餐失败')
+    if (!rows || !rows.length) throw new Error('更换套餐失败，订单可能已被审核')
+    return rows[0]
   }
 
   /** 上传付款凭证（可选，失败时仍可只填流水号） */

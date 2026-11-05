@@ -1545,14 +1545,14 @@
     const preferred = (plans.filter((p) => p.code === 'pro')[0] || plans[0] || {}).id
     openAction(
       title,
-      `<p class="mc-hint" style="margin-bottom:12px">选择后按新套餐重新生成缴费订单，金额由平台套餐表计算；原待审核订单自动作废。</p>
+      `<p class="mc-hint" style="margin-bottom:12px">选择后按新套餐重算应付金额，金额由平台套餐表计算，待审核订单号保持不变；若为续费则生成新订单。</p>
        ${mcPlanGrid(plans, preferred, true)}`,
       async () => {
         const planId = mcSelectedPlanId()
         if (!planId) throw new Error('请先选择入驻套餐')
         if (currentOrderId) await API.changeMerchantEnrollPlan(currentOrderId, planId, shopId)
         else await API.createMerchantEnrollOrder(planId, shopId)
-        toast('新缴费订单已生成，请按订单金额转账')
+        toast('套餐已更新，请按订单最新金额转账')
         render()
       },
       '生成缴费订单'
