@@ -287,7 +287,7 @@ window.API = (function () {
     const pathname = q >= 0 ? s.slice(0, q) : s
     // 本地封面图换版后统一刷新缓存版本号（只动站内静态图，不动云存储签名地址）
     if (/(?:covers\/|l-hero|l-cat-|l-mini-)/i.test(pathname) && /^\?v=/i.test(query)) {
-      query = '?v=20261105b'
+      query = '?v=20261105c'
     }
     if (!/^https?:\/\//i.test(s)) return pathname + query
     // 本站域名 → 相对路径

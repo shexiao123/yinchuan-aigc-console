@@ -1172,7 +1172,7 @@ img { max-width: 100%; display: block; }
   background-position: center 42%;
   background-repeat: no-repeat;
 }
-/* 左侧蒙层：保证白字在照片上可读 */
+/* 插图不叠任何不透明蒙层，文字靠实色卡片承托 */
 .hero-banner-has-img::before {
   content: '';
   position: absolute;
@@ -1180,7 +1180,7 @@ img { max-width: 100%; display: block; }
   top: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(100deg, #181515 0%, #171920 42%, #161F30 100%);
+  background: none;
   z-index: 1;
 }
 .hero-banner-has-img .banner-text { z-index: 2; }

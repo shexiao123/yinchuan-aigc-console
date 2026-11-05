@@ -119,17 +119,17 @@
 .banner-title {
   font-size: 38rpx;
   font-weight: 700;
-  color: #fff;
+  color: #0B1F33;
   letter-spacing: 2rpx;
 }
 
 .banner-sub {
   font-size: 24rpx;
-  color: #FFFFFF;
+  color: #40536B;
   margin-top: 12rpx;
 }
 
-/* 无图 banner 使用浅蓝动态底，文字改为深色 */
+/* 浅蓝动态底 + 浅色插图，文字统一深色（不再靠深色不透明蒙层） */
 .banner-tech .banner-title { color: #0B1F33; }
 .banner-tech .banner-sub { color: #4A5B6E; }
 
@@ -359,7 +359,7 @@
   background-position: center 42%;
   background-repeat: no-repeat;
 }
-/* 左侧蒙层：保证白字在照片上可读 */
+/* 插图不叠任何不透明蒙层：保证图片本身清晰可见 */
 .banner-has-img::after {
   content: '';
   position: absolute;
@@ -367,7 +367,7 @@
   top: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(100deg, #181515 0%, #171920 42%, #161F30 100%);
+  background: none;
   z-index: 1;
 }
 .banner-has-img .banner-inner { position: relative; z-index: 2; }

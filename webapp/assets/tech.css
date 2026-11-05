@@ -420,7 +420,8 @@ label, .field-label { color: var(--ink-2); font-weight: 500; }
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, #FFFFFF 62%, #FFFFFF 100%);
+  /* 插图不叠任何不透明蒙层：白雾会把城市线条糊成灰白 */
+  background: none;
   pointer-events: none;
 }
 .cat-icon-wrap {
@@ -443,7 +444,7 @@ label, .field-label { color: var(--ink-2); font-weight: 500; }
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, #FFFFFF 66%, #FFFFFF 100%);
+  background: none;
   pointer-events: none;
 }
 .svc-title {
@@ -482,7 +483,8 @@ label, .field-label { color: var(--ink-2); font-weight: 500; }
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(180deg, #FFFFFF 62%, #FFFFFF 100%);
+  /* 插图不叠任何不透明蒙层：白雾会把城市线条糊成灰白 */
+  background: none;
   pointer-events: none;
 }
 
@@ -583,7 +585,7 @@ label, .field-label { color: var(--ink-2); font-weight: 500; }
   justify-content: center;
   color: rgba(14, 165, 233, .34);
   font-size: 30px;
-  background: #FFFFFF;
+  background: none;
 }
 .cat-img-wrap:has(.img-missing),
 .svc-cover-wrap:has(.img-missing) { min-height: 60px; }
@@ -694,7 +696,7 @@ body .cat-img-wrap { aspect-ratio: 16 / 10; }
 .home-trust i { font-style: normal; font-size: 11.5px; color: #6A7B8C; }
 .home-hero-media {
   position: relative; min-height: 360px; border-radius: 18px; overflow: hidden;
-  background: url("covers/light/cyber-hero.jpg?v=20261105b") center/cover no-repeat, #E8F1FC;
+  background: url("covers/light/cyber-hero.jpg?v=20261105c") center/cover no-repeat, #E8F1FC;
   display: flex; align-items: center; justify-content: center;
 }
 .home-hero-media.has-img { background-size: cover; background-position: center; }
@@ -885,15 +887,9 @@ body .cat-img-wrap { aspect-ratio: 16 / 10; }
 }
 .home-viz-points li b { color: #0B1F33; font-weight: 700; }
 
-/* 动态背景：hero 内漂浮柔光球 + 渐变缓动 */
+/* 动态背景：整块不透明浅色层会盖住 Canvas 与插图，直接不生成 */
 .home.home-anim .home-hero { overflow: hidden; }
-.home.home-anim .home-hero::before {
-  content: ''; position: absolute; inset: -40% -10% auto -10%; height: 140%;
-  /* 动态底层用整块不透明浅色渐变，不再有半透明光斑和硬色块 */
-  background: linear-gradient(115deg, #F4F9FF 0%, #F7F4FF 52%, #F1FBFA 100%);
-  filter: blur(6px); z-index: 0; animation: heroFloat 14s ease-in-out infinite alternate;
-  pointer-events: none;
-}
+.home.home-anim .home-hero::before { content: none; display: none; }
 @keyframes heroFloat {
   0% { transform: translate3d(0,0,0) scale(1); }
   50% { transform: translate3d(2%, -2%, 0) scale(1.06); }
@@ -912,7 +908,10 @@ body .cat-img-wrap { aspect-ratio: 16 / 10; }
     /* 单列同样整块实色，城市图只在下方独立图片卡内 */
     background: linear-gradient(180deg, #FFFFFF 0%, #F1F7FF 100%);
   }
-  .home-hero-title { font-size: 30px; }
+  .home-hero { min-width: 0; }
+  .home-hero-copy { min-width: 0; }
+  .home-hero-title { font-size: clamp(23px, 6.2vw, 30px); line-height: 1.28; overflow-wrap: anywhere; }
+  .home-hero-sub { overflow-wrap: anywhere; }
   .home-hero-media { min-height: 220px; }
   .home-section { margin-top: 36px; }
   .home-cat-grid { grid-template-columns: repeat(2, 1fr); gap: 14px; }

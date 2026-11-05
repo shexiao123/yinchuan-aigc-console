@@ -2,13 +2,16 @@
 """
 把参考图（未来都市霓虹）加工成网页端首页的背景 / 底图 / 插图资源。
 
-设计取舍（2026-11-05 舍先生要求「插图也做成和底图一样风格」）：
-- 原图整体偏暗偏浓，站点定调是「浅色商业科技感 / 背景不要黑色」。
-- 所有输出（底图、Hero 底、Hero 大图、分类卡、服务封面、mini 插图）
-  统一走同一个 soften() 配方：提亮 + 降饱和 + 降对比 + 柔化 + 叠冷白。
-  只靠 alpha（冷白占比）区分层次，靠裁切区域与极轻微色调偏移区分卡片，
-  不再出现「底图淡、插图浓艳写实」的割裂。
-- alpha 越大越淡：底图 0.72（最淡）→ 卡片 0.60 → Hero 底 0.55 → Hero 大图 0.48（最浓但仍柔和）。
+2026-11-05 舍先生：「插图不透明度太高了，不要不透明度」。
+旧配方用 Image.blend(x, 冷白, alpha=0.48~0.72) 在画面上叠了一层
+高不透明度的冷白雾，又叠高斯模糊 —— 城市线条、霓虹色斑全被糊成灰白，
+这就是「不透明度太高」的根因。CSS 里那几层纯白遮罩则又白上加白。
+
+新配方（零叠罩）：
+- 不再叠任何白 / 浅色不透明层，也不做高斯模糊（不发灰、不发糊）。
+- 用 gamma 曲线单独抬暗部：暗处变亮、亮处不炸，层次与细节完整保留。
+- 轻微青蓝冷调 + 轻微提对比：明亮通透的商业科技感，底色仍不是黑色。
+- 层次区分改用 gamma / 饱和度 / 冷调强度，不再靠白色占比。
 
 用法：
   PYTHONPATH=tools/_pylib python3 tools/make-cyber-bg.py <参考图路径>
@@ -26,18 +29,26 @@ SRC = sys.argv[1] if len(sys.argv) > 1 else os.path.join(
 os.makedirs(OUT, exist_ok=True)
 src = Image.open(SRC).convert('RGB')
 W, H = src.size
-COLD_WHITE = (247, 248, 250)
 
 
-def soften(img, alpha, color=0.70, brightness=1.28, contrast=0.92, blur=0.6):
-    """底图与插图共用的唯一风格配方：浅、柔、低饱和、冷白、霓虹色斑隐约。"""
-    x = ImageEnhance.Brightness(img).enhance(brightness)
+def soften(img, gamma=0.70, color=1.0, contrast=1.05,
+           cool=(0.97, 1.00, 1.05), blur=0):
+    """底图与插图共用的唯一风格配方：亮、透、清晰、青蓝冷调，零白色叠罩。
+
+    gamma < 1 提亮暗部且不洗白高光；cool 给 R 微降、B 微升，偏青靛科技感。
+    """
+    lut = [min(255, round(255 * (v / 255.0) ** gamma)) for v in range(256)]
+    x = img.point(lut * 3)
     x = ImageEnhance.Color(x).enhance(color)
     x = ImageEnhance.Contrast(x).enhance(contrast)
+    r, g, b = x.split()
+    r = r.point(lambda v, f=cool[0]: min(255, int(v * f)))
+    g = g.point(lambda v, f=cool[1]: min(255, int(v * f)))
+    b = b.point(lambda v, f=cool[2]: min(255, int(v * f)))
+    x = Image.merge('RGB', (r, g, b))
     if blur:
         x = x.filter(ImageFilter.GaussianBlur(blur))
-    white = Image.new('RGB', x.size, COLD_WHITE)
-    return Image.blend(x, white, alpha)
+    return x
 
 
 def save(img, name, width=None, quality=84):
@@ -61,20 +72,20 @@ def tint(img, k):
     return Image.merge('RGB', (r, g, b))
 
 
-# 1) 全页底图：最淡，只留都市轮廓和色斑，深色文字压得住
+# 1) 全页底图：最亮最淡（靠低饱和，不靠白雾）
 print('底图：')
-save(soften(src, 0.72, color=0.55, brightness=1.40, contrast=0.86, blur=1.1),
-     'cyber-bg.jpg', 1920, 78)
+save(soften(src, gamma=0.58, color=0.70, contrast=0.96),
+     'cyber-bg.jpg', 1920, 88)
 
-# 2) Hero 整块底：比底图略浓，透出城市结构
+# 2) Hero 整块底：城市结构清楚、色调柔和
 print('Hero 底：')
-save(soften(src, 0.55, color=0.68, brightness=1.32, contrast=0.90, blur=0.8),
-     'cyber-hero.jpg', 1600, 82)
+save(soften(src, gamma=0.66, color=0.90, contrast=1.02),
+     'cyber-hero.jpg', 1600, 90)
 
-# 3) Hero 右栏大图：全套里最浓的一张，但仍是冷白柔和调，不再暗沉写实
+# 3) Hero 右栏大图：全套里对比最足、细节最清晰的一张
 print('Hero 大图：')
-save(soften(src, 0.48, color=0.78, brightness=1.26, contrast=0.94, blur=0.5),
-     'l-hero.jpg', 1600, 86)
+save(soften(src, gamma=0.72, color=1.04, contrast=1.07),
+     'l-hero.jpg', 1600, 92)
 
 # 4) 8 张分类卡 / 服务封面：同配方、不同区域裁切，风格统一但不雷同
 spots = [
@@ -93,18 +104,17 @@ tints = [
 print('分类卡 / 服务封面（同底图风格）：')
 for i, (box, k) in enumerate(zip(spots, tints), 1):
     c = crop(box)
-    c = soften(c, 0.60, color=0.72, brightness=1.28, contrast=0.92, blur=0.55)
+    c = soften(c, gamma=0.70, color=1.02, contrast=1.05)
     c = tint(c, k).resize((800, 500), Image.LANCZOS)
-    save(c, f'l-cat-{i:02d}.jpg', None, 82)
+    save(c, f'l-cat-{i:02d}.jpg', None, 90)
 
-# 5) 两张 mini 插图：原来是抽象线条/方块插画，与赛博都市底图完全不是一套语言，
-#    现在一并换成同配方的都市裁切（当前首页只用作文字胶囊，留作备用不裂图）
-print('mini 插图（替换旧抽象插画）：')
+# 5) 两张 mini 插图：同配方的都市裁切
+print('mini 插图：')
 mini_spots = [(0.10, 0.18, 0.62, 0.88), (0.45, 0.30, 0.97, 1.00)]
 for i, (box, k) in enumerate(zip(mini_spots, [(1.00, 1.02, 1.03), (1.03, 1.00, 1.02)]), 1):
     c = crop(box)
-    c = soften(c, 0.60, color=0.72, brightness=1.28, contrast=0.92, blur=0.55)
+    c = soften(c, gamma=0.70, color=1.02, contrast=1.05)
     c = tint(c, k).resize((900, 620), Image.LANCZOS)
-    save(c, f'l-mini-{i}.jpg', None, 82)
+    save(c, f'l-mini-{i}.jpg', None, 90)
 
 print('done ->', OUT)

@@ -1827,7 +1827,7 @@
 
     return `
       <div class="detail-hero">
-        <div class="detail-cover ${service.coverUrl ? 'detail-cover-has-img' : ''}" style="background:${service.coverUrl ? 'transparent' : API.coverTheme(service.id)}">
+        <div class="detail-cover ${service.coverUrl ? 'detail-cover-has-img' : ''}" style="background:${service.coverUrl ? '#EAF3FC' : API.coverTheme(service.id)}">
           ${service.coverUrl ? `<img ${API.imgAttrs(service.coverUrl, 'detail-cover-img')} alt="${API.esc(service.title || '')}" />` : '<span class="detail-cover-mark">MG</span>'}
         </div>
         <div class="detail-info">

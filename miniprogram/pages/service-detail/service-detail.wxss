@@ -16,7 +16,7 @@
 
 .detail-cover-cat {
   font-size: 22rpx;
-  color: rgba(255, 255, 255, 0.8);
+  color: #0369A1;
   letter-spacing: 2rpx;
   margin-bottom: 14rpx;
 }
@@ -24,13 +24,13 @@
 .detail-cover-title {
   font-size: 42rpx;
   font-weight: 700;
-  color: #fff;
+  color: #0B1F33;
   letter-spacing: 2rpx;
 }
 
 .detail-cover-sub {
   font-size: 24rpx;
-  color: rgba(255, 255, 255, 0.88);
+  color: #40536B;
   margin-top: 12rpx;
 }
 
@@ -40,7 +40,7 @@
   bottom: -40rpx;
   font-size: 180rpx;
   font-weight: 800;
-  color: rgba(255, 255, 255, 0.13);
+  color: rgba(14, 165, 233, .18);
 }
 
 .price-bar {
@@ -382,8 +382,9 @@
   z-index: 0;
 }
 .detail-cover.has-img {
-  background: #2A231C;
+  background: #EAF3FC;
 }
+/* 插图不叠任何不透明蒙层 */
 .detail-cover.has-img::after {
   content: '';
   position: absolute;
@@ -391,6 +392,6 @@
   top: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(90deg, #1C1A1B 0%, #1A1E28 60%, #182030 100%);
+  background: none;
   z-index: 1;
 }
