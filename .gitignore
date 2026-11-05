@@ -58,3 +58,6 @@ tools/_pylib/
 shots/
 .playwright-cli/
 tmp-gh-*/
+tools/.gh-sync-blobs.json
+__pycache__/
+*.pyc

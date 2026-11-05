@@ -56,6 +56,27 @@ python -m http.server 8899
 
 > 注意：直接双击 `index.html`（`file://` 协议）无法调用云服务，必须走 HTTP。
 
+## 每次更新同步到 GitHub 线上
+
+**双击 `同步GitHub.bat`** 即可（自动完成前三步）：
+
+1. `node tools/sync-pages.js` —— 把 `webapp/` 同步到 `docs/`（Pages 发布源）
+2. `git add -A && git commit` —— 提交本地改动
+3. `python -u tools/gh-sync.py` —— 推送到 GitHub `main`
+4. GitHub Actions 自动部署 Pages，约 1-2 分钟生效
+
+线上地址：
+
+| 端 | 地址 |
+|---|---|
+| 用户端 | <https://shexiao123.github.io/yinchuan-aigc-console/> |
+| 管理端 | <https://shexiao123.github.io/yinchuan-aigc-console/admin.html> |
+
+`tools/gh-sync.py` 走 GitHub Data API（增量 blob → tree → commit → 更新 ref），因为本机
+`git push` 到 `github.com` 常被网关重置，而 `api.github.com` 可达。凭据读系统凭据管理器里的
+PAT（需要 `repo` + `workflow` 权限）。默认跳过 `assets/`、`_docs/` 等历史素材目录，
+`--full` 可全量同步，`--check` 只对比不写入。
+
 ## 自检
 
 ```bash
