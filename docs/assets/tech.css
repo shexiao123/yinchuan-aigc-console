@@ -665,7 +665,7 @@ body .cat-img-wrap { aspect-ratio: 16 / 10; }
 .home-hero {
   display: grid; grid-template-columns: 1.05fr 1fr; gap: 40px; align-items: center;
   /* 整块实色浅底；城市底图只放进右侧独立图片卡，不再从 Hero 背景透出来 */
-  background: linear-gradient(112deg, #FFFFFF 0%, #FFFFFF 48%, #F1F7FF 100%);
+  background: linear-gradient(112deg, #F7FBFF 0%, #F7FBFF 40%, #D8EAFF 100%);
   border: 1px solid rgba(14,165,233,.10);
   border-radius: 24px; padding: 48px 52px; position: relative; overflow: hidden;
   box-shadow: 0 24px 60px -30px rgba(20,60,120,.28);
@@ -1242,7 +1242,7 @@ body .cat-img-wrap { aspect-ratio: 16 / 10; }
 .mc-hero {
   position: relative; display: flex; align-items: center; justify-content: space-between; gap: 32px;
   margin: 26px 0 30px; padding: 38px 44px; border-radius: 18px; overflow: hidden;
-  background: linear-gradient(120deg, #EAF3FE 0%, #F0EEFD 55%, #F8F4FF 100%);
+  background: linear-gradient(120deg, #F2F8FF 0%, #E9F2FF 55%, #DFEBFF 100%);
   border: 1px solid rgba(79, 125, 243, .16);
   box-shadow: var(--shadow);
 }
@@ -1259,12 +1259,15 @@ body .cat-img-wrap { aspect-ratio: 16 / 10; }
 .mc-hero-sub { font-size: 14px; color: var(--ink-2); line-height: 1.8; margin: 0 0 22px; }
 .mc-hero-cta { display: flex; gap: 12px; flex-wrap: wrap; }
 .mc-hero-stat { position: relative; z-index: 1; display: flex; gap: 34px; flex: none; }
-.mc-hero-stat div { text-align: center; }
+.mc-hero-stat div {
+  text-align: center; padding: 14px 18px; border-radius: 14px;
+  background: #FFFFFF; border: 1px solid rgba(79,125,243,.18);
+}
 .mc-hero-stat b {
   display: block; font-size: 34px; font-weight: 800; line-height: 1.1;
   background: var(--grad-brand); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
 }
-.mc-hero-stat span { font-size: 11.5px; color: var(--ink-3); }
+.mc-hero-stat span { font-size: 11.5px; color: #66799A; }
 
 .mc-shop-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
 .mc-shop {
@@ -1528,7 +1531,7 @@ body .cat-img-wrap { aspect-ratio: 16 / 10; }
   padding: 42px 44px;
   border-radius: 22px;
   border: 1px solid rgba(79, 125, 243, .20);
-  background: linear-gradient(112deg, #FFFFFF 0%, #F4F9FF 52%, #F6F3FF 100%);
+  background: linear-gradient(112deg, #F7FBFF 0%, #E8F2FF 52%, #DFECFF 100%);
   box-shadow: 0 16px 42px rgba(35, 72, 140, .08);
 }
 .mjoin-hero::before {
@@ -1662,5 +1665,23 @@ body .cat-img-wrap { aspect-ratio: 16 / 10; }
   .mjoin-order-grid { grid-template-columns: 1fr; }
   .mjoin-switch { flex-direction: column; align-items: stretch; }
 }
+
+/* ============ 蓝色科技 · 实时动态背景 ============
+   参考企业宣传片「科技字幕背景」：透视网格 / 数据流 / 扫描光带 / 脉冲环。
+   Canvas 每帧先铺满不透明浅蓝底，整幅像素 alpha = 1，
+   不使用 CSS 半透明叠层、不使用 backdrop blur，深色文字始终清晰。
+   仅作用于首屏主视觉，内容区保持干净实色。 */
+.home-hero, .mc-hero, .mjoin-hero { isolation: isolate; }
+.tech-motion-canvas {
+  position: absolute; inset: 0; z-index: 0;
+  display: block; width: 100%; height: 100%;
+  pointer-events: none;
+}
+/* canvas 是首个子元素，内容统一提到上一层，保证文字与图片卡压在动态背景之上 */
+.home-hero > *:not(.tech-motion-canvas),
+.mc-hero > *:not(.tech-motion-canvas),
+.mjoin-hero > *:not(.tech-motion-canvas) { position: relative; z-index: 1; }
+/* 入驻页原有静态网格让位给动态网格，避免两层网格叠加变脏 */
+.mjoin-hero::before { background-image: none; }
 
 

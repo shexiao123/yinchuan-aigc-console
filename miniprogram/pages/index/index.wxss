@@ -69,9 +69,45 @@
   overflow: hidden;
 }
 
-.banner-amber { background: linear-gradient(120deg, #E8B27A 0%, #C4703F 100%); }
-.banner-olive { background: linear-gradient(120deg, #A8BC96 0%, #6E7F5C 100%); }
-.banner-rose { background: linear-gradient(120deg, #D9A5A0 0%, #A5645F 100%); }
+/* 蓝色科技动态背景：三档主题统一为浅蓝实色，与网页端首屏一致 */
+.banner-amber { background: linear-gradient(120deg, #F2F8FF 0%, #D8EAFF 100%); }
+.banner-olive { background: linear-gradient(120deg, #EAF7FF 0%, #CDEBFF 100%); }
+.banner-rose { background: linear-gradient(120deg, #F0F4FF 0%, #DDE7FF 100%); }
+
+.tech-motion {
+  position: absolute; left: 0; top: 0; right: 0; bottom: 0; z-index: 0;
+  overflow: hidden;
+  background: linear-gradient(120deg, #F7FBFF 0%, #E4F0FF 55%, #C7DFFF 100%);
+}
+.tech-grid {
+  position: absolute; left: -40rpx; top: -40rpx; right: -40rpx; bottom: -40rpx;
+  background-image:
+    repeating-linear-gradient(0deg, rgba(79, 125, 243, .14) 0 2rpx, transparent 2rpx 34rpx),
+    repeating-linear-gradient(90deg, rgba(79, 125, 243, .14) 0 2rpx, transparent 2rpx 34rpx);
+  animation: techGridDrift 14s linear infinite;
+}
+.tech-scan {
+  position: absolute; left: 0; right: 0; top: -140rpx; height: 140rpx;
+  background: linear-gradient(180deg, #E4F0FF 0%, #C6DCFA 50%, #E4F0FF 100%);
+  animation: techScanDown 7s linear infinite;
+}
+.tech-ring {
+  position: absolute; right: 46rpx; top: 34rpx; width: 110rpx; height: 110rpx;
+  border: 3rpx solid #A9C9F5; border-radius: 50%;
+  animation: techRingPulse 6s ease-out infinite;
+}
+@keyframes techGridDrift {
+  from { transform: translateY(0); }
+  to { transform: translateY(34rpx); }
+}
+@keyframes techScanDown {
+  from { top: -140rpx; }
+  to { top: 300rpx; }
+}
+@keyframes techRingPulse {
+  0% { transform: scale(.4); border-color: #A9C9F5; }
+  100% { transform: scale(2.2); border-color: #E4F0FF; }
+}
 
 .banner-inner {
   display: flex;
@@ -89,17 +125,22 @@
 
 .banner-sub {
   font-size: 24rpx;
-  color: rgba(255, 255, 255, 0.86);
+  color: #FFFFFF;
   margin-top: 12rpx;
 }
+
+/* 无图 banner 使用浅蓝动态底，文字改为深色 */
+.banner-tech .banner-title { color: #0B1F33; }
+.banner-tech .banner-sub { color: #4A5B6E; }
 
 .banner-mark {
   position: absolute;
   right: 30rpx;
   bottom: -30rpx;
+  z-index: 1;
   font-size: 140rpx;
   font-weight: 800;
-  color: rgba(255, 255, 255, 0.12);
+  color: #BED4F2;
   letter-spacing: 6rpx;
 }
 

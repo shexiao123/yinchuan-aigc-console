@@ -43,10 +43,10 @@ echo.
 echo  [3/3] 启动服务 ...
 cd /d "%~dp0webapp"
 
-start "用户端 :%USER_PORT%" /b python -m http.server %USER_PORT% --bind 127.0.0.1
+start "用户端 :%USER_PORT%" /b python "..\tools\serve.py" %USER_PORT%
 node -e "setTimeout(()=>{},1200)"
 
-start "管理端 :%ADMIN_PORT%" /b python -m http.server %ADMIN_PORT% --bind 127.0.0.1
+start "管理端 :%ADMIN_PORT%" /b python "..\tools\serve.py" %ADMIN_PORT%
 node -e "setTimeout(()=>{},2000)"
 
 rem ---------- 启动后自检 ----------
