@@ -274,8 +274,8 @@ body.m-mode .mobile-nav {
   bottom: 0; left: 0; right: 0;
   height: calc(56px + env(safe-area-inset-bottom, 0px));
   padding-bottom: env(safe-area-inset-bottom, 0px);
-  background: rgba(255, 255, 255, .96);
-  backdrop-filter: blur(14px);
+  background: #FFFFFF;
+  backdrop-filter: none;
   border-top: 1px solid var(--line);
   z-index: 200;
 }
@@ -368,10 +368,10 @@ body.m-mode .empty-hint { font-size: 13px; line-height: 1.6; }
 
 /* 底部标签栏：白玻璃 + 顶部细线 */
 body.m-mode .mobile-nav {
-  background: rgba(255, 255, 255, .92) !important;
+  background: #FFFFFF !important;
   border-top: 1px solid var(--line) !important;
-  backdrop-filter: blur(22px) saturate(180%);
-  -webkit-backdrop-filter: blur(22px) saturate(180%);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
   box-shadow: 0 -1px 0 var(--line), 0 -6px 24px rgba(15, 23, 42, .06);
 }
 body.m-mode .mobile-nav-item.active { color: var(--brand-deep); }
@@ -435,7 +435,7 @@ body.m-mode .list-row-title {
 /* 顶栏 */
 body.m-mode .topbar-inner { background: transparent; }
 body.m-mode .topbar {
-  background: rgba(255, 255, 255, .90) !important;
+  background: #FFFFFF !important;
   border-bottom: 1px solid var(--line);
 }
 
@@ -460,7 +460,7 @@ body.m-mode .hero-mini-sub { color: var(--ink-2); }
 body.m-mode .input,
 body.m-mode .textarea,
 body.mode select.input {
-  background: rgba(255, 255, 255, .94) !important;
+  background: #FFFFFF !important;
   border: 1px solid var(--line) !important;
   color: var(--ink) !important;
   border-radius: 8px;
@@ -496,14 +496,14 @@ body.m-mode .field-hint, body.m-mode .field-label { color: var(--ink-3) !importa
 
 /* 弹层 */
 body.m-mode .modal {
-  background: rgba(255, 255, 255, .98) !important;
+  background: #FFFFFF !important;
   border: 1px solid rgba(14, 165, 233, .20) !important;
   border-radius: 12px;
 }
 
 /* 侧栏菜单（管理端在手机上） */
 body.m-mode .side-menu {
-  background: rgba(255, 255, 255, .92) !important;
+  background: #FFFFFF !important;
   border: 1px solid var(--line) !important;
 }
 body.m-mode .side-item.active {

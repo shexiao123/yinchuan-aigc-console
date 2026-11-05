@@ -426,8 +426,8 @@
   box-sizing: border-box;
   margin: 20rpx 0 0;
   padding: 0 16rpx 0 8rpx;
-  background: rgba(255, 255, 255, .92);
-  border: 1rpx solid rgba(15, 23, 42, .07);
+  background: #F3F8FF;
+  border: 1rpx solid rgba(79, 125, 243, .14);
   border-radius: 999rpx;
   box-shadow: 0 2rpx 12rpx rgba(15, 23, 42, .05);
 }

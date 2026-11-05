@@ -150,9 +150,11 @@ img { max-width: 100%; display: block; }
 
 .admin-topbar {
   height: 60px;
-  background: rgba(255, 255, 255, .88);
-  backdrop-filter: blur(12px);
-  border-bottom: 1px solid var(--line);
+  background: #FFFFFF;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  border-bottom: 1px solid rgba(15, 23, 42, .07);
+  box-shadow: 0 4px 18px rgba(15, 23, 42, .05);
   display: flex;
   align-items: center;
   justify-content: space-between;

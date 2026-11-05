@@ -357,13 +357,13 @@ view, text, button, input, textarea, scroll-view, swiper, image {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(255, 255, 255, 0.96);
+  background: #FFFFFF;
   border-top: 1rpx solid var(--line);
   padding: 20rpx 28rpx calc(20rpx + env(safe-area-inset-bottom));
   display: flex;
   align-items: center;
   z-index: 20;
-  backdrop-filter: blur(10rpx);
+  backdrop-filter: none;
 }
 
 .action-bar-spacer {
