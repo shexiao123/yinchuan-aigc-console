@@ -65,7 +65,24 @@
       </view>
     </view>
 
-    <view class="empty" wx:if="{{!loading && !services.length}}">
+    <!-- 漫剧制作：整案对接，不划分标品服务项 -->
+    <view class="int-panel" wx:if="{{!loading && !services.length && isComic}}">
+      <text class="int-badge">🎭 漫剧制作 · 整案对接</text>
+      <text class="int-title">不拆服务项，按项目整体定制</text>
+      <text class="int-desc">从选题策划、分集剧本、分镜与角色锚点，到 AI 生成、配音与竖屏成片，由一个团队按项目整体承接。平台不设单独服务项与固定报价，需求沟通后按项目出方案、走平台担保交易。</text>
+      <view class="int-flow">
+        <text>① 说清题材与集数</text>
+        <text>② 上传参考视频</text>
+        <text>③ 团队整案报价</text>
+        <text>④ 平台担保交付</text>
+      </view>
+      <view class="int-actions">
+        <view class="int-btn int-btn-main" bindtap="onComicTasks">查看在招漫剧项目 ›</view>
+        <view class="int-btn" bindtap="onComicGroups">去群聊沟通</view>
+      </view>
+    </view>
+
+    <view class="empty" wx:if="{{!loading && !services.length && !isComic}}">
       <text class="empty-icon">🎬</text>
       <text class="empty-text">没有找到匹配的服务</text>
       <text class="empty-hint">换个关键词或分类试试</text>

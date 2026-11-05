@@ -1355,6 +1355,23 @@
     const providerMap = {}
     providers.forEach((p) => { providerMap[p.id] = p })
 
+    // 漫剧制作按项目整案对接，不划分标品服务项：该分类下无服务时显示整案引导
+    const isComic = S.serviceCategory === 'comic-drama' && !S.serviceKeyword
+    const comicPanel = `
+      <div class="int-panel">
+        <div class="int-badge">🎭 漫剧制作 · 整案对接</div>
+        <div class="int-title">不拆服务项，按项目整体定制</div>
+        <div class="int-desc">从选题策划、分集剧本、分镜与角色锚点，到 AI 生成、配音与竖屏成片，由一个团队按项目整体承接。平台不设单独服务项与固定报价，需求沟通后按项目出方案、走平台担保交易。</div>
+        <div class="int-flow">
+          <span>① 说清题材与集数</span><span>② 上传参考视频</span><span>③ 团队整案报价</span><span>④ 平台担保交付</span>
+        </div>
+        <div class="int-actions">
+          <a class="btn btn-primary" href="#/tasks?category=comic-drama">查看在招漫剧项目 ›</a>
+          <a class="btn btn-ghost" href="#/groups">去「漫剧制作」群沟通</a>
+          <a class="btn btn-ghost" href="#/merchant-console">我是商家 · 发布需求</a>
+        </div>
+      </div>`
+
     return `
       <div class="page-head">
         <div class="page-title">全部服务</div>
@@ -1376,7 +1393,7 @@
       </div>
 
       <div class="section-head">
-        <span class="section-title">共 ${services.length} 项服务</span>
+        <span class="section-title">${isComic ? '整案对接 · 不设标品服务项' : `共 ${services.length} 项服务`}</span>
       </div>
 
       ${
@@ -1414,7 +1431,9 @@
             </a>`
               })
               .join('')}</div>`
-          : `<div class="empty"><div class="empty-icon">🎬</div>
+          : isComic
+              ? comicPanel
+              : `<div class="empty"><div class="empty-icon">🎬</div>
               <span class="empty-text">没有找到匹配的服务</span>
               <span class="empty-hint">换个关键词或分类试试</span></div>`
       }

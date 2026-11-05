@@ -10,7 +10,8 @@ Page({
     categories: [],
     activeCat: '',
     services: [],
-    total: 0
+    total: 0,
+    isComic: false
   },
 
   onLoad(options) {
@@ -54,6 +55,7 @@ Page({
           coverClass: coverTheme(s.id)
         })),
         total: services.length,
+        isComic: this.data.category === 'comic-drama' && !this.data.keyword,
         loading: false
       })
     } catch (e) {
@@ -80,6 +82,14 @@ Page({
   onServiceTap(e) {
     const id = e.currentTarget.dataset.id
     wx.navigateTo({ url: `/pages/service-detail/service-detail?id=${id}` })
+  },
+
+  /** 漫剧制作按项目整案对接，不划分服务项 */
+  onComicTasks() {
+    wx.navigateTo({ url: '/pages/merchants/merchants?tab=tasks' })
+  },
+  onComicGroups() {
+    wx.navigateTo({ url: '/pages/groups/groups' })
   },
 
   onPullDownRefresh() {

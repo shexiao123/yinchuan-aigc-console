@@ -1462,4 +1462,80 @@ body .cat-img-wrap { aspect-ratio: 16 / 10; }
   .mc-console-actions { width: 100%; }
 }
 
+/* 漫剧制作 · 整案对接（不划分标品服务项） */
+.int-panel {
+  position: relative;
+  overflow: hidden;
+  padding: 38px 40px;
+  border-radius: 20px;
+  background: linear-gradient(120deg, #FFFFFF 0%, #F5F9FF 56%, #F8F5FF 100%);
+  border: 1px solid rgba(79, 125, 243, .22);
+  box-shadow: 0 14px 38px rgba(35, 72, 140, .08);
+}
+.int-panel::after {
+  content: '';
+  position: absolute;
+  right: -70px;
+  top: -90px;
+  width: 260px;
+  height: 260px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(124, 92, 240, .16), rgba(34, 211, 238, 0) 70%);
+  pointer-events: none;
+}
+.int-badge {
+  display: inline-block;
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .4px;
+  color: #fff;
+  background: linear-gradient(100deg, #22A6E8, #7C5CF0);
+}
+.int-title {
+  position: relative;
+  margin: 16px 0 10px;
+  font-size: 26px;
+  font-weight: 750;
+  color: #1B2A4A;
+  letter-spacing: .3px;
+}
+.int-desc {
+  position: relative;
+  max-width: 780px;
+  font-size: 14px;
+  line-height: 1.95;
+  color: #5A6B88;
+}
+.int-flow {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 22px;
+}
+.int-flow span {
+  padding: 8px 15px;
+  border-radius: 999px;
+  font-size: 13px;
+  color: #3D5A8A;
+  background: rgba(255, 255, 255, .86);
+  border: 1px solid rgba(79, 125, 243, .2);
+}
+.int-actions {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 26px;
+}
+@media (max-width: 860px) {
+  .int-panel { padding: 26px 20px; }
+  .int-title { font-size: 20px; }
+  .int-flow { gap: 8px; }
+  .int-flow span { font-size: 12px; padding: 7px 12px; }
+  .int-actions .btn { width: 100%; }
+}
+
 
