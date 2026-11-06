@@ -28,6 +28,23 @@
   var RGB = { blue: '79,125,243', cyan: '14,165,233', violet: '124,92,240' }
   function rgba(tone, a) { return 'rgba(' + RGB[tone] + ',' + Number(a).toFixed(3) + ')' }
 
+  /* 整幅科技底图：解决「只有细线、画面单调」。图片自带极光带 / 斜切色块 /
+     斜向光轨 / 透视网格 / 全息数据球 / HUD 面板，Canvas 只负责在它之上跑动效。
+     超宽版给 Hero（约 3:1），竖版给手机，避免 cover 裁掉主体。 */
+  var STAGE = {
+    wide: 'assets/covers/light/tech-stage-wide.jpg?v=20261106b',
+    small: 'assets/covers/light/tech-stage-m.jpg?v=20261106b'
+  }
+  var stageCache = {}
+  function stageImage(url, cb) {
+    if (Object.prototype.hasOwnProperty.call(stageCache, url)) { cb(stageCache[url]); return }
+    var img = new Image()
+    img.onload = function () { stageCache[url] = img; cb(img) }
+    img.onerror = function () { stageCache[url] = null; cb(null) }
+    img.src = url
+    if (img.complete && img.naturalWidth) { stageCache[url] = img; cb(img) }
+  }
+
   var instances = new Map() // host element -> Motion
   var rafPending = false
 
@@ -51,6 +68,7 @@
     this.beams = []
     this.city = null
     this.staticLayer = null
+    this.stage = null
     this.small = false
     this.resize()
   }
@@ -67,6 +85,11 @@
     this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
     this.small = w < 720
     this.seed()
+    var self = this
+    stageImage(this.small ? STAGE.small : STAGE.wide, function (img) {
+      self.stage = img
+      self.draw(0)
+    })
     this.draw(0)
   }
 
@@ -303,11 +326,11 @@
       ctx.rotate(-0.40)
       var lg = ctx.createLinearGradient(0, 0, b.len, 0)
       lg.addColorStop(0, rgba(b.tone, 0))
-      lg.addColorStop(0.42, rgba(b.tone, 0.22))
-      lg.addColorStop(0.55, rgba(b.tone, 0.42))
+      lg.addColorStop(0.42, rgba(b.tone, 0.32))
+      lg.addColorStop(0.55, rgba(b.tone, 0.60))
       lg.addColorStop(1, rgba(b.tone, 0))
       ctx.fillStyle = lg
-      ctx.fillRect(0, 0, b.len, b.width)
+      ctx.fillRect(0, 0, b.len, b.width * 1.5)
       ctx.restore()
     }
   }
@@ -433,6 +456,17 @@
     }
     for (var j = 0; j < ps.length; j++) {
       var q = ps[j]
+      // 每 6 颗给一颗加发光晕，让底图上的动态粒子有「光」而不是小灰点
+      if (j % 6 === 0) {
+        var hr = q.r * 7
+        var hg = ctx.createRadialGradient(q.x, q.y, 0, q.x, q.y, hr)
+        hg.addColorStop(0, rgba(q.tone, 0.34))
+        hg.addColorStop(1, rgba(q.tone, 0))
+        ctx.fillStyle = hg
+        ctx.beginPath()
+        ctx.arc(q.x, q.y, hr, 0, Math.PI * 2)
+        ctx.fill()
+      }
       ctx.fillStyle = colors[q.tone]
       ctx.globalAlpha = 0.72 + 0.28 * Math.sin(t * 0.0016 + q.phase)
       ctx.beginPath()
@@ -535,10 +569,17 @@
     var ctx = this.ctx
     if (!ctx || !this.w || !this.h) return
     var w = this.w, h = this.h, t = this.t
-    this.drawBase(ctx, w, h, t)
-    if (this.staticLayer) ctx.drawImage(this.staticLayer, 0, 0, w, h)
-    this.drawVeil(ctx, w, h)
-    this.drawGrid(ctx, w, h, t)
+    if (this.stage) {
+      // 整幅底图已含极光 / 色块 / 网格 / 数据球，动态层只叠加会动的部分，
+      // 不再重画静态城市与网格，避免两层叠脏。
+      ctx.drawImage(this.stage, 0, 0, w, h)
+    } else {
+      // 图片未就绪时的兜底画面（纯程序化绘制，保持不透明浅蓝底）
+      this.drawBase(ctx, w, h, t)
+      if (this.staticLayer) ctx.drawImage(this.staticLayer, 0, 0, w, h)
+      this.drawVeil(ctx, w, h)
+      this.drawGrid(ctx, w, h, t)
+    }
     this.drawBeams(ctx, w, h, t)
     this.drawRings(ctx, w, h, t)
     this.drawWave(ctx, w, h, t)

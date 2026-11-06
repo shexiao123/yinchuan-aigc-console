@@ -18,6 +18,8 @@
         <view class="banner {{item.themeClass}} {{item.hasImage ? 'banner-has-img' : 'banner-tech'}}" style="{{item.imageUrl ? 'background-image:url(' + item.imageUrl + ')' : ''}}">
           <!-- 蓝色科技动态背景：与网页端同源风格，整幅实色不透明 -->
           <view class="tech-motion" wx:if="{{!item.hasImage}}">
+            <!-- 整幅科技底图：极光 / 斜切色块 / 光轨 / 透视网格 / 全息数据球 -->
+            <image class="tech-stage-img" src="/assets/tech-stage-m.jpg" mode="aspectFill" />
             <view class="tech-grid"></view>
             <view class="tech-city"></view>
             <view class="tech-windows"></view>

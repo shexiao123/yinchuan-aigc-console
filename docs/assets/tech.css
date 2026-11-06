@@ -62,17 +62,24 @@
 
 /* ============ 2. 底：冷灰白 + 精密网格 ============ */
 
-/* 全站底色：完全不透明的冷白 → 淡蓝实色渐变，不再铺城市大图，
-   避免内容区透出底图造成「透明 / 发灰 / 糊白」的观感 */
+/* 全站底色：整幅不透明的浅蓝科技底图（极光带 / 光轨 / 网格 / 全息球），
+   让首屏往下滚动都有画面，而不是大片空白；内容卡片保持实色白底浮在其上。
+   底图本身是 JPG 实像素，不是 CSS 半透明叠层，杜绝发灰发糊。
+   管理端 body.admin-page 不走这条，保持纯色数据看板底。 */
 body {
-  background-color: #F7F8FA;
-  background-image: linear-gradient(180deg, #FFFFFF 0%, #F4F8FE 38%, #F5F8FC 100%);
-  background-attachment: fixed;
   color: var(--ink);
   /* 全站无衬线 —— 商业科技的字面 */
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC',
     'Microsoft YaHei', 'Helvetica Neue', sans-serif;
   letter-spacing: -.005em;
+}
+body:not(.admin-page) {
+  background-color: #EEF6FF;
+  background-image: url("covers/light/tech-stage-page.jpg?v=20261106b");
+  background-repeat: no-repeat;
+  background-position: center top;
+  background-size: cover;
+  background-attachment: fixed;
 }
 
 /* ============ 3. 顶栏 ============ */
@@ -900,8 +907,12 @@ body .cat-img-wrap { aspect-ratio: 16 / 10; }
 
 /* ============ 移动端适配（按视口宽度，不依赖 UA，避免横滑截断） */
 @media (max-width: 860px) {
-  /* iOS 上 fixed 背景容易抖动/裁切，移动端改随内容滚动 */
-  body { background-attachment: scroll; }
+  /* iOS 上 fixed 背景容易抖动/裁切，移动端改随内容滚动；
+     尺寸锁成视口大小，避免 cover 按整页高度把画面拉糊 */
+  body:not(.admin-page) {
+    background-attachment: scroll;
+    background-size: 100vw 100vh;
+  }
   .home { padding: 18px 16px 40px; }
   .home-hero {
     grid-template-columns: 1fr; gap: 24px; padding: 30px 24px;

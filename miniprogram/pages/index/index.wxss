@@ -79,6 +79,10 @@
   overflow: hidden;
   background: linear-gradient(120deg, #F7FBFF 0%, #E4F0FF 55%, #C7DFFF 100%);
 }
+/* 整幅科技底图（最底层）：给画面「面」与色彩层次，动画层叠在其上 */
+.tech-stage-img {
+  position: absolute; left: 0; top: 0; width: 100%; height: 100%; z-index: 0;
+}
 .tech-grid {
   position: absolute; left: -40rpx; top: -40rpx; right: -40rpx; bottom: -40rpx;
   background-image:
