@@ -787,6 +787,30 @@ img { max-width: 100%; display: block; }
   .stat-grid { grid-template-columns: repeat(2, 1fr); }
   .hall-grid { grid-template-columns: 1fr; }
   .footer-inner { grid-template-columns: 1fr 1fr; }
+  /* 中等屏底部 Tab 栏为固定悬浮，给页面底部留出空间，避免表单按钮被其遮挡 */
+  body { padding-bottom: 90px; }
+}
+
+/* 横排导航项较多，窄于 1280 时改用汉堡菜单，避免顶栏被挤出视口产生横向滚动 */
+@media (max-width: 1280px) {
+  .nav { display: none; }
+  .nav.mobile-open {
+    display: flex; position: absolute; top: 68px; left: 0; right: 0;
+    flex-direction: column; gap: 2px; padding: 12px 16px;
+    background: #fff; border-bottom: 1px solid var(--line);
+    box-shadow: 0 8px 20px rgba(120, 90, 60, .1); z-index: 99;
+  }
+  .nav.mobile-open .nav-link { padding: 12px 14px; }
+  .mobile-menu-btn { display: flex; }
+  .user-name { display: none; }
+}
+
+/* 1101–1440 仍保留横排导航，但收紧间距与字号，保证不溢出视口 */
+@media (max-width: 1440px) and (min-width: 1101px) {
+  .topbar-inner { gap: 22px; padding: 0 28px; }
+  .brand-logo { max-width: 220px; }
+  .nav-link { padding: 8px 11px; font-size: 14px; }
+  .topbar-right { gap: 10px; }
 }
 
 /* 中等屏：品牌名进一步收紧，避免把登录按钮挤出视口 */
@@ -798,7 +822,7 @@ img { max-width: 100%; display: block; }
 }
 
 @media (max-width: 768px) {
-  body { padding-bottom: 62px; }
+  body { padding-bottom: 90px; }
   .topbar-inner { height: 58px; padding: 0 16px; gap: 12px; }
   .brand-logo { font-size: 13.5px; letter-spacing: .5px; max-width: 178px; }
   .brand-slogan { font-size: 9.5px; letter-spacing: 0; max-width: 178px; }
