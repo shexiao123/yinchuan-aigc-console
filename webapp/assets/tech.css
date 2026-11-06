@@ -703,7 +703,7 @@ body .cat-img-wrap { aspect-ratio: 16 / 10; }
 .home-trust b { font-size: 13.5px; color: #0B1F33; font-weight: 650; }
 .home-trust i { font-style: normal; font-size: 11.5px; color: #6A7B8C; }
 .home-hero-media {
-  position: relative; min-height: clamp(320px, 26vw, 560px); border-radius: 18px; overflow: hidden;
+  position: relative; aspect-ratio: 16 / 10; min-height: 260px; border-radius: 18px; overflow: hidden;
   background: url("covers/light/cyber-hero.jpg?v=20261105c") center/cover no-repeat, #E8F1FC;
   display: flex; align-items: center; justify-content: center;
 }
