@@ -134,7 +134,7 @@
 .edit-input {
   width: 100%;
   height: 82rpx;
-  background: #F7F2EC;
+  background: #F3F8FF;
   border: 1rpx solid var(--line);
   border-radius: 14rpx;
   padding: 0 22rpx;
@@ -151,7 +151,7 @@
 .edit-textarea {
   width: 100%;
   min-height: 180rpx;
-  background: #F7F2EC;
+  background: #F3F8FF;
   border: 1rpx solid var(--line);
   border-radius: 14rpx;
   padding: 18rpx 22rpx;
@@ -176,7 +176,7 @@
 
 .edit-picker-inner {
   height: 82rpx;
-  background: #F7F2EC;
+  background: #F3F8FF;
   border: 1rpx solid var(--line);
   border-radius: 14rpx;
   padding: 0 22rpx;
@@ -258,7 +258,7 @@
 .edit-preset {
   font-size: 23rpx;
   color: var(--ink-2);
-  background: #F5EFE8;
+  background: #EFF5FE;
   border: 1rpx solid transparent;
   border-radius: 999rpx;
   padding: 8rpx 20rpx;

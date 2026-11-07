@@ -1,6 +1,6 @@
 .status-head {
   padding: 40rpx 32rpx 44rpx;
-  background: linear-gradient(140deg, #E8B27A 0%, #C4703F 100%);
+  background: linear-gradient(140deg, #E8B27A 0%, #2F6BEA 100%);
   display: flex;
   flex-direction: column;
 }
@@ -154,7 +154,7 @@
 
 .prov-arrow {
   font-size: 36rpx;
-  color: #CFC4BA;
+  color: #B9C9DE;
 }
 
 .fee-row {

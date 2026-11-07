@@ -1,6 +1,6 @@
 .apply-banner {
   margin: 20rpx 28rpx 0;
-  background: linear-gradient(135deg, #FBF3EA, #F7EFE4);
+  background: linear-gradient(135deg, #EAF3FF, #F0F6FF);
   border-radius: 20rpx;
   padding: 26rpx 28rpx;
 }
@@ -44,7 +44,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: #FAF6F1;
+  background: #F4F8FE;
   border-radius: 16rpx;
   padding: 22rpx 24rpx;
 }
@@ -56,12 +56,12 @@
 
 .picker-arrow {
   font-size: 32rpx;
-  color: #CFC4BA;
+  color: #B9C9DE;
 }
 
 .form-error {
   margin: 24rpx 28rpx 0;
-  background: #FBEDEA;
+  background: #FCEFF3;
   border-radius: 16rpx;
   padding: 20rpx 24rpx;
 }
@@ -88,7 +88,7 @@
   border: 1rpx dashed var(--line);
   border-radius: 16rpx;
   overflow: hidden;
-  background: #F7F2EC;
+  background: #F3F8FF;
 }
 
 .cover-picker-img {
@@ -155,7 +155,7 @@
   display: flex;
   align-items: center;
   gap: 6rpx;
-  background: #F7F2EC;
+  background: #F3F8FF;
   border: 1rpx solid var(--line);
   border-radius: 999rpx;
   padding: 10rpx 22rpx;
@@ -200,7 +200,7 @@
 .role-preset {
   font-size: 22rpx;
   color: var(--ink-2);
-  background: #F5EFE8;
+  background: #EFF5FE;
   border-radius: 999rpx;
   padding: 7rpx 20rpx;
 }

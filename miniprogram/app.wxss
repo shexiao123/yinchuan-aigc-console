@@ -1,26 +1,38 @@
 /* 宁夏云辇文化科技有限公司 - 全局样式
-   调性：温暖生活服务风。暖陶土色主色 + 米白底 + 圆角柔阴影 */
+   调性：深海全息 · 商业科技感。冷白底 + 电光蓝主色 + 1px 冷蓝细线，
+   青色只用于状态提示；不做黑底、不做毛玻璃、不做模糊。
+   本主题为原创实现，未使用任何第三方皮肤插件的代码或素材。 */
 
 page {
-  --brand: #C4703F;
-  --brand-deep: #A85A2D;
-  --brand-soft: #F6E7DA;
-  --ink: #2C2622;
-  --ink-2: #6B6058;
-  --ink-3: #9A8E85;
-  --line: #EDE4DA;
-  --bg: #FBF7F2;
+  --brand: #2F6BEA;
+  --brand-deep: #1D4FB8;
+  --brand-soft: #E8F1FF;
+  --ink: #10233F;
+  --ink-2: #4A6285;
+  --ink-3: #8397B4;
+  --line: #DCE8F8;
+  --bg: #F5F9FF;
   --card: #FFFFFF;
-  --olive: #6E7F5C;
-  --rose: #B5707A;
-  --shadow: 0 2rpx 16rpx rgba(120, 90, 60, 0.07);
-  --shadow-lg: 0 8rpx 32rpx rgba(120, 90, 60, 0.12);
+  --cyan: #0AA5B4;
+  --cyan-soft: #E2F7F8;
+  --violet: #6C5CE0;
+  --olive: #0F8A7E;
+  --rose: #7C5CE0;
+  --shadow: 0 2rpx 16rpx rgba(30, 74, 140, 0.07);
+  --shadow-lg: 0 8rpx 32rpx rgba(30, 74, 140, 0.12);
+  --font-hud: 'DIN Alternate', 'Bahnschrift', 'Cascadia Mono', Consolas, monospace;
 
   background: var(--bg);
   color: var(--ink);
   font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Helvetica Neue', 'Microsoft YaHei', sans-serif;
   font-size: 28rpx;
   line-height: 1.6;
+}
+
+/* 等宽读数：数字与编号走仪表盘字体，强化全息仪表感 */
+.hud-num {
+  font-family: var(--font-hud);
+  letter-spacing: 1rpx;
 }
 
 view, text, button, input, textarea, scroll-view, swiper, image {
@@ -80,10 +92,24 @@ view, text, button, input, textarea, scroll-view, swiper, image {
 /* ---------------- 卡片 ---------------- */
 
 .card {
+  position: relative;
   background: var(--card);
-  border-radius: 24rpx;
+  border: 1rpx solid var(--line);
+  border-radius: 18rpx;
   box-shadow: var(--shadow);
   overflow: hidden;
+}
+
+/* 全息仪表盘骨架：卡片左上角一道青色刻度，青色只出现在状态位 */
+.card::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 64rpx;
+  height: 3rpx;
+  background: linear-gradient(90deg, var(--cyan), rgba(10, 165, 180, 0));
+  z-index: 2;
 }
 
 .card-pad {
@@ -134,7 +160,7 @@ view, text, button, input, textarea, scroll-view, swiper, image {
 }
 
 .btn-danger {
-  background: #C0574A;
+  background: #D2455A;
   color: #fff;
 }
 
@@ -169,17 +195,17 @@ view, text, button, input, textarea, scroll-view, swiper, image {
 }
 
 .tag-plain {
-  background: #F3EDE6;
+  background: #EBF3FC;
   color: var(--ink-2);
 }
 
 .tag-olive {
-  background: #EBF0E6;
+  background: #E4F5F3;
   color: var(--olive);
 }
 
 .tag-rose {
-  background: #F7E9EB;
+  background: #F1ECFD;
   color: var(--rose);
 }
 
@@ -195,12 +221,12 @@ view, text, button, input, textarea, scroll-view, swiper, image {
   font-weight: 500;
 }
 
-.badge-pending { background: #FBF0DC; color: #A9752B; }
+.badge-pending { background: #E6F0FF; color: #1D6FD8; }
 .badge-taken { background: #E7EFF6; color: #4A6E8C; }
 .badge-busy { background: #EDE7F5; color: #6B5B92; }
-.badge-delivered { background: #F5E9E4; color: var(--brand-deep); }
-.badge-done { background: #E6F0E6; color: #4F7A4F; }
-.badge-cancelled { background: #EFEBE6; color: var(--ink-3); }
+.badge-delivered { background: #EFF5FF; color: var(--brand-deep); }
+.badge-done { background: #E4F5F3; color: #4F7A4F; }
+.badge-cancelled { background: #EEF3FB; color: var(--ink-3); }
 
 /* ---------------- 价格 ---------------- */
 
@@ -278,7 +304,7 @@ view, text, button, input, textarea, scroll-view, swiper, image {
 .input,
 .textarea {
   width: 100%;
-  background: #FAF6F1;
+  background: #F4F8FE;
   border-radius: 16rpx;
   padding: 22rpx 24rpx;
   font-size: 28rpx;
@@ -291,7 +317,7 @@ view, text, button, input, textarea, scroll-view, swiper, image {
 }
 
 .input-placeholder {
-  color: #BFB4AA;
+  color: #9DB0CC;
 }
 
 /* ---------------- 分割与空态 ---------------- */
@@ -321,7 +347,7 @@ view, text, button, input, textarea, scroll-view, swiper, image {
 .empty-hint {
   margin-top: 10rpx;
   font-size: 24rpx;
-  color: #B5AAA0;
+  color: #9DB0CC;
 }
 
 /* ---------------- 头像 ---------------- */

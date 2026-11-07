@@ -20,7 +20,7 @@
   color: var(--ink-2);
   margin-right: 14rpx;
   flex-shrink: 0;
-  background: #F7F2EC;
+  background: #F3F8FF;
 }
 
 .filter-chip-active {

@@ -29,11 +29,11 @@
     "navigationBarBackgroundColor": "#FFFFFF",
     "navigationBarTitleText": "AIGC数字文化产业基地",
     "navigationBarTextStyle": "black",
-    "backgroundColor": "#FFFFFF"
+    "backgroundColor": "#F5F9FF"
   },
   "tabBar": {
-    "color": "#9A8E85",
-    "selectedColor": "#C4703F",
+    "color": "#8397B4",
+    "selectedColor": "#2F6BEA",
     "backgroundColor": "#FFFFFF",
     "borderStyle": "white",
     "list": [

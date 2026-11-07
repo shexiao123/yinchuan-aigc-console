@@ -18,7 +18,7 @@
   color: var(--brand-deep);
   padding: 6rpx 20rpx;
   border-radius: 999rpx;
-  background: #F7EBE4;
+  background: #F2F6FF;
 }
 
 /* 消息列表 */
@@ -37,7 +37,7 @@
   border-bottom: none;
 }
 .notify-unread {
-  background: #FDF9F4;
+  background: #F7FAFF;
 }
 .notify-dot {
   width: 12rpx;
@@ -67,7 +67,7 @@
 .notify-type {
   font-size: 20rpx;
   color: var(--ink-3);
-  background: #F3EDE6;
+  background: #EBF3FC;
   padding: 3rpx 12rpx;
   border-radius: 8rpx;
   flex-shrink: 0;

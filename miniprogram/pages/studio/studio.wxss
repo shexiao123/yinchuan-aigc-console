@@ -1,6 +1,6 @@
 .studio-head {
   padding: 34rpx 28rpx 30rpx;
-  background: linear-gradient(140deg, #A8BC96 0%, #6E7F5C 100%);
+  background: linear-gradient(140deg, #A8BC96 0%, #0F8A7E 100%);
 }
 
 .studio-profile {
@@ -128,7 +128,7 @@
 
 .seg {
   display: flex;
-  background: #F2EBE3;
+  background: #EDF4FC;
   border-radius: 16rpx;
   padding: 6rpx;
 }
@@ -301,12 +301,12 @@
 }
 
 .status-on {
-  background: #E6F0E6;
+  background: #E4F5F3;
   color: #4F7A4F;
 }
 
 .status-off {
-  background: #EFEBE6;
+  background: #EEF3FB;
   color: var(--ink-3);
 }
 
@@ -336,12 +336,12 @@
   gap: 16rpx;
   margin: 24rpx 28rpx 0;
   padding: 24rpx 26rpx;
-  background: linear-gradient(135deg, #3A2E26 0%, #4A3A2E 100%);
+  background: linear-gradient(135deg, #1A3050 0%, #213A5B 100%);
   border-radius: 20rpx;
 }
 
 .mem-banner-off {
-  background: linear-gradient(135deg, #5A4C40 0%, #6A5A4C 100%);
+  background: linear-gradient(135deg, #2E4463 0%, #3F5573 100%);
 }
 
 .mem-banner-left {

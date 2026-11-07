@@ -29,6 +29,11 @@
             <view class="tech-hud"></view>
             <view class="tech-scan"></view>
             <view class="tech-ring"></view>
+            <!-- 深海全息层：数据雨 / 四角括号 / 等宽仪表读数（纯 CSS 原创） -->
+            <view class="tech-rain"></view>
+            <view class="tech-bracket tech-bracket-tl"></view>
+            <view class="tech-bracket tech-bracket-br"></view>
+            <text class="tech-readout hud-num">● ONLINE {{onlineCount}} // YINCHUAN AIGC</text>
           </view>
           <view class="banner-inner">
             <text class="banner-title">{{item.title}}</text>

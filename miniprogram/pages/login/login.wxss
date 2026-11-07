@@ -12,7 +12,7 @@
   left: -120rpx;
   right: -120rpx;
   height: 560rpx;
-  background: linear-gradient(160deg, #E8B27A 0%, #C4703F 55%, #A85A2D 100%);
+  background: linear-gradient(160deg, #E8B27A 0%, #2F6BEA 55%, #1D4FB8 100%);
   border-bottom-left-radius: 50%;
   border-bottom-right-radius: 50%;
   opacity: 0.9;
@@ -83,7 +83,7 @@
   width: 32rpx;
   height: 32rpx;
   border-radius: 6rpx;
-  border: 2rpx solid #D5C9BE;
+  border: 2rpx solid #C4D3E6;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -106,7 +106,7 @@
 
 .login-error {
   margin-top: 24rpx;
-  background: #FBEDEA;
+  background: #FCEFF3;
   border-radius: 14rpx;
   padding: 18rpx 20rpx;
 }

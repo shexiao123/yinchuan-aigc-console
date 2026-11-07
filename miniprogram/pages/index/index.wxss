@@ -141,6 +141,30 @@
   border: 3rpx solid #9CC4F2; border-radius: 50%;
   animation: techRingPulse 6s ease-out infinite;
 }
+/* 深海全息层：细线数据雨 + 四角括号 + 等宽仪表读数。
+   全部是 1px 实线，不用模糊、不用毛玻璃、不叠不透明蒙层。 */
+.tech-rain {
+  position: absolute; left: -20%; top: -80rpx; width: 140%; height: 420rpx;
+  background-image: repeating-linear-gradient(104deg,
+    rgba(10, 165, 180, 0) 0 22rpx,
+    rgba(10, 165, 180, .22) 22rpx 23rpx,
+    rgba(10, 165, 180, 0) 23rpx 46rpx);
+  animation: techRainFall 5.5s linear infinite;
+}
+@keyframes techRainFall {
+  from { transform: translateY(-70rpx); }
+  to { transform: translateY(70rpx); }
+}
+.tech-bracket {
+  position: absolute; width: 34rpx; height: 34rpx; z-index: 1;
+  border: 2rpx solid rgba(47, 107, 234, .55);
+}
+.tech-bracket-tl { left: 16rpx; top: 16rpx; border-right: none; border-bottom: none; }
+.tech-bracket-br { right: 16rpx; bottom: 16rpx; border-left: none; border-top: none; }
+.tech-readout {
+  position: absolute; left: 30rpx; bottom: 20rpx; z-index: 1;
+  font-size: 19rpx; color: #0B6F7A; opacity: .85;
+}
 @keyframes techGridDrift {
   from { transform: translateY(0); }
   to { transform: translateY(28rpx); }
@@ -376,13 +400,13 @@
 
 .prov-arrow {
   font-size: 34rpx;
-  color: #CFC4BA;
+  color: #B9C9DE;
 }
 
 /* ---------------- 平台说明 ---------------- */
 
 .notice {
-  background: linear-gradient(135deg, #FBF3EA, #F7EFE4);
+  background: linear-gradient(135deg, #EAF3FF, #F0F6FF);
 }
 
 .notice-title {

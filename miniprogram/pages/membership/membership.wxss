@@ -1,14 +1,14 @@
 /* ---------------- 会员中心 ---------------- */
 
 .card-membership {
-  background: linear-gradient(135deg, #3A2E26 0%, #4A3A2E 100%);
+  background: linear-gradient(135deg, #1A3050 0%, #213A5B 100%);
   color: #fff;
   border: none;
   margin-top: 24rpx;
 }
 
 .card-membership-off {
-  background: linear-gradient(135deg, #4A4038 0%, #5A4C40 100%);
+  background: linear-gradient(135deg, #4A4038 0%, #2E4463 100%);
 }
 
 .mem-head {
@@ -210,7 +210,7 @@
 .plan-fee {
   font-size: 20rpx;
   color: var(--ink-2);
-  background: #F5EFE8;
+  background: #EFF5FE;
   padding: 4rpx 12rpx;
   border-radius: 8rpx;
 }
@@ -299,7 +299,7 @@
 }
 
 .pay-lines {
-  background: #F7F2EC;
+  background: #F3F8FF;
   border-radius: 18rpx;
   padding: 8rpx 24rpx;
 }
@@ -309,7 +309,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 20rpx 0;
-  border-bottom: 1rpx solid #EDE4D9;
+  border-bottom: 1rpx solid #E4EDF9;
 }
 
 .pay-line:last-child {
@@ -317,7 +317,7 @@
 }
 
 .pay-line-total {
-  border-top: 1rpx solid #EDE4D9;
+  border-top: 1rpx solid #E4EDF9;
 }
 
 .pay-label {
@@ -411,13 +411,13 @@
 }
 
 .rec-status-pending {
-  background: #FBF0DC;
-  color: #A9752B;
+  background: #E6F0FF;
+  color: #1D6FD8;
 }
 
 .rec-status-cancelled,
 .rec-status-refunded {
-  background: #F2EBE3;
+  background: #EDF4FC;
   color: var(--ink-3);
 }
 

@@ -33,7 +33,7 @@
 }
 .rating-star {
   font-size: 56rpx;
-  color: #E0D6CC;
+  color: #C4D3E6;
   line-height: 1;
   transition: color 0.15s;
   padding: 0 4rpx;
@@ -68,7 +68,7 @@
 .tag-chip {
   font-size: 24rpx;
   color: var(--ink-2);
-  background: #F5EFE8;
+  background: #EFF5FE;
   border: 1rpx solid transparent;
   padding: 10rpx 22rpx;
   border-radius: 999rpx;
@@ -85,7 +85,7 @@
   width: 100%;
   min-height: 180rpx;
   margin-top: 18rpx;
-  background: #F9F5F0;
+  background: #F6F9FF;
   border-radius: 14rpx;
   padding: 20rpx;
   font-size: 28rpx;
@@ -117,7 +117,7 @@
   width: 100%;
   height: 100%;
   border-radius: 12rpx;
-  background: #F3EDE6;
+  background: #EBF3FC;
 }
 .image-remove {
   position: absolute;
@@ -135,7 +135,7 @@
 .image-add {
   width: 160rpx;
   height: 160rpx;
-  border: 2rpx dashed #D8CEC3;
+  border: 2rpx dashed #DCE8F8;
   border-radius: 12rpx;
   display: flex;
   flex-direction: column;
@@ -145,7 +145,7 @@
 }
 .image-add-icon {
   font-size: 44rpx;
-  color: #C4B8AC;
+  color: #B9C9DE;
   line-height: 1;
 }
 .image-add-text {
@@ -157,7 +157,7 @@
 .error-tip {
   margin-top: 20rpx;
   padding: 20rpx 24rpx;
-  background: #FBEDEA;
+  background: #FCEFF3;
   border-radius: 12rpx;
   font-size: 26rpx;
   color: #A8463A;

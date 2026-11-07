@@ -81,7 +81,7 @@
 
 .prov-row-tip-open {
   color: var(--olive);
-  background: #EBF0E6;
+  background: #E4F5F3;
 }
 
 .mode-item {
@@ -104,7 +104,7 @@
   width: 34rpx;
   height: 34rpx;
   border-radius: 50%;
-  border: 2rpx solid #D5C9BE;
+  border: 2rpx solid #C4D3E6;
   flex-shrink: 0;
   margin: 4rpx 18rpx 0 0;
   position: relative;
@@ -156,7 +156,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: #FAF6F1;
+  background: #F4F8FE;
   border-radius: 16rpx;
   padding: 22rpx 24rpx;
 }
@@ -167,12 +167,12 @@
 }
 
 .picker-placeholder {
-  color: #BFB4AA;
+  color: #9DB0CC;
 }
 
 .picker-arrow {
   font-size: 32rpx;
-  color: #CFC4BA;
+  color: #B9C9DE;
 }
 
 .field-counter {
@@ -234,7 +234,7 @@
 
 .form-error {
   margin: 24rpx 28rpx 0;
-  background: #FBEDEA;
+  background: #FCEFF3;
   border-radius: 16rpx;
   padding: 20rpx 24rpx;
 }

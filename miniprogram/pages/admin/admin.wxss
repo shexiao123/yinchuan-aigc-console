@@ -52,7 +52,7 @@
 
 .admin-gmv {
   margin-top: 20rpx;
-  background: linear-gradient(135deg, #FBF3EA, #F7EFE4);
+  background: linear-gradient(135deg, #EAF3FF, #F0F6FF);
 }
 
 .admin-gmv-label {
@@ -211,7 +211,7 @@
   margin: 12rpx 0 20rpx;
 }
 .activate-input {
-  background: #F5EFE8;
+  background: #EFF5FE;
   border-radius: 14rpx;
   padding: 0 24rpx;
   height: 84rpx;
