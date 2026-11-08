@@ -4167,20 +4167,26 @@
     }
     updateUserChip()
 
-    // 端点不可达：直接显示明确的故障页，不做无谓的渲染
+    // 端点不可达（如 GitHub Pages 域名不在平台 CORS 白名单，预检 403）：
+    // 带只读快照 → 降级为「离线演示模式」照常渲染；没快照 → 维持故障页
     if (!endpointOk) {
-      const hint = (window.APP_CONFIG && window.APP_CONFIG.endpointFailureHint) || '服务暂时无法连接，请稍后刷新重试'
-      app.innerHTML = `<div class="empty" style="padding:80px 24px">
-        <div class="empty-icon">🔌</div>
-        <span class="empty-text">服务暂时无法连接</span>
-        <span class="empty-hint">${API.esc(hint)}</span>
-        <button class="btn btn-primary" style="margin-top:20px" onclick="location.reload()">重新加载</button>
-      </div>`
-      const bar = document.createElement('div')
-      bar.className = 'endpoint-warn'
-      bar.textContent = hint
-      document.body.appendChild(bar)
-      return
+      if (typeof window.enableOfflineMode === 'function' && window.SEED_DATA) {
+        window.enableOfflineMode()
+        toast('已进入离线演示模式：内容为只读快照，下单/登录请访问完整版')
+      } else {
+        const hint = (window.APP_CONFIG && window.APP_CONFIG.endpointFailureHint) || '服务暂时无法连接，请稍后刷新重试'
+        app.innerHTML = `<div class="empty" style="padding:80px 24px">
+          <div class="empty-icon">🔌</div>
+          <span class="empty-text">服务暂时无法连接</span>
+          <span class="empty-hint">${API.esc(hint)}</span>
+          <button class="btn btn-primary" style="margin-top:20px" onclick="location.reload()">重新加载</button>
+        </div>`
+        const bar = document.createElement('div')
+        bar.className = 'endpoint-warn'
+        bar.textContent = hint
+        document.body.appendChild(bar)
+        return
+      }
     }
 
     render()

@@ -289,10 +289,12 @@ window.API = (function () {
     if (/(?:covers\/|l-hero|l-cat-|l-mini-)/i.test(pathname) && /^\?v=/i.test(query)) {
       query = '?v=20261105c'
     }
-    if (!/^https?:\/\//i.test(s)) return pathname + query
-    // 本站域名 → 相对路径
+    if (!/^https?:\/\//i.test(s)) return pathname.replace(/^\//, '') + query
+    // 本站域名 → 相对当前目录的路径。
+    // 不带前导斜杠：GitHub Pages 部署在 /yinchuan-aigc-console/ 子路径下，
+    // 绝对路径 /assets/... 会指到域名根导致 404；相对路径在根路径站点同样成立。
     if (/^https?:\/\/(guangying-web|meige-prototype)\.app\.workbuddy\.host/i.test(pathname)) {
-      return pathname.replace(/^https?:\/\/[^/]+/i, '') + query
+      return pathname.replace(/^https?:\/\/[^/]+/i, '').replace(/^\//, '') + query
     }
     // 其它域名（云存储等）保持原样
     return s

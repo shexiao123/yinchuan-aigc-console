@@ -3,7 +3,15 @@
  * 视频/图片上传到云存储，样片记录写入 service_samples 表。
  */
 window.SAMPLES = (function () {
-  const cloud = window.cloud
+  // 与 api.js 相同的动态 Proxy：离线模式会整体替换 window.cloud，
+  // 闭包常量会指向旧 client，这里每次调用时动态取。
+  const cloud = new Proxy({}, {
+    get(_t, prop) {
+      const c = window.cloud
+      if (!c) throw new Error('云服务尚未就绪，请稍后重试')
+      return c[prop]
+    }
+  })
   const API = window.API
 
   const MAX_VIDEO_MB = 100

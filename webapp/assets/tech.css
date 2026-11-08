@@ -1695,4 +1695,26 @@ body .cat-img-wrap { aspect-ratio: 16 / 10; }
 /* 入驻页原有静态网格让位给动态网格，避免两层网格叠加变脏 */
 .mjoin-hero::before { background-image: none; }
 
+/* ============ 离线演示模式徽标（云不可达时的只读快照降级） ============ */
+body.offline-mode::after {
+  content: '离线演示 · 只读快照';
+  position: fixed;
+  z-index: 90;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 16px;
+  padding: 7px 18px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid #9CC4F2;
+  color: #2F6BEA;
+  font-size: 12.5px;
+  letter-spacing: 0.05em;
+  box-shadow: 0 4px 18px rgba(47, 107, 234, 0.14);
+  pointer-events: none;
+}
+@media (max-width: 1100px) {
+  body.offline-mode::after { bottom: 78px; }
+}
+
 
