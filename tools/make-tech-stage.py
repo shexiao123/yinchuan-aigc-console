@@ -28,7 +28,9 @@ OUT = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
 
 BLUE = (79, 125, 243)
 CYAN = (56, 189, 248)
-VIOLET = (151, 121, 255)
+# 原 VIOLET(151,121,255) 偏粉紫、显廉价（舍先生 2026-11-12 反馈「背景不好看」），
+# 全部改为冷靛蓝，画面统一在蓝-青两个色相内
+VIOLET = (99, 122, 238)
 DEEP = (58, 108, 214)
 WHITE = (255, 255, 255)
 
@@ -78,14 +80,12 @@ def soft_layer(W, H, scale=2):
     k = 1.0 / scale
     u = lambda v: int(v * k)
 
-    # --- 大面积极光带：斜向正弦曲线，多条不同色 ---
+    # --- 大面积极光带：斜向正弦曲线，条数收敛（6→4），避免互相叠成脏色 ---
     bands = [
-        (CYAN, 0.42, 0.20, 0.55, 0.10, 175),
-        (BLUE, 0.48, 0.44, 0.34, 0.13, 225),
-        (VIOLET, 0.34, 0.66, 0.62, 0.09, 160),
-        (CYAN, 0.30, 0.88, 0.24, 0.11, 140),
-        (BLUE, 0.34, 0.08, 0.78, 0.08, 150),
-        (VIOLET, 0.26, 0.30, 0.90, 0.07, 110),
+        (CYAN, 0.40, 0.42, 0.55, 0.10, 175),
+        (BLUE, 0.44, 0.66, 0.34, 0.13, 225),
+        (CYAN, 0.28, 0.88, 0.24, 0.11, 140),
+        (BLUE, 0.30, 0.08, 0.78, 0.08, 150),
     ]
     for color, alpha, yc, amp, freq, width in bands:
         pts = []
@@ -104,14 +104,12 @@ def soft_layer(W, H, scale=2):
         poly = [(sx, sy), (w * tx, h * 1.08), (w * (tx + spread), h * 1.08)]
         d.polygon(poly, fill=WHITE + (int(255 * a),))
 
-    # --- 大光晕：右上青蓝 + 中部紫 + 左下青 ---
+    # --- 大光晕：只留蓝青两色，数量收敛（6→4），杜绝紫粉脏斑 ---
     glows = [
-        (0.84, 0.22, 0.46, CYAN, 0.46),
-        (0.62, 0.10, 0.38, BLUE, 0.34),
-        (0.96, 0.78, 0.42, VIOLET, 0.34),
-        (0.18, 0.92, 0.40, CYAN, 0.28),
-        (0.44, 0.52, 0.30, VIOLET, 0.22),
-        (0.30, 0.24, 0.34, CYAN, 0.20),
+        (0.84, 0.22, 0.46, CYAN, 0.42),
+        (0.62, 0.10, 0.38, BLUE, 0.30),
+        (0.96, 0.78, 0.42, BLUE, 0.26),
+        (0.18, 0.92, 0.40, CYAN, 0.26),
     ]
     for cx, cy, r, color, a in glows:
         R = max(w, h) * r
@@ -314,17 +312,17 @@ def draw_marks(D, W, H, portrait):
 
 
 def draw_stars(D, W, H, portrait):
-    """发光星点：大部分细点，少量带光晕的亮点。"""
-    n = 190 if not portrait else 150
+    """发光星点：数量收敛（190→110）、透明度降低，避免噪点感。"""
+    n = 110 if not portrait else 84
     for i in range(n):
         x = random.uniform(0, W)
         y = random.uniform(0, H)
         c = WHITE if i % 6 else (CYAN if i % 3 else BLUE)
-        r = random.uniform(0.8, 2.4)
-        a = random.randint(70, 200)
-        if i % 13 == 0:
+        r = random.uniform(0.8, 2.2)
+        a = random.randint(55, 150)
+        if i % 17 == 0:
             R = r * 5
-            D.ellipse([x - R, y - R, x + R, y + R], fill=c + (26,))
+            D.ellipse([x - R, y - R, x + R, y + R], fill=c + (22,))
         D.ellipse([x - r, y - r, x + r, y + r], fill=c + (a,))
 
 

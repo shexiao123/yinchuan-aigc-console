@@ -25,15 +25,17 @@
   var forcedOff = /[?&]motion=0(?:&|$)/.test(location.search)
   var enabled = !forcedOff
 
-  var RGB = { blue: '79,125,243', cyan: '14,165,233', violet: '124,92,240' }
+  /* tone 三色：blue / cyan / violet。violet 键名保留，但色值已从粉紫(124,92,240)
+     改为冷靛蓝(86,112,226) —— 舍先生反馈画面发紫显脏，全站统一冷蓝青色相 */
+  var RGB = { blue: '79,125,243', cyan: '14,165,233', violet: '86,112,226' }
   function rgba(tone, a) { return 'rgba(' + RGB[tone] + ',' + Number(a).toFixed(3) + ')' }
 
   /* 整幅科技底图：解决「只有细线、画面单调」。图片自带极光带 / 斜切色块 /
      斜向光轨 / 透视网格 / 全息数据球 / HUD 面板，Canvas 只负责在它之上跑动效。
      超宽版给 Hero（约 3:1），竖版给手机，避免 cover 裁掉主体。 */
   var STAGE = {
-    wide: 'assets/covers/light/tech-stage-wide.jpg?v=20261106b',
-    small: 'assets/covers/light/tech-stage-m.jpg?v=20261106b'
+    wide: 'assets/covers/light/tech-stage-wide.jpg?v=20261112c',
+    small: 'assets/covers/light/tech-stage-m.jpg?v=20261112c'
   }
   var stageCache = {}
   function stageImage(url, cb) {
@@ -94,17 +96,18 @@
   }
 
   Motion.prototype.seed = function () {
-    var n = this.small ? 44 : 96
+    // 粒子减半（96→54）：底图已够丰富，粒子只做点缀，多了像噪点
+    var n = this.small ? 30 : 54
     this.particles = []
     for (var i = 0; i < n; i++) {
       this.particles.push({
         x: rand(0, this.w),
         y: rand(0, this.h),
-        r: rand(1.2, 3.2),
-        vy: rand(0.10, 0.40),
-        vx: rand(-0.09, 0.09),
+        r: rand(1.4, 3.2),
+        vy: rand(0.08, 0.30),
+        vx: rand(-0.07, 0.07),
         phase: rand(0, Math.PI * 2),
-        tone: Math.random() < 0.58 ? 'blue' : (Math.random() < 0.6 ? 'cyan' : 'violet')
+        tone: Math.random() < 0.7 ? 'blue' : 'cyan'
       })
     }
     this.bars = []
@@ -113,7 +116,7 @@
       this.bars.push({ phase: rand(0, Math.PI * 2), speed: rand(0.0007, 0.0016) })
     }
     this.beams = []
-    var kn = this.small ? 3 : 6
+    var kn = this.small ? 3 : 5
     for (var k = 0; k < kn; k++) {
       this.beams.push({
         speed: rand(0.000055, 0.00012),
@@ -121,7 +124,7 @@
         len: rand(this.w * 0.16, this.w * 0.38),
         width: rand(2, 6),
         lane: rand(0.04, 0.92),
-        tone: k % 3 === 0 ? 'violet' : (k % 3 === 1 ? 'cyan' : 'blue')
+        tone: k % 2 ? 'cyan' : 'blue'
       })
     }
     this.city = this.buildCity()
@@ -148,14 +151,14 @@
         for (var c = 0; c < cols; c++) {
           if (Math.random() < 0.44) {
             var roll = Math.random()
-            wins.push({ x: c, y: r, tone: roll < 0.13 ? 'violet' : (roll < 0.38 ? 'cyan' : 'white') })
+            wins.push({ x: c, y: r, tone: roll < 0.38 ? 'cyan' : 'white' })
           }
         }
       }
       near.push({
         x: x, w: bw, h: bh, cols: cols, rows: rows, wins: wins,
         tower: Math.random() < 0.24 ? rand(h * 0.06, h * 0.17) : 0,
-        neon: Math.random() < 0.34 ? (Math.random() < 0.5 ? 'violet' : 'cyan') : ''
+        neon: Math.random() < 0.34 ? 'cyan' : ''
       })
       x += bw + rand(5, 15)
     }

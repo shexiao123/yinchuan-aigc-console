@@ -287,7 +287,7 @@ window.API = (function () {
     const pathname = q >= 0 ? s.slice(0, q) : s
     // 本地封面图换版后统一刷新缓存版本号（只动站内静态图，不动云存储签名地址）
     if (/(?:covers\/|l-hero|l-cat-|l-mini-)/i.test(pathname) && /^\?v=/i.test(query)) {
-      query = '?v=20261112a'
+      query = '?v=20261112c'
     }
     if (!/^https?:\/\//i.test(s)) return pathname.replace(/^\//, '') + query
     // 本站域名 → 相对当前目录的路径。
@@ -310,14 +310,14 @@ window.API = (function () {
    * 且本地图与站点域名解耦，Pages / 托管域都可用。
    */
   const CATEGORY_COVER = {
-    'wedding-shoot': 'assets/covers/light/l-cat-01.jpg?v=20261112a',
-    'wedding-film': 'assets/covers/light/l-cat-02.jpg?v=20261112a',
-    'brand-film': 'assets/covers/light/l-cat-03.jpg?v=20261112a',
-    'short-video': 'assets/covers/light/l-cat-04.jpg?v=20261112a',
-    'commercial-photo': 'assets/covers/light/l-cat-05.jpg?v=20261112a',
-    'ae-motion': 'assets/covers/light/l-cat-06.jpg?v=20261112a',
-    'ai-generate': 'assets/covers/light/l-cat-07.jpg?v=20261112a',
-    'comic-drama': 'assets/covers/light/l-cat-08.jpg?v=20261112a'
+    'wedding-shoot': 'assets/covers/light/l-cat-01.jpg?v=20261112c',
+    'wedding-film': 'assets/covers/light/l-cat-02.jpg?v=20261112c',
+    'brand-film': 'assets/covers/light/l-cat-03.jpg?v=20261112c',
+    'short-video': 'assets/covers/light/l-cat-04.jpg?v=20261112c',
+    'commercial-photo': 'assets/covers/light/l-cat-05.jpg?v=20261112c',
+    'ae-motion': 'assets/covers/light/l-cat-06.jpg?v=20261112c',
+    'ai-generate': 'assets/covers/light/l-cat-07.jpg?v=20261112c',
+    'comic-drama': 'assets/covers/light/l-cat-08.jpg?v=20261112c'
   }
 
   async function attachCategoryImages(categories) {

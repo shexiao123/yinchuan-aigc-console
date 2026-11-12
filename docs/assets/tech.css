@@ -75,7 +75,7 @@ body {
 }
 body:not(.admin-page) {
   background-color: #EEF6FF;
-  background-image: url("covers/light/tech-stage-page.jpg?v=20261106b");
+  background-image: url("covers/light/tech-stage-page.jpg?v=20261112c");
   background-repeat: no-repeat;
   background-position: center top;
   background-size: cover;
@@ -704,7 +704,7 @@ body .cat-img-wrap { aspect-ratio: 16 / 10; }
 .home-trust i { font-style: normal; font-size: 11.5px; color: #6A7B8C; }
 .home-hero-media {
   position: relative; aspect-ratio: 16 / 10; min-height: 260px; border-radius: 18px; overflow: hidden;
-  background: url("covers/light/cyber-hero.jpg?v=20261105c") center/cover no-repeat, #E8F1FC;
+  background: url("covers/light/hero-stage.jpg?v=20261112c") center/cover no-repeat, #E8F1FC;
   display: flex; align-items: center; justify-content: center;
 }
 .home-hero-media.has-img { background-size: cover; background-position: center; }
