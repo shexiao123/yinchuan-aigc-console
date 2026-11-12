@@ -287,7 +287,7 @@ window.API = (function () {
     const pathname = q >= 0 ? s.slice(0, q) : s
     // 本地封面图换版后统一刷新缓存版本号（只动站内静态图，不动云存储签名地址）
     if (/(?:covers\/|l-hero|l-cat-|l-mini-)/i.test(pathname) && /^\?v=/i.test(query)) {
-      query = '?v=20261105c'
+      query = '?v=20261112a'
     }
     if (!/^https?:\/\//i.test(s)) return pathname.replace(/^\//, '') + query
     // 本站域名 → 相对当前目录的路径。
@@ -304,11 +304,30 @@ window.API = (function () {
    * 解析分类配图。
    * image_url 可能是完整 http 地址（站点静态资源），也可能是云存储路径（需签名）。
    */
+  /**
+   * 分类 slug → 本站主题插图（tools/make-category-covers.py 按内容匹配生成）。
+   * 优先用本站图：数据库 image_url 有历史错配（如「漫剧制作」曾指向 l-cat-07），
+   * 且本地图与站点域名解耦，Pages / 托管域都可用。
+   */
+  const CATEGORY_COVER = {
+    'wedding-shoot': 'assets/covers/light/l-cat-01.jpg?v=20261112a',
+    'wedding-film': 'assets/covers/light/l-cat-02.jpg?v=20261112a',
+    'brand-film': 'assets/covers/light/l-cat-03.jpg?v=20261112a',
+    'short-video': 'assets/covers/light/l-cat-04.jpg?v=20261112a',
+    'commercial-photo': 'assets/covers/light/l-cat-05.jpg?v=20261112a',
+    'ae-motion': 'assets/covers/light/l-cat-06.jpg?v=20261112a',
+    'ai-generate': 'assets/covers/light/l-cat-07.jpg?v=20261112a',
+    'comic-drama': 'assets/covers/light/l-cat-08.jpg?v=20261112a'
+  }
+
   async function attachCategoryImages(categories) {
     const list = categories || []
     if (!list.length) return []
     return Promise.all(
       list.map(async (c) => {
+        if (c.slug && CATEGORY_COVER[c.slug]) {
+          return { ...c, imageUrl: CATEGORY_COVER[c.slug] }
+        }
         if (!c.image_url) return { ...c, imageUrl: '' }
         if (String(c.image_url).startsWith('http')) {
           return { ...c, imageUrl: toRelativeAsset(c.image_url) }
