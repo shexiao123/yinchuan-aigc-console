@@ -15,31 +15,17 @@
     <!-- 轮播 -->
     <swiper class="banner-swiper" indicator-dots="{{false}}" autoplay="{{true}}" circular="{{true}}" interval="4200" duration="420">
       <swiper-item wx:for="{{banners}}" wx:key="id" bindtap="onBannerTap" data-slug="{{item.link_value}}" data-type="{{item.link_type}}">
-        <view class="banner {{item.themeClass}} {{item.hasImage ? 'banner-has-img' : 'banner-tech'}}" style="{{item.imageUrl ? 'background-image:url(' + item.imageUrl + ')' : ''}}">
-          <!-- 蓝色科技动态背景：与网页端同源风格，整幅实色不透明 -->
-          <view class="tech-motion" wx:if="{{!item.hasImage}}">
-            <!-- 整幅科技底图：极光 / 斜切色块 / 光轨 / 透视网格 / 全息数据球 -->
-            <image class="tech-stage-img" src="/assets/tech-stage-m.jpg" mode="aspectFill" />
-            <view class="tech-grid"></view>
-            <view class="tech-city"></view>
-            <view class="tech-windows"></view>
-            <view class="tech-beam"></view>
-            <view class="tech-beam tech-beam-2"></view>
-            <view class="tech-wave"></view>
-            <view class="tech-hud"></view>
-            <view class="tech-scan"></view>
-            <view class="tech-ring"></view>
-            <!-- 深海全息层：数据雨 / 四角括号 / 等宽仪表读数（纯 CSS 原创） -->
-            <view class="tech-rain"></view>
-            <view class="tech-bracket tech-bracket-tl"></view>
-            <view class="tech-bracket tech-bracket-br"></view>
-            <text class="tech-readout hud-num">● ONLINE {{onlineCount}} // YINCHUAN AIGC</text>
-          </view>
+        <!-- 整幅包内主题插画（冷白实色，与网页端按内容匹配那套同源）。
+             用 <image> 而不是 WXSS background-image：小程序样式里不能引用包内本地图。 -->
+        <view class="banner banner-has-img">
+          <image class="banner-bg-img" src="{{item.imageUrl}}" mode="aspectFill"
+                 data-field="banners" data-idx="{{index}}" data-key="imageUrl"
+                 data-fallback="{{item.localImage}}" binderror="onImageFallback" />
           <view class="banner-inner">
             <text class="banner-title">{{item.title}}</text>
             <text class="banner-sub">{{item.subtitle}}</text>
           </view>
-          <text class="banner-mark" wx:if="{{!item.hasImage}}">MG</text>
+          <text class="banner-hud hud-num">● ONLINE {{onlineCount}} // YINCHUAN AIGC</text>
         </view>
       </swiper-item>
     </swiper>
@@ -93,7 +79,9 @@
           <text class="cat-icon">{{item.icon}}</text>
         </view>
         <view class="cat-img-wrap" wx:else>
-          <image class="cat-img" src="{{item.imageUrl}}" mode="aspectFill" />
+          <image class="cat-img" src="{{item.imageUrl}}" mode="aspectFill"
+                 data-field="categories" data-idx="{{index}}" data-key="imageUrl"
+                 data-fallback="{{item.localImage}}" binderror="onImageFallback" />
         </view>
         <text class="cat-name">{{item.name}}</text>
         <text class="cat-desc ellipsis">{{item.description}}</text>
@@ -112,8 +100,9 @@
     <view class="svc-list">
       <view class="svc-item card" wx:for="{{hotServices}}" wx:key="id" bindtap="onServiceTap" data-id="{{item.id}}">
         <view class="svc-cover {{item.coverClass}}">
-          <image wx:if="{{item.coverUrl}}" class="svc-cover-img" src="{{item.coverUrl}}" mode="aspectFill" />
-          <text wx:else class="svc-cover-mark">MG</text>
+          <image class="svc-cover-img" src="{{item.coverUrl}}" mode="aspectFill"
+                 data-field="hotServices" data-idx="{{index}}" data-key="coverUrl"
+                 data-fallback="{{item.localCover}}" binderror="onImageFallback" />
         </view>
         <view class="svc-body">
           <text class="svc-title ellipsis">{{item.title}}</text>

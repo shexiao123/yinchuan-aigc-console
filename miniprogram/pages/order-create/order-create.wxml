@@ -5,8 +5,9 @@
     <!-- 服务摘要 -->
     <view class="card card-pad order-svc">
       <view class="order-svc-cover {{service.coverClass}}">
-        <image wx:if="{{service.coverUrl}}" class="order-svc-cover-img" src="{{service.coverUrl}}" mode="aspectFill" />
-        <text wx:else class="order-svc-mark">MG</text>
+        <image class="order-svc-cover-img" src="{{service.coverUrl}}" mode="aspectFill"
+               data-field="service" data-key="coverUrl"
+               data-fallback="{{service.localCover}}" binderror="onImageFallback" />
       </view>
       <view class="order-svc-body">
         <text class="order-svc-title ellipsis">{{service.title}}</text>

@@ -1,4 +1,5 @@
 const api = require('../../utils/api')
+const media = require('../../utils/local-media')
 const samples = require('../../utils/samples')
 const { coverTheme, yuanShort, yuan, fromNow } = require('../../utils/util')
 
@@ -24,6 +25,8 @@ Page({
     const app = getApp()
     this.setData({ loggedIn: !!(app.globalData.session && app.globalData.session.user) })
   },
+
+  onImageFallback: media.makeImageFallback(),
 
   async loadData() {
     this.setData({ loading: true })
@@ -51,7 +54,10 @@ Page({
           ...service,
           priceText: yuanShort(service.price),
           oldPriceText: service.original_price ? yuanShort(service.original_price) : '',
-          coverClass: coverTheme(service.id)
+          coverClass: coverTheme(service.id),
+          coverUrl: service.coverUrl || media.squareFor(service),
+          coverUrlWide: service.coverUrlWide || media.coverFor(service),
+          localCover: service.localCover || media.squareFor(service)
         },
         provider: provider
           ? {

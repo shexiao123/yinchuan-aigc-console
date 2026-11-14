@@ -185,7 +185,9 @@
       <view class="my-svc-list" wx:if="{{myServices.length}}">
         <view class="my-svc card" wx:for="{{myServices}}" wx:key="id">
           <view class="my-svc-cover {{item.coverClass}}">
-            <text class="my-svc-mark">MG</text>
+            <image class="my-svc-cover-img" src="{{item.coverUrl}}" mode="aspectFill"
+                   data-field="myServices" data-idx="{{index}}" data-key="coverUrl"
+                   data-fallback="{{item.localCover}}" binderror="onImageFallback" />
           </view>
           <view class="my-svc-body">
             <text class="my-svc-title ellipsis">{{item.title}}</text>

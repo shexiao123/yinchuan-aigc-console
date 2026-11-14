@@ -1,4 +1,5 @@
 const api = require('../../utils/api')
+const media = require('../../utils/local-media')
 const { coverTheme, yuanShort } = require('../../utils/util')
 
 Page({
@@ -30,39 +31,50 @@ Page({
   },
 
   async loadCategories() {
+    let categories = []
     try {
-      const categories = await api.listCategories()
-      this.setData({ categories })
+      categories = await api.listCategories()
     } catch (e) {
-      console.error('[services] loadCategories failed', JSON.stringify({ message: e.message }))
+      categories = []
     }
+    this.setData({ categories: categories.length ? categories : media.demoCategories() })
   },
 
   async loadServices() {
     this.setData({ loading: true })
+    let services = []
     try {
-      const services = await api.listServices({
+      services = await api.listServices({
         categorySlug: this.data.category,
         providerId: this.data.providerId ? Number(this.data.providerId) : undefined,
         keyword: this.data.keyword,
         limit: 50
       })
-      this.setData({
-        services: services.map((s) => ({
-          ...s,
-          priceText: yuanShort(s.price),
-          oldPriceText: s.original_price ? yuanShort(s.original_price) : '',
-          coverClass: coverTheme(s.id)
-        })),
-        total: services.length,
-        isComic: this.data.category === 'comic-drama' && !this.data.keyword,
-        loading: false
-      })
     } catch (e) {
-      this.setData({ loading: false })
-      wx.showToast({ title: api.friendlyError(e), icon: 'none' })
+      services = []
     }
+    // 云端不可达时按分类给出离线演示服务，插图仍然在
+    if (!services.length && !this.data.providerId && !this.data.keyword) {
+      services = media.demoServices(this.data.category)
+    }
+    this.setData({
+      services: services.map((s) => ({
+        ...s,
+        priceText: yuanShort(s.price),
+        oldPriceText: s.original_price ? yuanShort(s.original_price) : '',
+        coverClass: coverTheme(s.id),
+        coverUrl: s.coverUrl || media.squareFor(s),
+        localCover: s.localCover || media.squareFor(s),
+        coverUrlWide: s.coverUrlWide || media.coverFor(s)
+      })),
+      total: services.length,
+      isComic: this.data.category === 'comic-drama' && !this.data.keyword,
+      loading: false
+    })
   },
+
+  /** 外链封面裂图时换包内插画 */
+  onImageFallback: media.makeImageFallback(),
 
   onCatTap(e) {
     const slug = e.currentTarget.dataset.slug

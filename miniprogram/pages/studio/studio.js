@@ -1,4 +1,5 @@
 const api = require('../../utils/api')
+const media = require('../../utils/local-media')
 const samples = require('../../utils/samples')
 const member = require('../../utils/member')
 const { orderStatus, yuan, yuanShort, coverTheme, fromNow } = require('../../utils/util')
@@ -25,6 +26,8 @@ Page({
   onLoad() {
     this.loadData()
   },
+
+  onImageFallback: media.makeImageFallback(),
 
   onShow() {
     this.loadData()
@@ -117,6 +120,8 @@ Page({
           ...s,
           priceText: yuanShort(s.price),
           coverClass: coverTheme(s.id),
+          coverUrl: s.coverUrl || media.squareFor(s),
+          localCover: s.localCover || media.squareFor(s),
           statusText: s.status === 'on' ? '已上架' : '已下架',
           sampleCount: mySamples.filter((x) => x.service_id === s.id).length
         })),

@@ -26,12 +26,14 @@
   font-weight: 700;
   color: #0B1F33;
   letter-spacing: 2rpx;
+  text-shadow: 0 1rpx 0 #FFFFFF, 0 0 2rpx #FFFFFF;
 }
 
 .detail-cover-sub {
   font-size: 24rpx;
-  color: #40536B;
+  color: #23405E;
   margin-top: 12rpx;
+  text-shadow: 0 1rpx 0 #FFFFFF, 0 0 2rpx #FFFFFF;
 }
 
 .detail-cover-mark {

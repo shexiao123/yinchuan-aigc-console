@@ -41,8 +41,9 @@
     <view class="svc-list" wx:if="{{!loading && services.length}}">
       <view class="svc-item card" wx:for="{{services}}" wx:key="id" bindtap="onServiceTap" data-id="{{item.id}}">
         <view class="svc-cover {{item.coverClass}}">
-          <image wx:if="{{item.coverUrl}}" class="svc-cover-img" src="{{item.coverUrl}}" mode="aspectFill" />
-          <text wx:else class="svc-cover-mark">MG</text>
+          <image class="svc-cover-img" src="{{item.coverUrl}}" mode="aspectFill"
+                 data-field="services" data-idx="{{index}}" data-key="coverUrl"
+                 data-fallback="{{item.localCover}}" binderror="onImageFallback" />
         </view>
         <view class="svc-body">
           <text class="svc-title ellipsis">{{item.title}}</text>

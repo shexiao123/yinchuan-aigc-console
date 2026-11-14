@@ -2,6 +2,19 @@ const { cloud } = require('./cloud')
 const { unwrap, makeOrderNo, friendlyError } = require('./util')
 const samples = require('./samples')
 const commission = require('./commission')
+const media = require('./local-media')
+
+/**
+ * 站点静态图外链：小程序需要配置 downloadFile 合法域名才能显示，
+ * 测试号 / 未绑定 AppID 时必然裂图。这类地址一律换成包内同一张插画。
+ * 后台上传到云存储的自定义图（签名地址）仍然优先。
+ */
+const SITE_STATIC = /(?:guangying-web|github\.io|\/assets\/covers\/)/i
+
+function isUsableRemote(url) {
+  const s = String(url || '')
+  return !!s && (!s.startsWith('http') || !SITE_STATIC.test(s))
+}
 
 /* ---------------------------------------------------------------- 会话 */
 
@@ -33,61 +46,85 @@ async function signOut() {
 /* ---------------------------------------------------------------- 目录 */
 
 async function listCategories() {
-  const res = await cloud.database
-    .from('categories')
-    .select('id, name, slug, icon, description, image_url, sort_order')
-    .order('sort_order', { ascending: true })
-  const list = unwrap(res, '分类加载失败') || []
+  let list = []
+  try {
+    const res = await cloud.database
+      .from('categories')
+      .select('id, name, slug, icon, description, image_url, sort_order')
+      .order('sort_order', { ascending: true })
+    list = unwrap(res, '分类加载失败') || []
+  } catch (e) {
+    list = []
+  }
+  if (!list.length) return media.demoCategories()
   return attachCategoryImages(list)
 }
 
 /**
- * 解析分类配图。
- * image_url 可能是完整 http 地址（站点静态资源），也可能是云存储路径（需签名）。
+ * 解析分类配图：包内「按内容匹配」的插画兜底，后台自定义封面优先。
+ * image_url 可能是站点静态外链（小程序里不可直接显示）、云存储路径（需签名）
+ * 或空值；三种情况都保证 imageUrl 有值，页面不会再退回 emoji 占位。
  */
 async function attachCategoryImages(categories) {
   const list = categories || []
   if (!list.length) return []
-  const samples = require('./samples')
   return Promise.all(
     list.map(async (c) => {
-      if (!c.image_url) return { ...c, imageUrl: '' }
-      if (String(c.image_url).startsWith('http')) return { ...c, imageUrl: c.image_url }
-      try {
-        return { ...c, imageUrl: await samples.signedUrl(c.image_url, 7200) }
-      } catch (e) {
-        return { ...c, imageUrl: '' }
+      const local = media.coverFor(c)
+      const raw = String(c.image_url || '')
+      let remote = ''
+      if (raw && !raw.startsWith('http')) {
+        try {
+          remote = await samples.signedUrl(raw, 7200)
+        } catch (e) {
+          remote = ''
+        }
+      } else if (isUsableRemote(raw)) {
+        remote = raw
       }
+      return { ...c, imageUrl: remote || local, localImage: local }
     })
   )
 }
 
 async function listBanners() {
-  const res = await cloud.database
-    .from('banners')
-    .select('id, title, subtitle, image_url, theme, link_type, link_value, sort_order')
-    .order('sort_order', { ascending: true })
-  const list = unwrap(res, '轮播加载失败') || []
+  let list = []
+  try {
+    const res = await cloud.database
+      .from('banners')
+      .select('id, title, subtitle, image_url, theme, link_type, link_value, sort_order')
+      .order('sort_order', { ascending: true })
+    list = unwrap(res, '轮播加载失败') || []
+  } catch (e) {
+    list = []
+  }
+  if (!list.length) return media.demoBanners()
   return attachBannerImages(list)
 }
 
 /**
- * 解析轮播背景图。
- * image_url 可能是完整 http 地址（站点静态资源），也可能是云存储路径（需签名）。
+ * 解析轮播图：站点静态外链换成包内按内容匹配的插画，云存储自定义图优先。
+ * 注意返回的是本地 / 签名后的 <image src>，不是 CSS background-image 路径 ——
+ * 小程序 WXSS 里不允许引用包内本地图片文件。
  */
 async function attachBannerImages(banners) {
   const list = banners || []
   if (!list.length) return []
-  const samples = require('./samples')
   return Promise.all(
-    list.map(async (b) => {
-      if (!b.image_url) return { ...b, imageUrl: '' }
-      if (String(b.image_url).startsWith('http')) return { ...b, imageUrl: b.image_url }
-      try {
-        return { ...b, imageUrl: await samples.signedUrl(b.image_url, 7200) }
-      } catch (e) {
-        return { ...b, imageUrl: '' }
+    list.map(async (b, i) => {
+      const local = media.bannerImage(b, i)
+      const raw = String(b.image_url || '')
+      let remote = ''
+      if (raw && !raw.startsWith('http')) {
+        try {
+          remote = await samples.signedUrl(raw, 7200)
+        } catch (e) {
+          remote = ''
+        }
+      } else if (isUsableRemote(raw)) {
+        remote = raw
       }
+      return { ...b, imageUrl: remote || local, localImage: local }
     })
   )
 }
@@ -115,30 +152,45 @@ async function listServices(params = {}) {
   }
   if (providerId) query = query.eq('provider_id', providerId)
   if (keyword) query = query.ilike('title', `%${keyword}%`)
-  const res = await query.order('sales_count', { ascending: false }).range(offset, offset + limit - 1)
-  const list = unwrap(res, '服务加载失败') || []
+  let list = []
+  try {
+    const res = await query.order('sales_count', { ascending: false }).range(offset, offset + limit - 1)
+    list = unwrap(res, '服务加载失败') || []
+  } catch (e) {
+    list = []
+  }
+  // 云端不可达且没有任何筛选条件时给出离线演示服务，保证首页 / 服务页有插图
+  if (!list.length && !categorySlug && !keyword && !providerId && offset === 0) {
+    return media.demoServices()
+  }
   return attachCoverUrls(list)
 }
 
 /**
  * 解析服务封面。
- * cover_url 存的是云存储路径，显示时需转成可访问的签名地址。
- * 没封面的返回空串，页面会回退到渐变占位。
+ * 商家上传到云存储的自有封面优先（签名地址）；没有封面、或是站点静态外链时
+ * 用包内「按内容匹配」的方图，页面不再显示「MG」字母占位。
+ * coverUrlWide 供详情页大图使用。
  */
 async function attachCoverUrls(services) {
   const list = services || []
   if (!list.length) return []
-  const samples = require('./samples')
   return Promise.all(
     list.map(async (s) => {
-      if (!s.cover_url) return { ...s, coverUrl: '' }
-      if (String(s.cover_url).startsWith('http')) return { ...s, coverUrl: s.cover_url }
-      try {
-        const url = await samples.signedUrl(s.cover_url, 7200)
-        return { ...s, coverUrl: url }
-      } catch (e) {
-        return { ...s, coverUrl: '' }
+      const local = media.squareFor(s)
+      const wide = media.coverFor(s)
+      const raw = String(s.cover_url || '')
+      let remote = ''
+      if (raw && !raw.startsWith('http')) {
+        try {
+          remote = await samples.signedUrl(raw, 7200)
+        } catch (e) {
+          remote = ''
+        }
+      } else if (isUsableRemote(raw)) {
+        remote = raw
       }
+      return { ...s, coverUrl: remote || local, localCover: local, coverUrlWide: remote || wide }
     })
   )
 }
@@ -285,7 +337,8 @@ async function listMyServices(providerId) {
     .select('*')
     .eq('provider_id', providerId)
     .order('created_at', { ascending: false })
-  return unwrap(res, '我的服务加载失败') || []
+  // 与公开服务列表一样补上封面（无 cover_url 时用包内按内容匹配的方图）
+  return attachCoverUrls(unwrap(res, '我的服务加载失败') || [])
 }
 
 /* ---------------------------------------------------------------- 订单 */
@@ -403,10 +456,12 @@ async function attachOrderCovers(orders) {
   }
 
   return list.map((o) => {
+    const local = media.squareFor({ title: o.service_title, id: o.service_id })
     const raw = covers[o.service_id]
-    if (!raw) return { ...o, coverUrl: '' }
+    if (!raw) return { ...o, coverUrl: local, localCover: local }
     const url = String(raw).startsWith('http') ? raw : (signed[raw] || '')
-    return { ...o, coverUrl: url }
+    const usable = isUsableRemote(url) ? url : ''
+    return { ...o, coverUrl: usable || local, localCover: local }
   })
 }
 

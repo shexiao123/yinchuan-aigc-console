@@ -1,6 +1,7 @@
 const api = require('../../utils/api')
 const presence = require('../../utils/presence')
 const notice = require('../../utils/notice')
+const media = require('../../utils/local-media')
 const { coverTheme, yuanShort, fromNow } = require('../../utils/util')
 
 Page({
@@ -32,49 +33,61 @@ Page({
     if (this._onlineStarted) this.reportOnline()
   },
 
+  /**
+   * 每一项单独降级：云数据库某一张表连不上时不影响其他板块，
+   * 首页的轮播 / 分类 / 服务插图始终有画面（包内本地插画）。
+   */
   async loadData() {
     this.setData({ loading: true })
-    try {
-      const [banners, categories, hotServices, providers, notices] = await Promise.all([
-        api.listBanners(),
-        api.listCategories(),
-        api.listServices({ limit: 6 }),
-        api.listProviders(),
-        notice.listAnnouncements()
-      ])
-      const settings = await api.getSettings()
-      const app = getApp()
-      this.setData({
-        banners: banners.map((b) => ({
-          ...b,
-          themeClass: `banner-${b.theme || 'amber'}`,
-          // 背景图：完整 http 地址直接用；存储路径需转签名地址
-          imageUrl: b.image_url ? (String(b.image_url).startsWith('http') ? b.image_url : '') : '',
-          hasImage: !!b.image_url
-        })),
-        categories,
-        hotServices: hotServices.map((s) => ({
-          ...s,
-          priceText: yuanShort(s.price),
-          oldPriceText: s.original_price ? yuanShort(s.original_price) : '',
-          coverClass: coverTheme(s.id)
-        })),
-        providers: providers.map((p) => ({
-          ...p,
-          initial: p.nickname ? p.nickname.charAt(0) : '影',
-          ratingText: Number(p.rating || 5).toFixed(1)
-        })),
-        settings,
-        notices,
-        noticeCurrent: 0,
-        loggedIn: !!(app.globalData.session && app.globalData.session.user),
-        loading: false
-      })
-    } catch (e) {
-      this.setData({ loading: false })
-      wx.showToast({ title: api.friendlyError(e), icon: 'none' })
-    }
+    const safe = (p, fallback) => Promise.resolve(p).catch(() => fallback)
+    const [banners, categories, hotServices, providers, notices, settings] = await Promise.all([
+      safe(api.listBanners(), media.demoBanners()),
+      safe(api.listCategories(), media.demoCategories()),
+      safe(api.listServices({ limit: 6 }), media.demoServices()),
+      safe(api.listProviders(), []),
+      safe(notice.listAnnouncements(), []),
+      safe(api.getSettings(), null)
+    ])
+    const app = getApp()
+    this.setData({
+      banners: (banners.length ? banners : media.demoBanners()).map((b, i) => ({
+        ...b,
+        themeClass: `banner-${b.theme || 'amber'}`,
+        // 用 api 层已解析好的地址（包内本地图 / 云存储签名地址）。
+        // 不能再回退去读原始 image_url——那是网页端外链，小程序会裂图。
+        imageUrl: b.imageUrl || media.bannerImage(b, i),
+        localImage: b.localImage || media.bannerImage(b, i),
+        hasImage: true
+      })),
+      categories: (categories.length ? categories : media.demoCategories()).map((c) => ({
+        ...c,
+        imageUrl: c.imageUrl || media.coverFor(c),
+        localImage: c.localImage || media.coverFor(c)
+      })),
+      hotServices: (hotServices.length ? hotServices : media.demoServices()).slice(0, 6).map((s) => ({
+        ...s,
+        priceText: yuanShort(s.price),
+        oldPriceText: s.original_price ? yuanShort(s.original_price) : '',
+        coverClass: coverTheme(s.id),
+        coverUrl: s.coverUrl || media.squareFor(s),
+        localCover: s.localCover || media.squareFor(s),
+        coverUrlWide: s.coverUrlWide || media.coverFor(s)
+      })),
+      providers: providers.map((p) => ({
+        ...p,
+        initial: p.nickname ? p.nickname.charAt(0) : '影',
+        ratingText: Number(p.rating || 5).toFixed(1)
+      })),
+      settings,
+      notices,
+      noticeCurrent: 0,
+      loggedIn: !!(app.globalData.session && app.globalData.session.user),
+      loading: false
+    })
   },
+
+  /** 外链封面加载失败时立刻换包内插画，绝不留白 */
+  onImageFallback: media.makeImageFallback(),
 
   /** 轮播点击：跳到对应分类的服务列表 */
   onBannerTap(e) {

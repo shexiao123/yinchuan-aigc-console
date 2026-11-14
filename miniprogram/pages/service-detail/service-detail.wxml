@@ -3,14 +3,15 @@
 
   <block wx:if="{{!loading && service}}">
     <!-- 封面 -->
-    <view class="detail-cover {{service.coverClass}} {{service.coverUrl ? 'has-img' : ''}}">
-      <image wx:if="{{service.coverUrl}}" class="detail-cover-img" src="{{service.coverUrl}}" mode="aspectFill" />
+    <view class="detail-cover {{service.coverClass}} has-img">
+      <image class="detail-cover-img" src="{{service.coverUrlWide}}" mode="aspectFill"
+             data-field="service" data-key="coverUrlWide"
+             data-fallback="{{service.localCover}}" binderror="onImageFallback" />
       <view class="detail-cover-text">
         <text class="detail-cover-cat">{{service.unit}} · {{service.duration}}</text>
         <text class="detail-cover-title">{{service.title}}</text>
         <text class="detail-cover-sub">{{service.subtitle}}</text>
       </view>
-      <text wx:if="{{!service.coverUrl}}" class="detail-cover-mark">MG</text>
     </view>
 
     <!-- 价格条 -->

@@ -1,4 +1,5 @@
 const api = require('../../utils/api')
+const media = require('../../utils/local-media')
 const { yuan, yuanShort, coverTheme } = require('../../utils/util')
 
 Page({
@@ -30,6 +31,8 @@ Page({
     this.loadData()
   },
 
+  onImageFallback: media.makeImageFallback(),
+
   async loadData() {
     this.setData({ loading: true })
     try {
@@ -48,7 +51,10 @@ Page({
         service: {
           ...service,
           priceText: yuanShort(service.price),
-          coverClass: coverTheme(service.id)
+          coverClass: coverTheme(service.id),
+          coverUrl: service.coverUrl || media.squareFor(service),
+          coverUrlWide: service.coverUrlWide || media.coverFor(service),
+          localCover: service.localCover || media.squareFor(service)
         },
         provider: provider ? { ...provider, initial: provider.nickname ? provider.nickname.charAt(0) : '影' } : null,
         settings,
