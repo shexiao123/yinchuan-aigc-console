@@ -170,7 +170,7 @@
         <view class="admin-mini-item">
           <text class="admin-mini-value">{{stats.cancelled}}</text>
           <text class="admin-mini-label">已取消</text>
-        </item>
+        </view>
       </view>
     </view>
 

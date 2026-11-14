@@ -1,7 +1,7 @@
 {
   "miniprogramRoot": "./",
   "compileType": "miniprogram",
-  "appid": "touristappid",
+  "appid": "",
   "projectname": "guangying-orders",
   "description": "宁夏云辇文化科技有限公司 - 影视制作接单平台",
   "setting": {

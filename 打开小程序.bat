@@ -23,6 +23,38 @@ echo.
 echo   工程目录： %PROJECT%
 echo.
 
+echo  [0/4] 检查 AppID...
+set "APPID="
+for /f "tokens=2 delims=:," %%a in ('findstr /i "appid" "%PROJECT%\project.config.json"') do set "APPID=%%~a"
+set "APPID=%APPID: =%"
+set "APPID=%APPID:"=%"
+if "%APPID%"=="" goto :needappid
+echo %APPID% | findstr /b /i "wx" >nul || goto :needappid
+echo          AppID 就绪（%APPID:~0,6%...）
+goto :startflow
+
+:needappid
+echo.
+echo   [!] 当前工程还没有真实 AppID（空或 touristappid 占位）。
+echo       新版开发者工具已不支持游客占位值，会直接报
+echo       「不存在此 AppID」，导致项目打不开。
+echo.
+echo   两种解决办法（任选其一）：
+echo     A. 导入时选「测试号」—— 立刻能在模拟器里跑
+echo     B. 填你自己的小程序 AppID —— 才能真机预览和上传
+echo.
+echo   现在帮你打开开发者工具，请按下面步骤手动导入一次：
+echo     1. 点「导入项目」
+echo     2. 目录选：%PROJECT%
+echo     3. AppID：点「测试号」或填自己的
+echo     4. 点「工具 - 构建 npm」
+echo     5. 点「编译」
+echo.
+if exist "%DEVTOOLS%\微信开发者工具.exe" start "" "%DEVTOOLS%\微信开发者工具.exe"
+pause
+exit /b 0
+
+:startflow
 echo  [1/4] 启动微信开发者工具...
 if not exist "%DEVTOOLS%\微信开发者工具.exe" (
   echo   未找到主程序，请手动导入项目。
