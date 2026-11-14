@@ -1,7 +1,7 @@
 {
   "miniprogramRoot": "./",
   "compileType": "miniprogram",
-  "appid": "",
+  "appid": "wx4b4167c078603e6d",
   "projectname": "guangying-orders",
   "description": "宁夏云辇文化科技有限公司 - 影视制作接单平台",
   "setting": {
@@ -22,29 +22,42 @@
     "coverView": true,
     "lazyloadPlaceholderEnable": false,
     "useCompilerPlugins": false,
-    "ignoreUploadUnusedFiles": true
+    "ignoreUploadUnusedFiles": true,
+    "compileWorklet": false,
+    "uglifyFileName": false,
+    "uploadWithSourceMap": true,
+    "minifyWXSS": true,
+    "minifyWXML": true,
+    "localPlugins": false,
+    "disableUseStrict": false,
+    "condition": false,
+    "babelSetting": {
+      "ignore": [],
+      "disablePlugins": [],
+      "outputPath": ""
+    }
   },
   "packOptions": {
     "ignore": [
       {
-        "type": "folder",
-        "value": "tests"
+        "value": "tests",
+        "type": "folder"
       },
       {
-        "type": "folder",
-        "value": "node_modules"
+        "value": "node_modules",
+        "type": "folder"
       },
       {
-        "type": "file",
-        "value": "package-lock.json"
+        "value": "package-lock.json",
+        "type": "file"
       },
       {
-        "type": "file",
-        "value": ".gitignore"
+        "value": ".gitignore",
+        "type": "file"
       },
       {
-        "type": "suffix",
-        "value": ".privacy.json"
+        "value": ".privacy.json",
+        "type": "suffix"
       }
     ],
     "include": []
@@ -72,5 +85,7 @@
         }
       ]
     }
-  }
+  },
+  "simulatorPluginLibVersion": {},
+  "editorSetting": {}
 }

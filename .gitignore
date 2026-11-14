@@ -21,6 +21,9 @@ Thumbs.db
 .idea/
 *.swp
 
+# 微信开发者工具生成的本机私有配置（每人不同，不入库）
+miniprogram/project.private.config.json
+
 # 生成的图片素材（体积大，可重新生成）
 assets/covers/*.png
 assets/covers/hero/*.png
