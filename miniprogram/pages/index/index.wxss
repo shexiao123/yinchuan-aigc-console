@@ -30,27 +30,6 @@
   font-weight: 500;
 }
 
-.hero-city {
-  display: flex;
-  align-items: center;
-  height: 56rpx;
-  padding: 0 22rpx;
-  background: var(--card);
-  border-radius: 28rpx;
-  box-shadow: var(--shadow);
-  margin-top: 8rpx;
-}
-
-.hero-city-icon {
-  font-size: 24rpx;
-  margin-right: 8rpx;
-}
-
-.hero-city-text {
-  font-size: 24rpx;
-  color: var(--ink-2);
-}
-
 /* ---------------- 轮播 ---------------- */
 
 .banner-swiper {

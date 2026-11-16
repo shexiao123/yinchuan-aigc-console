@@ -6,10 +6,6 @@
         <text class="hero-logo">银川AIGC数字文化产业基地</text>
         <text class="hero-slogan">宁夏云辇文化科技有限公司</text>
       </view>
-      <view class="hero-city">
-        <text class="hero-city-icon">📍</text>
-        <text class="hero-city-text">银川</text>
-      </view>
     </view>
 
     <swiper class="banner-swiper" indicator-dots="{{false}}" autoplay="{{true}}" circular="{{true}}" interval="4200" duration="420">
