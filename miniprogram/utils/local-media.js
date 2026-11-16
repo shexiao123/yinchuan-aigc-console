@@ -1,5 +1,5 @@
 /**
- * 小程序包内插图索引（图片由 tools/sync-miniprogram-media.py 生成）
+ * 小程序包内插图索引（图片由 AI 生成 + tools/mp-media-ai.py 压缩）
  *
  * 为什么需要它：数据库里的 image_url / cover_url 大多是网页端的完整外链
  * （https://guangying-web.app.workbuddy.host/assets/covers/...）。小程序要显示
@@ -36,10 +36,10 @@ const KEYWORDS = [
 ]
 
 const BANNER_IMAGES = [
-  DIR + 'mp-banner-1.jpg',  // 剪辑监视器工作台
-  DIR + 'mp-banner-2.jpg',  // 短视频剪辑
-  DIR + 'mp-banner-3.jpg',  // AI 生成
-  DIR + 'mp-banner-4.jpg'   // 漫剧制作
+  DIR + 'mp-banner-1.jpg',  // 剪辑工作台全景（主视觉）
+  DIR + 'mp-cat-04.jpg',    // 短视频剪辑
+  DIR + 'mp-cat-07.jpg',    // AI 生成
+  DIR + 'mp-cat-08.jpg'     // 漫剧制作
 ]
 
 /** 云端轮播文案 → 同主题插画，避免「摄影师文案配 AI 节点图」这类错配 */
@@ -61,7 +61,7 @@ function categoryImage(no) {
 }
 
 function squareImage(no) {
-  return DIR + 'mp-sq-' + pad(no) + '.jpg'
+  return categoryImage(no)
 }
 
 /** 稳定兜底：同一个服务每次都拿到同一张图，不会乱跳 */
