@@ -19,6 +19,8 @@
           <image class="banner-bg-img" src="{{item.imageUrl}}" mode="aspectFill"
                  data-field="banners" data-idx="{{index}}" data-key="imageUrl"
                  data-fallback="{{item.localImage}}" binderror="onImageFallback" />
+          <!-- 实拍照片亮度不可控：文字区加暖褐暗角，保证任何底图都读得清 -->
+          <view class="banner-scrim"></view>
           <view class="banner-inner">
             <text class="banner-title">{{item.title}}</text>
             <text class="banner-sub">{{item.subtitle}}</text>

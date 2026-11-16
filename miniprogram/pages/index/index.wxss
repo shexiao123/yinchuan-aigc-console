@@ -188,29 +188,40 @@
   to { transform: scaleY(1.25) translateY(-4rpx); }
 }
 
+/* 轮播文字暗角：只在左侧文字区渐隐，不糊整幅照片 */
+.banner-scrim {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 78%;
+  z-index: 1;
+  background: linear-gradient(100deg, rgba(43, 26, 12, 0.76) 0%, rgba(43, 26, 12, 0.44) 46%, rgba(43, 26, 12, 0) 88%);
+}
+
 .banner-inner {
   display: flex;
   flex-direction: column;
   position: relative;
   z-index: 2;
-  max-width: 520rpx;
+  max-width: 560rpx;
 }
 
 .banner-title {
   font-size: 38rpx;
   font-weight: 700;
-  color: #3A2A18;
   letter-spacing: 2rpx;
-  /* 清新版插画是浅底，重光晕会让字发虚；只留极轻的暖白描边提清晰度 */
-  text-shadow: 0 1rpx 2rpx rgba(255, 253, 248, 0.75);
+  /* 实拍照片亮度不可控，改用暖褐暗角 + 白字，保证任何底图都读得清 */
+  color: #FFFFFF;
+  text-shadow: 0 2rpx 10rpx rgba(60, 38, 18, 0.55);
 }
 
 .banner-sub {
   font-size: 24rpx;
-  color: #6B5440;
+  color: rgba(255, 250, 242, 0.92);
   margin-top: 12rpx;
   max-width: 460rpx;
-  text-shadow: 0 1rpx 2rpx rgba(255, 253, 248, 0.7);
+  text-shadow: 0 1rpx 6rpx rgba(60, 38, 18, 0.5);
 }
 
 /* 右下角全息读数：实色暖白底 + 暖边，不叠模糊、不发灰 */
@@ -532,15 +543,15 @@
 }
 
 .cat-chip-img {
-  width: 72rpx;
-  height: 72rpx;
+  width: 112rpx;
+  height: 112rpx;
   border-radius: 10rpx;
   flex-shrink: 0;
   background: var(--brand-soft);
 }
 
 .cat-chip-name {
-  margin-left: 14rpx;
+  margin-left: 16rpx;
   font-size: 25rpx;
   color: var(--ink);
   font-weight: 500;
