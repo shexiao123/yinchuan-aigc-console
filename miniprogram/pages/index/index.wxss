@@ -199,18 +199,18 @@
 .banner-title {
   font-size: 38rpx;
   font-weight: 700;
-  color: #33220F;
+  color: #3A2A18;
   letter-spacing: 2rpx;
-  /* 暖色插画本身色块密，用「暖白柔光晕」把字托出来；仍然不叠半透明蒙层，插图保持清晰 */
-  text-shadow: 0 2rpx 12rpx rgba(255, 252, 245, 0.95), 0 0 4rpx #FFFAF0, 0 0 1rpx #FFFAF0;
+  /* 清新版插画是浅底，重光晕会让字发虚；只留极轻的暖白描边提清晰度 */
+  text-shadow: 0 1rpx 2rpx rgba(255, 253, 248, 0.75);
 }
 
 .banner-sub {
   font-size: 24rpx;
-  color: #5A4530;
+  color: #6B5440;
   margin-top: 12rpx;
   max-width: 460rpx;
-  text-shadow: 0 2rpx 10rpx rgba(255, 252, 245, 0.92), 0 0 3rpx #FFFAF0;
+  text-shadow: 0 1rpx 2rpx rgba(255, 253, 248, 0.7);
 }
 
 /* 右下角全息读数：实色暖白底 + 暖边，不叠模糊、不发灰 */
