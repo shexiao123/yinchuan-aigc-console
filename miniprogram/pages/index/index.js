@@ -2,6 +2,7 @@ const api = require('../../utils/api')
 const presence = require('../../utils/presence')
 const notice = require('../../utils/notice')
 const media = require('../../utils/local-media')
+const demand = require('../../utils/demand')
 const { coverTheme, yuanShort, fromNow } = require('../../utils/util')
 
 Page({
@@ -15,7 +16,8 @@ Page({
     loggedIn: false,
     onlineCount: '–',
     notices: [],
-    noticeCurrent: 0
+    noticeCurrent: 0,
+    work: { pending: 0, doing: 0, check: 0, refund: 0, done: 0, closed: 0 }
   },
 
   onLoad() {
@@ -81,6 +83,18 @@ Page({
       settings,
       notices,
       noticeCurrent: 0,
+      work: (() => {
+        const mine = demand.myTaken()
+        const cnt = (s) => mine.filter((x) => x.status === s).length
+        return {
+          pending: cnt('taken'),
+          doing: cnt('producing'),
+          check: cnt('delivered'),
+          refund: 0,
+          done: cnt('completed'),
+          closed: cnt('cancelled')
+        }
+      })(),
       loggedIn: !!(app.globalData.session && app.globalData.session.user),
       loading: false
     })
@@ -136,6 +150,11 @@ Page({
   onNoticeTap() {
     const a = this.data.notices[this.data.noticeCurrent]
     if (a) this.showNoticeDetail(a)
+  },
+
+  /** 工作台统计格点进抢单大厅 */
+  onGoHall() {
+    wx.switchTab({ url: '/pages/hall/hall' })
   },
 
   onNoticeAll() {

@@ -1,0 +1,346 @@
+/* 接单大厅：冷白底 + 电光蓝，1rpx 冷蓝细线，不用毛玻璃 / 不用半透明蒙层 */
+
+.hall {
+  padding-bottom: 40rpx;
+}
+
+/* ---------------- 资金条 ---------------- */
+.wallet-bar {
+  margin: 24rpx 28rpx 0;
+  padding: 26rpx 28rpx;
+  display: flex;
+  align-items: center;
+}
+
+.wallet-cell {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.wallet-label {
+  font-size: 22rpx;
+  color: var(--ink-3);
+  letter-spacing: 1rpx;
+}
+
+.wallet-value {
+  font-size: 38rpx;
+  font-weight: 600;
+  color: var(--ink);
+  margin-top: 6rpx;
+}
+
+.wallet-value-frozen {
+  color: #B0731F;
+}
+
+.wallet-split {
+  width: 1rpx;
+  height: 56rpx;
+  background: var(--line);
+  margin: 0 32rpx;
+}
+
+.wallet-act {
+  margin-left: auto;
+  padding: 10rpx 24rpx;
+  border: 1rpx solid var(--line);
+  border-radius: 999rpx;
+  font-size: 24rpx;
+  color: var(--brand);
+  background: var(--brand-soft);
+}
+
+/* ---------------- 双 Tab ---------------- */
+.hall-tabs {
+  margin: 24rpx 28rpx 0;
+  padding: 6rpx;
+  display: flex;
+  background: var(--card);
+  border: 1rpx solid var(--line);
+  border-radius: 16rpx;
+}
+
+.hall-tab {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18rpx 0;
+  border-radius: 12rpx;
+  font-size: 26rpx;
+  color: var(--ink-3);
+}
+
+.hall-tab.on {
+  background: var(--brand-soft);
+  color: var(--brand);
+  font-weight: 600;
+}
+
+.tab-count {
+  margin-left: 8rpx;
+  font-size: 22rpx;
+  opacity: 0.85;
+}
+
+/* ---------------- 品类横滑 ---------------- */
+.cat-scroll {
+  margin-top: 20rpx;
+  padding: 0 28rpx;
+  white-space: nowrap;
+  display: flex;
+}
+
+.cat-chip {
+  flex-shrink: 0;
+  padding: 12rpx 26rpx;
+  margin-right: 16rpx;
+  border: 1rpx solid var(--line);
+  border-radius: 999rpx;
+  background: var(--card);
+  font-size: 24rpx;
+  color: var(--ink-2);
+}
+
+.cat-chip.on {
+  background: var(--brand);
+  border-color: var(--brand);
+  color: #FFFFFF;
+  font-weight: 600;
+}
+
+/* ---------------- 筛选行 ---------------- */
+.filter-row {
+  display: flex;
+  align-items: center;
+  margin: 18rpx 28rpx 0;
+  padding: 0 4rpx;
+}
+
+.filter-item {
+  display: flex;
+  align-items: center;
+  margin-right: 40rpx;
+  font-size: 25rpx;
+  color: var(--ink-2);
+}
+
+.filter-caret {
+  margin-left: 8rpx;
+  font-size: 20rpx;
+  color: var(--ink-3);
+}
+
+.filter-dot {
+  margin-left: auto;
+  padding: 4rpx 14rpx;
+  border-radius: 999rpx;
+  background: var(--cyan-soft);
+  color: var(--olive);
+  font-size: 21rpx;
+}
+
+/* ---------------- 需求卡 ---------------- */
+.d-card {
+  margin: 20rpx 28rpx 0;
+  padding: 24rpx 26rpx;
+}
+
+.d-line1 {
+  display: flex;
+  align-items: flex-start;
+}
+
+.d-tag {
+  flex-shrink: 0;
+  margin-right: 12rpx;
+  margin-top: 4rpx;
+  padding: 2rpx 12rpx;
+  border-radius: 6rpx;
+  background: #FFF1E4;
+  color: #B0731F;
+  font-size: 21rpx;
+  line-height: 1.7;
+}
+
+.d-title {
+  flex: 1;
+  min-width: 0;
+  font-size: 29rpx;
+  font-weight: 600;
+  color: var(--ink);
+  line-height: 1.45;
+}
+
+.d-price {
+  display: flex;
+  align-items: baseline;
+  flex-shrink: 0;
+  padding-left: 16rpx;
+}
+
+.price-symbol {
+  font-size: 22rpx;
+  color: #D0453F;
+}
+
+.price-value {
+  font-size: 38rpx;
+  font-weight: 600;
+  color: #D0453F;
+  margin-left: 2rpx;
+}
+
+.d-sub {
+  display: block;
+  margin-top: 10rpx;
+  font-size: 22rpx;
+  color: var(--ink-3);
+}
+
+.d-sub-inline {
+  display: inline;
+  margin-top: 0;
+}
+
+.d-meta {
+  display: flex;
+  align-items: center;
+  margin-top: 14rpx;
+}
+
+.d-req {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin-top: 14rpx;
+  font-size: 25rpx;
+  color: var(--ink-2);
+  line-height: 1.6;
+}
+
+.d-req-full {
+  display: block;
+  -webkit-line-clamp: unset;
+}
+
+.d-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 18rpx;
+  padding-top: 18rpx;
+  border-top: 1rpx solid var(--line);
+}
+
+.d-foot-left {
+  display: flex;
+  align-items: center;
+  font-size: 22rpx;
+}
+
+.d-foot-k {
+  color: var(--ink-3);
+}
+
+.d-foot-v {
+  color: var(--ink-2);
+  font-weight: 600;
+}
+
+/* ---------------- 状态与步骤 ---------------- */
+.d-status {
+  padding: 4rpx 14rpx;
+  border-radius: 999rpx;
+  font-size: 21rpx;
+  margin-right: 14rpx;
+}
+
+.d-status-pending {
+  background: var(--brand-soft);
+  color: var(--brand);
+}
+
+.d-status-busy {
+  background: var(--cyan-soft);
+  color: var(--olive);
+}
+
+.d-status-delivered {
+  background: #FFF4E4;
+  color: #B0731F;
+}
+
+.d-status-done {
+  background: #E9F7EF;
+  color: #1F7A4D;
+}
+
+.d-status-cancelled {
+  background: #F2F4F8;
+  color: var(--ink-3);
+}
+
+.d-steps {
+  display: flex;
+  align-items: center;
+  margin-top: 22rpx;
+}
+
+.d-step {
+  display: flex;
+  align-items: center;
+  font-size: 21rpx;
+  color: var(--ink-3);
+}
+
+.d-step.on {
+  color: var(--brand);
+}
+
+.d-step-dot {
+  width: 12rpx;
+  height: 12rpx;
+  border-radius: 50%;
+  background: var(--line);
+  margin-right: 8rpx;
+}
+
+.d-step.on .d-step-dot {
+  background: var(--brand);
+}
+
+.d-step-line {
+  flex: 1;
+  height: 2rpx;
+  background: var(--line);
+  margin: 0 12rpx;
+}
+
+.d-step-line.on {
+  background: var(--brand);
+}
+
+.d-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 22rpx;
+}
+
+.d-actions .btn {
+  margin-left: 16rpx;
+}
+
+/* ---------------- 发需求入口：放筛选行右侧，避免悬浮按钮压住卡片 ---------------- */
+.filter-pub {
+  margin-left: 16rpx;
+  padding: 8rpx 22rpx;
+  border-radius: 999rpx;
+  background: var(--brand);
+  color: #FFFFFF;
+  font-size: 23rpx;
+  font-weight: 600;
+}

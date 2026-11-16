@@ -451,6 +451,37 @@
   height: 100%;
 }
 
+/* 接单工作台统计格：冷白卡 + 冷蓝细线，数字走等宽字体 */
+.work-grid {
+  display: flex;
+  flex-wrap: wrap;
+  margin: 22rpx 20rpx 0;
+}
+
+.work-cell {
+  width: calc(33.333% - 16rpx);
+  margin: 8rpx;
+  padding: 20rpx 0;
+  background: var(--card);
+  border: 1rpx solid var(--line);
+  border-radius: 14rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.work-num {
+  font-size: 38rpx;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.work-label {
+  margin-top: 6rpx;
+  font-size: 22rpx;
+  color: var(--ink-2);
+}
+
 /* ---------------- 主视觉背景图 ---------------- */
 /* 整幅包内插画铺底：不叠任何不透明蒙层，图片本身清晰可见 */
 .banner-bg-img {

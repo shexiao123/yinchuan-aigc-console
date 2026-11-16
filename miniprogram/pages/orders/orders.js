@@ -14,7 +14,9 @@ Page({
     loading: true,
     filters: FILTERS,
     activeKey: 'all',
+    keyword: '',
     orders: [],
+    stats: { pending: 0, doing: 0, check: 0, refund: 0, done: 0, closed: 0 },
     role: 'customer',
     loggedIn: false
   },
@@ -49,31 +51,63 @@ Page({
       const provider = app.globalData.provider
       const providerIds = provider ? [provider.id] : []
       const role = provider ? 'provider' : 'customer'
-      const status = this.data.activeKey === 'all' ? '' : this.data.activeKey
-      const orders = await api.listOrders({
+      const key = this.data.activeKey
+      // 一次取全量，本地算统计格再按状态过滤，避免 6 宫格要发 6 次请求
+      const all = await api.listOrders({
         role,
         providerIds,
         uid: session.user.id,
-        status
+        status: ''
       })
+      const count = (fn) => all.filter(fn).length
+      const stats = {
+        pending: count((o) => o.status === 'open'),
+        doing: count((o) => o.status === 'taken' || o.status === 'producing'),
+        check: count((o) => o.status === 'delivered'),
+        refund: count((o) => o.status === 'refund'),
+        done: count((o) => o.status === 'completed'),
+        closed: count((o) => o.status === 'cancelled')
+      }
+      const pick = {
+        all: () => all,
+        open: () => all.filter((o) => o.status === 'open'),
+        producing: () => all.filter((o) => o.status === 'taken' || o.status === 'producing'),
+        delivered: () => all.filter((o) => o.status === 'delivered'),
+        completed: () => all.filter((o) => o.status === 'completed')
+      }
+      const orders = (pick[key] || pick.all)()
+      const mapped = orders.map((o) => {
+        const st = orderStatus(o.status)
+        return {
+          ...o,
+          statusText: st.text,
+          tone: st.tone,
+          amountText: yuan(o.amount),
+          timeText: fromNow(o.created_at)
+        }
+      })
+      // 搜索框在本地过滤，切 tab 不重新请求
+      this.allOrders = mapped
       this.setData({
         role,
-        orders: orders.map((o) => {
-          const st = orderStatus(o.status)
-          return {
-            ...o,
-            statusText: st.text,
-            tone: st.tone,
-            amountText: yuan(o.amount),
-            timeText: fromNow(o.created_at)
-          }
-        }),
+        stats,
+        orders: mapped,
         loading: false
       })
     } catch (e) {
       this.setData({ loading: false })
       wx.showToast({ title: api.friendlyError(e), icon: 'none' })
     }
+  },
+
+  onKeyword(e) {
+    const kw = String(e.detail.value || '').trim().toLowerCase()
+    this.setData({ keyword: e.detail.value })
+    const all = this.allOrders || []
+    const list = kw
+      ? all.filter((o) => (o.title || '').toLowerCase().indexOf(kw) >= 0 || (o.order_no || '').toLowerCase().indexOf(kw) >= 0)
+      : all
+    this.setData({ orders: list })
   },
 
   onOrderTap(e) {

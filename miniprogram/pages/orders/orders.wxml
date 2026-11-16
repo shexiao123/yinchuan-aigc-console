@@ -1,4 +1,44 @@
 <view class="page page-with-tabbar">
+  <view class="search-bar">
+    <view class="search-box">
+      <text class="search-icon">🔍</text>
+      <input
+        class="search-input"
+        placeholder="搜索订单标题 / 订单号"
+        value="{{keyword}}"
+        confirm-type="search"
+        bindinput="onKeyword"
+      />
+    </view>
+  </view>
+
+  <view class="stat-grid">
+    <view class="stat-cell">
+      <text class="stat-num hud-num">{{stats.pending}}</text>
+      <text class="stat-label">待实施</text>
+    </view>
+    <view class="stat-cell">
+      <text class="stat-num hud-num">{{stats.doing}}</text>
+      <text class="stat-label">进行中</text>
+    </view>
+    <view class="stat-cell">
+      <text class="stat-num hud-num">{{stats.check}}</text>
+      <text class="stat-label">待验收</text>
+    </view>
+    <view class="stat-cell">
+      <text class="stat-num hud-num">{{stats.refund}}</text>
+      <text class="stat-label">退款中</text>
+    </view>
+    <view class="stat-cell">
+      <text class="stat-num hud-num">{{stats.done}}</text>
+      <text class="stat-label">交易完成</text>
+    </view>
+    <view class="stat-cell">
+      <text class="stat-num hud-num">{{stats.closed}}</text>
+      <text class="stat-label">交易关闭</text>
+    </view>
+  </view>
+
   <view class="filter-bar">
     <scroll-view scroll-x="{{true}}" show-scrollbar="{{false}}">
       <view class="filter-row">

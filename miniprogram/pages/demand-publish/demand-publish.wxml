@@ -1,0 +1,92 @@
+<view class="page dp">
+
+  <view class="dp-tip card">
+    <text class="dp-tip-title">发布需求 = 进需求池，让服务者来抢</text>
+    <text class="dp-tip-body">发布时冻结预算全额作为预付款，验收通过后才结算给服务方；没人接单可随时取消并全额解冻。当前可用余额 ¥{{balanceText}}。</text>
+  </view>
+
+  <view class="card dp-form">
+    <view class="field">
+      <text class="field-label">业务品类</text>
+      <picker range="{{cats}}" range-key="name" value="{{catIdx}}" bindchange="onCatChange">
+        <view class="field-pick">
+          <text>{{cats[catIdx].name}}</text>
+          <text class="field-caret">▾</text>
+        </view>
+      </picker>
+    </view>
+
+    <view class="field">
+      <text class="field-label">需求标题</text>
+      <input
+        class="field-input"
+        placeholder="例：葡萄酒庄园品牌宣传片 3 分钟"
+        value="{{title}}"
+        data-field="title"
+        bindinput="onInput"
+        maxlength="40"
+      />
+    </view>
+
+    <view class="field">
+      <text class="field-label">需求描述</text>
+      <textarea
+        class="field-textarea"
+        placeholder="拍摄内容 / 成片时长 / 交付格式 / 修改轮次，写得越细接单越快"
+        value="{{requirement}}"
+        data-field="requirement"
+        bindinput="onInput"
+        maxlength="400"
+        auto-height
+      />
+      <text class="field-count">{{requirement.length}}/400</text>
+    </view>
+
+    <view class="field field-row">
+      <view class="field-half">
+        <text class="field-label">预算（元）</text>
+        <input
+          class="field-input"
+          type="digit"
+          placeholder="不低于 100"
+          value="{{budget}}"
+          data-field="budget"
+          bindinput="onInput"
+        />
+      </view>
+      <view class="field-half">
+        <text class="field-label">交付周期</text>
+        <picker range="{{deadlines}}" value="{{deadlineIdx}}" bindchange="onDeadlineChange">
+          <view class="field-pick">
+            <text>{{deadlines[deadlineIdx]}}</text>
+            <text class="field-caret">▾</text>
+          </view>
+        </picker>
+      </view>
+    </view>
+
+    <view class="field">
+      <text class="field-label">联系人 / 称呼</text>
+      <input
+        class="field-input"
+        placeholder="选填，默认「我」"
+        value="{{contact}}"
+        data-field="contact"
+        bindinput="onInput"
+        maxlength="20"
+      />
+    </view>
+  </view>
+
+  <view class="dp-note">
+    <text class="dp-note-line">· 预付款冻结在平台，验收通过才付款</text>
+    <text class="dp-note-line">· 服务方接单需冻结 10% 保证金（最低 100 元）</text>
+    <text class="dp-note-line">· 取消订单，预付款与保证金全额解冻</text>
+  </view>
+
+  <view class="dp-actions">
+    <view class="btn btn-primary btn-block {{canSubmit ? '' : 'btn-disabled'}}" bindtap="submit">
+      {{submitting ? '发布中…' : '发布需求并冻结预付款'}}
+    </view>
+  </view>
+</view>

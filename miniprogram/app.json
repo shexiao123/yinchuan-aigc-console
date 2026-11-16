@@ -1,6 +1,9 @@
 {
   "pages": [
     "pages/index/index",
+    "pages/hall/hall",
+    "pages/demand-publish/demand-publish",
+    "pages/wallet/wallet",
     "pages/services/services",
     "pages/service-detail/service-detail",
     "pages/review/review",
@@ -46,8 +49,12 @@
         "text": "订单"
       },
       {
-        "pagePath": "pages/studio/studio",
-        "text": "接单"
+        "pagePath": "pages/hall/hall",
+        "text": "抢单大厅"
+      },
+      {
+        "pagePath": "pages/wallet/wallet",
+        "text": "收入"
       },
       {
         "pagePath": "pages/profile/profile",

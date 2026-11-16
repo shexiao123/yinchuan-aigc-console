@@ -101,7 +101,7 @@ Page({
 
   onBack() {
     wx.navigateBack({
-      fail: () => wx.switchTab({ url: '/pages/orders/orders' })
+      fail: () => wx.navigateTo({ url: '/pages/orders/orders' })
     })
   },
 

@@ -1,3 +1,61 @@
+/* 顶部搜索 + 六宫格统计（对齐「师傅接单」工作台口径） */
+.search-bar {
+  padding: 20rpx 28rpx 0;
+  background: var(--bg);
+}
+
+.search-box {
+  display: flex;
+  align-items: center;
+  height: 76rpx;
+  padding: 0 24rpx;
+  background: var(--card);
+  border: 1rpx solid var(--line);
+  border-radius: 999rpx;
+}
+
+.search-icon {
+  font-size: 24rpx;
+  margin-right: 12rpx;
+  opacity: 0.6;
+}
+
+.search-input {
+  flex: 1;
+  font-size: 26rpx;
+  color: var(--ink);
+}
+
+.stat-grid {
+  display: flex;
+  flex-wrap: wrap;
+  padding: 18rpx 20rpx 4rpx;
+}
+
+.stat-cell {
+  width: calc(33.333% - 16rpx);
+  margin: 8rpx;
+  padding: 20rpx 0;
+  background: var(--card);
+  border: 1rpx solid var(--line);
+  border-radius: 14rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.stat-num {
+  font-size: 38rpx;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.stat-label {
+  margin-top: 6rpx;
+  font-size: 22rpx;
+  color: var(--ink-2);
+}
+
 .filter-bar {
   background: var(--card);
   padding: 20rpx 0 6rpx;

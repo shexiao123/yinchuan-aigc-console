@@ -1,0 +1,136 @@
+<view class="page wt" wx:if="{{w}}">
+
+  <!-- 收入头部：蓝色实色区，不用渐变叠蒙层 -->
+  <view class="wt-hero">
+    <view class="wt-hero-top">
+      <text class="wt-hero-label">账户余额（元）</text>
+      <text class="wt-hero-tip">冻结记账</text>
+    </view>
+    <text class="wt-hero-value hud-num">{{w.totalText}}</text>
+
+    <view class="wt-hero-cols">
+      <view class="wt-hero-col">
+        <text class="wt-col-num hud-num">{{w.balanceText}}</text>
+        <text class="wt-col-label">可提现金额</text>
+        <text class="wt-col-hint">已到账，可提至银行卡</text>
+      </view>
+      <view class="wt-hero-divider"></view>
+      <view class="wt-hero-col">
+        <text class="wt-col-num hud-num">{{w.frozenText}}</text>
+        <text class="wt-col-label">待结算金额</text>
+        <text class="wt-col-hint">客户已确认，结算中</text>
+      </view>
+    </view>
+
+    <view class="wt-withdraw" bindtap="onWithdraw">去提现</view>
+  </view>
+
+  <!-- 四指标 -->
+  <view class="wt-metrics">
+    <view class="wt-metric">
+      <text class="wt-metric-num hud-num">{{w.earnedText}}</text>
+      <text class="wt-metric-label">到手金额</text>
+      <text class="wt-metric-hint">已结算金额</text>
+    </view>
+    <view class="wt-metric">
+      <text class="wt-metric-num hud-num">{{w.settledText}}</text>
+      <text class="wt-metric-label">平台结算中</text>
+      <text class="wt-metric-hint">待结算金额</text>
+    </view>
+    <view class="wt-metric">
+      <text class="wt-metric-num hud-num">{{w.frozenText}}</text>
+      <text class="wt-metric-label">等客户确认</text>
+      <text class="wt-metric-hint">在途金额</text>
+    </view>
+    <view class="wt-metric">
+      <text class="wt-metric-num hud-num">{{w.earnedText}}</text>
+      <text class="wt-metric-label">一共赚了</text>
+      <text class="wt-metric-hint">累计收入</text>
+    </view>
+  </view>
+
+  <!-- 钱到哪一步 -->
+  <view class="card wt-step-card">
+    <view class="wt-step-head">
+      <text class="wt-step-title">我的钱到哪一步了</text>
+      <text class="wt-step-link" bindtap="onGoHall">去接单 ›</text>
+    </view>
+
+    <view class="wt-step wt-step-green">
+      <view class="wt-step-dot wt-dot-green">✓</view>
+      <view class="wt-step-body">
+        <text class="wt-step-name">可以提现的钱</text>
+        <text class="wt-step-desc">已经到账，现在就能提</text>
+      </view>
+      <text class="wt-step-amount hud-num">¥{{w.balanceText}}</text>
+    </view>
+
+    <view class="wt-step wt-step-blue">
+      <view class="wt-step-dot wt-dot-blue">·</view>
+      <view class="wt-step-body">
+        <text class="wt-step-name">平台正在结算的钱</text>
+        <text class="wt-step-desc">客户已确认 · {{w.ledger.length}} 笔</text>
+      </view>
+      <text class="wt-step-amount hud-num">¥{{w.settledText}}</text>
+    </view>
+
+    <view class="wt-step wt-step-amber">
+      <view class="wt-step-dot wt-dot-amber">·</view>
+      <view class="wt-step-body">
+        <text class="wt-step-name">等客户确认的钱</text>
+        <text class="wt-step-desc">活已经干完，等验收</text>
+      </view>
+      <text class="wt-step-amount hud-num">¥{{w.frozenText}}</text>
+    </view>
+  </view>
+
+  <!-- 流水分栏 -->
+  <view class="wt-tabs">
+    <view
+      class="wt-tab {{tab === item.key ? 'on' : ''}}"
+      wx:for="{{tabs}}"
+      wx:key="key"
+      data-key="{{item.key}}"
+      bindtap="onTabTap"
+    >{{item.label}}</view>
+  </view>
+
+  <view class="empty" wx:if="{{!list.length}}">
+    <text class="empty-text">暂无记录</text>
+    <text class="empty-hint">去大厅接一单，这里就会有资金流水</text>
+  </view>
+
+  <view class="wt-list card" wx:else>
+    <view class="wt-item" wx:for="{{list}}" wx:key="id">
+      <view class="wt-item-left">
+        <text class="wt-item-title">{{item.title}}</text>
+        <text class="wt-item-time hud-num">{{item.at}} · {{item.typeText}}</text>
+      </view>
+      <text class="wt-item-amount wt-amount-{{item.type}}">{{item.sign}}¥{{item.amountText}}</text>
+    </view>
+  </view>
+
+  <!-- 月度统计 -->
+  <view class="card wt-month">
+    <view class="wt-month-head">
+      <text class="wt-month-title">这个月我做了多少</text>
+      <text class="wt-month-tag hud-num">本月</text>
+    </view>
+    <view class="wt-month-row">
+      <view class="wt-month-cell">
+        <text class="wt-month-num hud-num">{{w.earnedCount}}</text>
+        <text class="wt-month-label">完成订单（单）</text>
+      </view>
+      <view class="wt-month-divider"></view>
+      <view class="wt-month-cell">
+        <text class="wt-month-num hud-num">{{w.avgText}}</text>
+        <text class="wt-month-label">平均每单（元）</text>
+      </view>
+    </view>
+  </view>
+
+  <view class="wt-acts">
+    <view class="btn btn-soft btn-block" bindtap="onRecharge">演示充值 ¥5000</view>
+    <view class="btn btn-ghost btn-block wt-reset" bindtap="onReset">重置演示数据</view>
+  </view>
+</view>

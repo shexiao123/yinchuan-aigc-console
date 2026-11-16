@@ -1,0 +1,376 @@
+/* 我的收入：蓝色实色头部 + 冷白卡片，1rpx 冷蓝细线，不用渐变蒙层与毛玻璃 */
+
+.wt {
+  padding-bottom: 60rpx;
+}
+
+/* ---------------- 收入头部 ---------------- */
+.wt-hero {
+  background: var(--brand);
+  padding: 30rpx 28rpx 34rpx;
+  color: #FFFFFF;
+}
+
+.wt-hero-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.wt-hero-label {
+  font-size: 24rpx;
+  opacity: 0.92;
+}
+
+.wt-hero-tip {
+  font-size: 21rpx;
+  padding: 4rpx 14rpx;
+  border-radius: 999rpx;
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.wt-hero-value {
+  display: block;
+  margin-top: 12rpx;
+  font-size: 66rpx;
+  font-weight: 600;
+  letter-spacing: 1rpx;
+}
+
+.wt-hero-cols {
+  display: flex;
+  align-items: center;
+  margin-top: 26rpx;
+  padding: 22rpx 0;
+  border-top: 1rpx solid rgba(255, 255, 255, 0.22);
+  border-bottom: 1rpx solid rgba(255, 255, 255, 0.22);
+}
+
+.wt-hero-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.wt-col-num {
+  font-size: 40rpx;
+  font-weight: 600;
+}
+
+.wt-col-label {
+  margin-top: 6rpx;
+  font-size: 23rpx;
+  opacity: 0.95;
+}
+
+.wt-col-hint {
+  margin-top: 2rpx;
+  font-size: 20rpx;
+  opacity: 0.7;
+}
+
+.wt-hero-divider {
+  width: 1rpx;
+  height: 70rpx;
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.wt-withdraw {
+  margin-top: 26rpx;
+  height: 84rpx;
+  line-height: 84rpx;
+  text-align: center;
+  border-radius: 999rpx;
+  background: #FFFFFF;
+  color: var(--brand);
+  font-size: 30rpx;
+  font-weight: 600;
+  letter-spacing: 2rpx;
+}
+
+/* ---------------- 四指标 ---------------- */
+.wt-metrics {
+  display: flex;
+  margin: 22rpx 28rpx 0;
+  padding: 24rpx 8rpx;
+  background: var(--card);
+  border: 1rpx solid var(--line);
+  border-radius: 16rpx;
+}
+
+.wt-metric {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+}
+
+.wt-metric + .wt-metric::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 6rpx;
+  bottom: 6rpx;
+  width: 1rpx;
+  background: var(--line);
+}
+
+.wt-metric-num {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.wt-metric-label {
+  margin-top: 6rpx;
+  font-size: 21rpx;
+  color: var(--ink-2);
+}
+
+.wt-metric-hint {
+  margin-top: 2rpx;
+  font-size: 19rpx;
+  color: var(--ink-3);
+}
+
+/* ---------------- 钱到哪一步 ---------------- */
+.wt-step-card {
+  margin: 22rpx 28rpx 0;
+  padding: 26rpx;
+}
+
+.wt-step-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 18rpx;
+}
+
+.wt-step-title {
+  font-size: 29rpx;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.wt-step-link {
+  font-size: 23rpx;
+  color: var(--brand);
+}
+
+.wt-step {
+  display: flex;
+  align-items: center;
+  padding: 20rpx 22rpx;
+  border-radius: 14rpx;
+  margin-bottom: 14rpx;
+}
+
+.wt-step:last-child {
+  margin-bottom: 0;
+}
+
+.wt-step-green {
+  background: #EAF7EF;
+}
+
+.wt-step-blue {
+  background: #EAF2FF;
+}
+
+.wt-step-amber {
+  background: #FFF4E4;
+}
+
+.wt-step-dot {
+  width: 40rpx;
+  height: 40rpx;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24rpx;
+  color: #FFFFFF;
+  flex-shrink: 0;
+  margin-right: 18rpx;
+}
+
+.wt-dot-green {
+  background: #2E9E63;
+}
+
+.wt-dot-blue {
+  background: var(--brand);
+}
+
+.wt-dot-amber {
+  background: #D99A2B;
+}
+
+.wt-step-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.wt-step-name {
+  font-size: 26rpx;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.wt-step-desc {
+  margin-top: 4rpx;
+  font-size: 21rpx;
+  color: var(--ink-2);
+}
+
+.wt-step-amount {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+/* ---------------- 流水分栏 ---------------- */
+.wt-tabs {
+  display: flex;
+  margin: 26rpx 28rpx 0;
+  padding: 6rpx;
+  background: var(--card);
+  border: 1rpx solid var(--line);
+  border-radius: 14rpx;
+}
+
+.wt-tab {
+  flex: 1;
+  text-align: center;
+  padding: 16rpx 0;
+  font-size: 25rpx;
+  color: var(--ink-3);
+  border-radius: 10rpx;
+}
+
+.wt-tab.on {
+  background: var(--brand-soft);
+  color: var(--brand);
+  font-weight: 600;
+}
+
+.wt-list {
+  margin: 18rpx 28rpx 0;
+  padding: 0 26rpx;
+}
+
+.wt-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 22rpx 0;
+  border-bottom: 1rpx solid var(--line);
+}
+
+.wt-item:last-child {
+  border-bottom: none;
+}
+
+.wt-item-left {
+  flex: 1;
+  min-width: 0;
+  padding-right: 20rpx;
+}
+
+.wt-item-title {
+  display: block;
+  font-size: 25rpx;
+  color: var(--ink);
+  line-height: 1.5;
+}
+
+.wt-item-time {
+  display: block;
+  margin-top: 6rpx;
+  font-size: 21rpx;
+  color: var(--ink-3);
+}
+
+.wt-item-amount {
+  flex-shrink: 0;
+  font-size: 28rpx;
+  font-weight: 600;
+}
+
+.wt-amount-freeze,
+.wt-amount-settle {
+  color: #B0731F;
+}
+
+.wt-amount-unfreeze,
+.wt-amount-earn,
+.wt-amount-recharge {
+  color: #1F7A4D;
+}
+
+/* ---------------- 月度统计 ---------------- */
+.wt-month {
+  margin: 22rpx 28rpx 0;
+  padding: 26rpx;
+}
+
+.wt-month-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.wt-month-title {
+  font-size: 29rpx;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.wt-month-tag {
+  font-size: 21rpx;
+  color: var(--ink-3);
+}
+
+.wt-month-row {
+  display: flex;
+  align-items: center;
+  margin-top: 22rpx;
+}
+
+.wt-month-cell {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.wt-month-num {
+  font-size: 42rpx;
+  font-weight: 600;
+  color: var(--brand);
+}
+
+.wt-month-label {
+  margin-top: 6rpx;
+  font-size: 21rpx;
+  color: var(--ink-3);
+}
+
+.wt-month-divider {
+  width: 1rpx;
+  height: 60rpx;
+  background: var(--line);
+}
+
+/* ---------------- 底部 ---------------- */
+.wt-acts {
+  margin: 32rpx 28rpx 0;
+}
+
+.wt-reset {
+  margin-top: 16rpx;
+}

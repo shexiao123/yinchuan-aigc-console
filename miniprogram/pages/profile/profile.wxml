@@ -90,6 +90,18 @@
           <text class="menu-value">{{memberValue}}</text>
           <text class="menu-arrow">›</text>
         </view>
+        <view class="menu-item" bindtap="onWallet">
+          <text class="menu-icon">💰</text>
+          <text class="menu-text">我的钱包</text>
+          <text class="menu-value">余额与冻结</text>
+          <text class="menu-arrow">›</text>
+        </view>
+        <view class="menu-item" bindtap="onPublishDemand">
+          <text class="menu-icon">📝</text>
+          <text class="menu-text">发布需求</text>
+          <text class="menu-value">进需求池</text>
+          <text class="menu-arrow">›</text>
+        </view>
         <view class="menu-item" bindtap="onOrders">
           <text class="menu-icon">📋</text>
           <text class="menu-text">我的订单</text>

@@ -1,0 +1,174 @@
+<view class="page-with-tabbar hall">
+
+  <!-- 资金条：余额 / 冻结 / 钱包入口 -->
+  <view class="wallet-bar card">
+    <view class="wallet-cell" bindtap="onWallet">
+      <text class="wallet-label">可用余额</text>
+      <text class="wallet-value hud-num">¥{{wallet.balanceText}}</text>
+    </view>
+    <view class="wallet-split"></view>
+    <view class="wallet-cell" bindtap="onWallet">
+      <text class="wallet-label">冻结中</text>
+      <text class="wallet-value wallet-value-frozen hud-num">¥{{wallet.frozenText}}</text>
+    </view>
+    <view class="wallet-act" bindtap="onWallet">钱包</view>
+  </view>
+
+  <!-- 大厅 / 我的接单 -->
+  <view class="hall-tabs">
+    <view class="hall-tab {{tab === 'pool' ? 'on' : ''}}" data-tab="pool" bindtap="onTabTap">
+      <text>待接需求</text>
+      <text class="tab-count hud-num">{{items.length}}</text>
+    </view>
+    <view class="hall-tab {{tab === 'mine' ? 'on' : ''}}" data-tab="mine" bindtap="onTabTap">
+      <text>我的接单</text>
+      <text class="tab-count hud-num">{{mine.length}}</text>
+    </view>
+  </view>
+
+  <block wx:if="{{tab === 'pool'}}">
+    <!-- 品类横滑：对应对方顶部游戏 chip -->
+    <scroll-view class="cat-scroll" scroll-x enable-flex>
+      <view
+        class="cat-chip {{activeCat === item.id ? 'on' : ''}}"
+        wx:for="{{cats}}"
+        wx:key="id"
+        data-id="{{item.id}}"
+        bindtap="onCatTap"
+      >{{item.name}}</view>
+    </scroll-view>
+
+    <!-- 筛选行：交付方式 / 排序，对应对方「区服 / 排序 / 订单类型」 -->
+    <view class="filter-row">
+      <picker range="{{modes}}" value="{{modeIdx}}" bindchange="onModeChange">
+        <view class="filter-item">
+          <text>{{modes[modeIdx]}}</text>
+          <text class="filter-caret">▾</text>
+        </view>
+      </picker>
+      <picker range="{{sorts}}" value="{{sortIdx}}" bindchange="onSortChange">
+        <view class="filter-item">
+          <text>{{sorts[sortIdx]}}</text>
+          <text class="filter-caret">▾</text>
+        </view>
+      </picker>
+      <view class="filter-dot" wx:if="{{source === 'local'}}">演示池</view>
+      <view class="filter-pub" bindtap="onPublish">＋ 发需求</view>
+    </view>
+
+    <view class="loading-box" wx:if="{{loading}}">
+      <text class="muted">正在加载需求…</text>
+    </view>
+
+    <view class="empty" wx:elif="{{!items.length}}">
+      <text class="empty-text">这个条件下暂时没有待接需求</text>
+      <text class="empty-hint">换个品类或交付方式看看，也可以点右下角自己发一条</text>
+    </view>
+
+    <view
+      class="d-card card"
+      wx:for="{{items}}"
+      wx:key="id"
+      data-id="{{item.id}}"
+      bindtap="onToggle"
+    >
+      <view class="d-line1">
+        <text class="d-tag">{{item.categoryName}}</text>
+        <text class="d-title">{{item.title}}</text>
+        <view class="d-price">
+          <text class="price-symbol">¥</text>
+          <text class="price-value hud-num">{{item.budgetText}}</text>
+        </view>
+      </view>
+
+      <text class="d-sub">{{item.categoryName}} / {{item.modeText}} / {{item.deadline || '交期待沟通'}}</text>
+
+      <text class="d-req {{expanded === item.id ? 'd-req-full' : ''}}">{{item.requirement}}</text>
+
+      <view class="d-foot">
+        <view class="d-foot-left">
+          <text class="d-foot-k">总保证金 </text>
+          <text class="d-foot-v">¥{{item.depositText}}</text>
+          <text class="d-foot-k">　时限 </text>
+          <text class="d-foot-v">{{item.hoursText}}</text>
+        </view>
+        <view class="btn btn-primary btn-sm" catchtap="onTake" data-id="{{item.id}}">抢单</view>
+      </view>
+    </view>
+  </block>
+
+  <block wx:else>
+    <view class="loading-box" wx:if="{{loading}}">
+      <text class="muted">正在加载…</text>
+    </view>
+
+    <view class="empty" wx:elif="{{!mine.length}}">
+      <text class="empty-text">还没有接单记录</text>
+      <text class="empty-hint">去「待接需求」里挑一条合适的</text>
+    </view>
+
+    <view class="d-card card" wx:for="{{mine}}" wx:key="id">
+      <view class="d-line1">
+        <text class="d-tag">{{item.categoryName}}</text>
+        <text class="d-title">{{item.title}}</text>
+        <view class="d-price">
+          <text class="price-symbol">¥</text>
+          <text class="price-value hud-num">{{item.budgetText}}</text>
+        </view>
+      </view>
+
+      <view class="d-meta">
+        <text class="d-status d-status-{{item.tone}}">{{item.statusText}}</text>
+        <text class="d-sub d-sub-inline">{{item.modeText}} / 时限 {{item.hoursText}}</text>
+      </view>
+
+      <view class="d-steps">
+        <view class="d-step {{item.status !== 'open' ? 'on' : ''}}">
+          <text class="d-step-dot"></text>
+          <text>已接单</text>
+        </view>
+        <view class="d-step-line {{item.status === 'producing' || item.status === 'delivered' || item.status === 'completed' ? 'on' : ''}}"></view>
+        <view class="d-step {{item.status === 'producing' || item.status === 'delivered' || item.status === 'completed' ? 'on' : ''}}">
+          <text class="d-step-dot"></text>
+          <text>制作中</text>
+        </view>
+        <view class="d-step-line {{item.status === 'completed' ? 'on' : ''}}"></view>
+        <view class="d-step {{item.status === 'completed' ? 'on' : ''}}">
+          <text class="d-step-dot"></text>
+          <text>已结算</text>
+        </view>
+      </view>
+
+      <view class="d-actions">
+        <view
+          class="btn btn-ghost btn-sm"
+          wx:if="{{item.status === 'taken'}}"
+          data-id="{{item.id}}"
+          data-next="producing"
+          bindtap="onAdvance"
+        >开始制作</view>
+        <view
+          class="btn btn-primary btn-sm"
+          wx:if="{{item.status === 'producing'}}"
+          data-id="{{item.id}}"
+          data-next="delivered"
+          bindtap="onAdvance"
+        >提交交付</view>
+        <view
+          class="btn btn-primary btn-sm"
+          wx:if="{{item.status === 'delivered'}}"
+          data-id="{{item.id}}"
+          data-next="completed"
+          bindtap="onAdvance"
+        >验收通过</view>
+        <view
+          class="btn btn-ghost btn-sm"
+          wx:if="{{item.status !== 'completed' && item.status !== 'cancelled'}}"
+          data-id="{{item.id}}"
+          data-next="cancelled"
+          bindtap="onAdvance"
+        >取消</view>
+      </view>
+    </view>
+  </block>
+</view>

@@ -193,7 +193,7 @@ Page({
       wx.showToast({ title: '申请已提交', icon: 'success' })
       setTimeout(() => {
         wx.navigateBack({
-          fail: () => wx.switchTab({ url: '/pages/studio/studio' })
+          fail: () => wx.navigateTo({ url: '/pages/studio/studio' })
         })
       }, 1000)
     } catch (e) {
@@ -258,7 +258,7 @@ Page({
       wx.showToast({ title: '上架成功', icon: 'success' })
       setTimeout(() => {
         wx.navigateBack({
-          fail: () => wx.switchTab({ url: '/pages/studio/studio' })
+          fail: () => wx.navigateTo({ url: '/pages/studio/studio' })
         })
       }, 800)
     } catch (e) {

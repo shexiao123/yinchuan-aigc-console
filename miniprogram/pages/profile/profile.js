@@ -145,7 +145,15 @@ Page({
   },
 
   onOrders() {
-    wx.switchTab({ url: '/pages/orders/orders' })
+    wx.navigateTo({ url: '/pages/orders/orders' })
+  },
+
+  onWallet() {
+    wx.navigateTo({ url: '/pages/wallet/wallet' })
+  },
+
+  onPublishDemand() {
+    wx.navigateTo({ url: '/pages/demand-publish/demand-publish' })
   },
 
   onNotifications() {
@@ -161,7 +169,7 @@ Page({
   },
 
   onStudio() {
-    wx.switchTab({ url: '/pages/studio/studio' })
+    wx.navigateTo({ url: '/pages/studio/studio' })
   },
 
   onAdmin() {

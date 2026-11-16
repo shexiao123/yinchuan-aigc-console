@@ -30,6 +30,34 @@
       </swiper-item>
     </swiper>
 
+    <!-- 接单工作台统计：与「订单」页同口径 -->
+    <view class="work-grid">
+      <view class="work-cell" bindtap="onGoHall">
+        <text class="work-num hud-num">{{work.pending}}</text>
+        <text class="work-label">待实施</text>
+      </view>
+      <view class="work-cell" bindtap="onGoHall">
+        <text class="work-num hud-num">{{work.doing}}</text>
+        <text class="work-label">进行中</text>
+      </view>
+      <view class="work-cell" bindtap="onGoHall">
+        <text class="work-num hud-num">{{work.check}}</text>
+        <text class="work-label">待验收</text>
+      </view>
+      <view class="work-cell">
+        <text class="work-num hud-num">{{work.refund}}</text>
+        <text class="work-label">退款中</text>
+      </view>
+      <view class="work-cell">
+        <text class="work-num hud-num">{{work.done}}</text>
+        <text class="work-label">交易完成</text>
+      </view>
+      <view class="work-cell">
+        <text class="work-num hud-num">{{work.closed}}</text>
+        <text class="work-label">交易关闭</text>
+      </view>
+    </view>
+
     <!-- 平台公告滚动栏（垂直轮播，数据来自云数据库） -->
     <view class="notice-bar" wx:if="{{notices.length}}">
       <view class="notice-label" bindtap="onNoticeAll">
