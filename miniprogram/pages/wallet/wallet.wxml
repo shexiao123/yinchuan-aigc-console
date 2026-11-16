@@ -84,6 +84,16 @@
     </view>
   </view>
 
+  <!-- 收款账户：银行卡 / 支付宝 / 微信零钱 -->
+  <view class="card wt-acc-row" bindtap="onAccounts">
+    <text class="wt-acc-icon">🏦</text>
+    <view class="wt-acc-body">
+      <text class="wt-acc-name">收款账户</text>
+      <text class="wt-acc-sub">支持微信零钱、支付宝、银行卡</text>
+    </view>
+    <text class="wt-acc-arrow">›</text>
+  </view>
+
   <!-- 流水分栏 -->
   <view class="wt-tabs">
     <view

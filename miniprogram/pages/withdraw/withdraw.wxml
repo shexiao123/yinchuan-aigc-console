@@ -1,0 +1,84 @@
+<view class="page wd">
+
+  <!-- 可提现余额 -->
+  <view class="wd-hero">
+    <text class="wd-hero-label">可提现金额（元）</text>
+    <text class="wd-hero-value hud-num">¥{{balanceText}}</text>
+    <view class="wd-hero-row">
+      <text class="wd-hero-hint">单笔最低 {{rules.minText}} 元 · 今日已提 ¥{{rules.todayUsedText}}</text>
+      <text class="wd-hero-all" bindtap="onAll">全部提现</text>
+    </view>
+  </view>
+
+  <!-- 到账方式 -->
+  <view class="card wd-card">
+    <view class="wd-card-head">
+      <text class="wd-card-title">到账方式</text>
+      <text class="wd-card-link" bindtap="onManage">管理收款账户 ›</text>
+    </view>
+
+    <view
+      class="wd-acc {{activeId === item.id ? 'on' : ''}}"
+      wx:for="{{accounts}}"
+      wx:key="id"
+      data-id="{{item.id}}"
+      bindtap="onSelect"
+    >
+      <view class="wd-acc-icon wd-acc-{{item.type}}">{{item.type === 'wechat' ? '微' : (item.type === 'alipay' ? '支' : '卡')}}</view>
+      <view class="wd-acc-body">
+        <text class="wd-acc-name">{{item.label}}<text class="wd-acc-mask hud-num" wx:if="{{item.masked}}"> {{item.masked}}</text></text>
+        <text class="wd-acc-sub">{{item.arriveText}}</text>
+      </view>
+      <view class="wd-radio {{activeId === item.id ? 'on' : ''}}"></view>
+    </view>
+
+    <view class="wd-empty" wx:if="{{!accounts.length}}">
+      <text class="wd-empty-text">还没有收款账户</text>
+      <view class="btn btn-soft btn-sm wd-empty-btn" bindtap="onManage">去添加</view>
+    </view>
+  </view>
+
+  <!-- 金额 -->
+  <view class="card wd-card">
+    <view class="wd-card-head">
+      <text class="wd-card-title">提现金额</text>
+    </view>
+    <view class="wd-amount">
+      <text class="wd-amount-symbol">¥</text>
+      <input class="wd-amount-input hud-num" type="digit" placeholder="0.00"
+             value="{{amount}}" bindinput="onInput" />
+    </view>
+    <view class="wd-fee">
+      <text class="wd-fee-k">手续费</text>
+      <text class="wd-fee-v">¥0.00（演示版不收费，实际费率以渠道为准）</text>
+    </view>
+  </view>
+
+  <!-- 规则 -->
+  <view class="wd-rules">
+    <text class="wd-rule">· 单笔最低 {{rules.minText}} 元，单日上限 ¥{{rules.dailyText}}</text>
+    <text class="wd-rule">· 到账时效：微信零钱 / 支付宝 / 银行卡 各不相同，以渠道实际到账为准</text>
+    <text class="wd-rule">· 收款人姓名须与实名认证一致，否则渠道会退票</text>
+    <text class="wd-rule">· 微信零钱提现需平台具备企业付款资质，当前为演示流程</text>
+  </view>
+
+  <view class="btn btn-primary btn-block wd-submit {{canSubmit ? '' : 'btn-disabled'}}" bindtap="submit">
+    {{submitting ? '提交中…' : '确认提现'}}
+  </view>
+
+  <!-- 最近记录 -->
+  <view class="wd-records" wx:if="{{records.length}}">
+    <view class="wd-records-head">
+      <text class="wd-records-title">最近提现</text>
+    </view>
+    <view class="card wd-rec-list">
+      <view class="wd-rec" wx:for="{{records}}" wx:key="id">
+        <view class="wd-rec-left">
+          <text class="wd-rec-title">提现到 {{item.accountLabel}}</text>
+          <text class="wd-rec-time hud-num">{{item.at}} · {{item.statusText}}</text>
+        </view>
+        <text class="wd-rec-amount hud-num">-¥{{item.netText}}</text>
+      </view>
+    </view>
+  </view>
+</view>

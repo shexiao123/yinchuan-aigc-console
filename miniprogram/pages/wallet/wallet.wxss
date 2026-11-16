@@ -374,3 +374,49 @@
 .wt-reset {
   margin-top: 16rpx;
 }
+
+/* 收款账户入口 */
+.wt-acc-row {
+  margin: 22rpx 28rpx 0;
+  padding: 24rpx 26rpx;
+  display: flex;
+  align-items: center;
+}
+
+.wt-acc-icon {
+  width: 64rpx;
+  height: 64rpx;
+  border-radius: 14rpx;
+  background: var(--brand-soft);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 30rpx;
+  flex-shrink: 0;
+}
+
+.wt-acc-body {
+  flex: 1;
+  min-width: 0;
+  padding-left: 18rpx;
+}
+
+.wt-acc-name {
+  display: block;
+  font-size: 27rpx;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.wt-acc-sub {
+  display: block;
+  margin-top: 6rpx;
+  font-size: 21rpx;
+  color: var(--ink-3);
+}
+
+.wt-acc-arrow {
+  flex-shrink: 0;
+  font-size: 30rpx;
+  color: var(--ink-3);
+}

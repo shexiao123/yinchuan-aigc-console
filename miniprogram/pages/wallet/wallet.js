@@ -49,11 +49,11 @@ Page({
   },
 
   onWithdraw() {
-    wx.showModal({
-      title: '去提现',
-      content: '演示版未接真实支付通道，提现只做流程占位。接入微信支付后，这里走企业付款到零钱。',
-      showCancel: false
-    })
+    wx.navigateTo({ url: '/pages/withdraw/withdraw' })
+  },
+
+  onAccounts() {
+    wx.navigateTo({ url: '/pages/accounts/accounts' })
   },
 
   onGoHall() {

@@ -4,6 +4,8 @@
     "pages/hall/hall",
     "pages/demand-publish/demand-publish",
     "pages/wallet/wallet",
+    "pages/accounts/accounts",
+    "pages/withdraw/withdraw",
     "pages/services/services",
     "pages/service-detail/service-detail",
     "pages/review/review",

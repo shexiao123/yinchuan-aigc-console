@@ -1,0 +1,98 @@
+<view class="page ac">
+
+  <view class="ac-tip card">
+    <text class="ac-tip-title">收款账户须与实名信息一致</text>
+    <text class="ac-tip-body">平台按实名主体出款，姓名不一致会被退票。银行卡只保存脱敏尾号用于展示，完整卡号由后端加密校验。</text>
+  </view>
+
+  <!-- 已有账户 -->
+  <view class="ac-list">
+    <view class="ac-item card" wx:for="{{accounts}}" wx:key="id">
+      <view class="ac-icon ac-icon-{{item.type}}">{{item.type === 'wechat' ? '微' : (item.type === 'alipay' ? '支' : '卡')}}</view>
+
+      <view class="ac-body">
+        <view class="ac-name-row">
+          <text class="ac-name">{{item.label}}</text>
+          <text class="ac-default" wx:if="{{item.isDefault}}">默认</text>
+        </view>
+        <text class="ac-masked hud-num">{{item.masked || item.sub}}</text>
+        <text class="ac-holder" wx:if="{{item.holder}}">持卡人 {{item.holder}}</text>
+      </view>
+
+      <view class="ac-acts">
+        <text class="ac-link" wx:if="{{!item.isDefault}}" data-id="{{item.id}}" bindtap="onSetDefault">设为默认</text>
+        <text class="ac-del" wx:if="{{item.removable}}" data-id="{{item.id}}" bindtap="onRemove">删除</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 添加表单 -->
+  <view class="card ac-form" wx:if="{{showForm}}">
+    <view class="ac-form-head">
+      <text class="ac-form-title">添加收款账户</text>
+      <text class="ac-form-close" bindtap="onToggleForm">收起</text>
+    </view>
+
+    <view class="field">
+      <text class="field-label">账户类型</text>
+      <picker range="{{types}}" range-key="name" value="{{typeIdx}}" bindchange="onTypeChange">
+        <view class="field-pick">
+          <text>{{types[typeIdx].name}}</text>
+          <text class="field-caret">▾</text>
+        </view>
+      </picker>
+    </view>
+
+    <block wx:if="{{types[typeIdx].key === 'bank'}}">
+      <view class="field">
+        <text class="field-label">银行卡号</text>
+        <input class="field-input hud-num" type="number" placeholder="16-19 位储蓄卡号"
+               value="{{cardNo}}" data-field="cardNo" bindinput="onInput" maxlength="23" />
+      </view>
+      <view class="field">
+        <text class="field-label">开户银行</text>
+        <picker range="{{banks}}" value="{{bankIdx}}" bindchange="onBankChange">
+          <view class="field-pick">
+            <text>{{banks[bankIdx]}}</text>
+            <text class="field-caret">▾</text>
+          </view>
+        </picker>
+      </view>
+      <view class="field">
+        <text class="field-label">持卡人姓名</text>
+        <input class="field-input" placeholder="须与实名认证一致"
+               value="{{holder}}" data-field="holder" bindinput="onInput" maxlength="20" />
+      </view>
+      <view class="field">
+        <text class="field-label">银行预留手机号</text>
+        <input class="field-input hud-num" type="number" placeholder="用于银行鉴权"
+               value="{{phone}}" data-field="phone" bindinput="onInput" maxlength="11" />
+      </view>
+    </block>
+
+    <block wx:else>
+      <view class="field">
+        <text class="field-label">支付宝账号</text>
+        <input class="field-input" placeholder="邮箱或手机号"
+               value="{{alipay}}" data-field="alipay" bindinput="onInput" maxlength="40" />
+      </view>
+      <view class="field">
+        <text class="field-label">实名姓名</text>
+        <input class="field-input" placeholder="须与支付宝实名一致"
+               value="{{holder}}" data-field="holder" bindinput="onInput" maxlength="20" />
+      </view>
+    </block>
+
+    <view class="btn btn-primary btn-block ac-submit" bindtap="submit">
+      {{submitting ? '提交中…' : '保存账户'}}
+    </view>
+  </view>
+
+  <view class="btn btn-soft btn-block ac-add" wx:if="{{!showForm}}" bindtap="onToggleForm">＋ 添加银行卡 / 支付宝</view>
+
+  <view class="ac-note">
+    <text class="ac-note-line">· 微信零钱为默认到账方式，不需要单独添加</text>
+    <text class="ac-note-line">· 一个账户可设多条，提现时可切换；默认账户优先展示</text>
+    <text class="ac-note-line">· 渠道费率与到账时效以微信支付 / 支付宝官方规则为准</text>
+  </view>
+</view>

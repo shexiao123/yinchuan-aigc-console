@@ -113,6 +113,21 @@ function earn(amount, title, ref) {
   return w
 }
 
+/** 提现：可用余额划出（真实打款由后端处理，这里只记账） */
+function withdraw(amount, title, ref) {
+  const n = need(amount)
+  const w = load()
+  if (w.balance < n) {
+    const e = new Error('可提现余额不足')
+    e.code = 'NO_BALANCE'
+    throw e
+  }
+  w.balance -= n
+  push(w, 'withdraw', n, title, ref)
+  save(w)
+  return w
+}
+
 /** 演示充值（真实版这里接微信支付下单） */
 function recharge(amount = 500000) {
   const n = need(amount)
@@ -129,7 +144,8 @@ function typeText(t) {
     unfreeze: '解冻',
     settle: '支付',
     earn: '收入',
-    recharge: '充值'
+    recharge: '充值',
+    withdraw: '提现'
   })[t] || t
 }
 
@@ -154,7 +170,7 @@ function summary() {
       ...x,
       amountText: yuan(x.amount),
       typeText: typeText(x.type),
-      sign: x.type === 'freeze' || x.type === 'settle' ? '-' : '+'
+      sign: x.type === 'freeze' || x.type === 'settle' || x.type === 'withdraw' ? '-' : '+'
     }))
   }
 }
@@ -169,6 +185,7 @@ module.exports = {
   unfreeze,
   settle,
   earn,
+  withdraw,
   recharge,
   summary,
   reset

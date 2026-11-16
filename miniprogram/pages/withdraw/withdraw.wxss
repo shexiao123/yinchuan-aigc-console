@@ -1,0 +1,274 @@
+.wd {
+  padding-bottom: 60rpx;
+}
+
+/* ---------------- 可提现余额 ---------------- */
+.wd-hero {
+  background: var(--brand);
+  padding: 32rpx 28rpx 34rpx;
+  color: #FFFFFF;
+}
+
+.wd-hero-label {
+  font-size: 23rpx;
+  opacity: 0.9;
+}
+
+.wd-hero-value {
+  display: block;
+  margin-top: 10rpx;
+  font-size: 64rpx;
+  font-weight: 600;
+  letter-spacing: 1rpx;
+}
+
+.wd-hero-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 22rpx;
+  padding-top: 20rpx;
+  border-top: 1rpx solid rgba(255, 255, 255, 0.22);
+}
+
+.wd-hero-hint {
+  font-size: 21rpx;
+  opacity: 0.86;
+}
+
+.wd-hero-all {
+  font-size: 24rpx;
+  padding: 8rpx 22rpx;
+  border-radius: 999rpx;
+  background: rgba(255, 255, 255, 0.18);
+}
+
+/* ---------------- 卡片 ---------------- */
+.wd-card {
+  margin: 22rpx 28rpx 0;
+  padding: 26rpx;
+}
+
+.wd-card-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 8rpx;
+}
+
+.wd-card-title {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.wd-card-link {
+  font-size: 23rpx;
+  color: var(--brand);
+}
+
+/* 到账方式行 */
+.wd-acc {
+  display: flex;
+  align-items: center;
+  padding: 20rpx 0;
+  border-bottom: 1rpx solid var(--line);
+}
+
+.wd-acc:last-of-type {
+  border-bottom: none;
+}
+
+.wd-acc-icon {
+  width: 64rpx;
+  height: 64rpx;
+  border-radius: 14rpx;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #FFFFFF;
+  font-size: 26rpx;
+  font-weight: 600;
+}
+
+.wd-acc-wechat {
+  background: #3E9E5B;
+}
+
+.wd-acc-alipay {
+  background: #2F77C9;
+}
+
+.wd-acc-bank {
+  background: #B4671F;
+}
+
+.wd-acc-body {
+  flex: 1;
+  min-width: 0;
+  padding-left: 18rpx;
+}
+
+.wd-acc-name {
+  font-size: 26rpx;
+  color: var(--ink);
+  font-weight: 500;
+}
+
+.wd-acc-mask {
+  font-size: 23rpx;
+  color: var(--ink-2);
+  font-weight: 400;
+}
+
+.wd-acc-sub {
+  display: block;
+  margin-top: 6rpx;
+  font-size: 21rpx;
+  color: var(--ink-3);
+}
+
+.wd-radio {
+  width: 36rpx;
+  height: 36rpx;
+  border-radius: 50%;
+  border: 2rpx solid var(--line);
+  flex-shrink: 0;
+}
+
+.wd-radio.on {
+  border-color: var(--brand);
+  background: radial-gradient(circle, var(--brand) 0 10rpx, #FFFFFF 11rpx);
+}
+
+.wd-empty {
+  padding: 30rpx 0 10rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.wd-empty-text {
+  font-size: 24rpx;
+  color: var(--ink-3);
+}
+
+.wd-empty-btn {
+  margin-top: 16rpx;
+}
+
+/* 金额输入 */
+.wd-amount {
+  display: flex;
+  align-items: flex-end;
+  padding: 16rpx 0 6rpx;
+  border-bottom: 2rpx solid var(--line);
+}
+
+.wd-amount-symbol {
+  font-size: 40rpx;
+  color: var(--ink);
+  margin-right: 10rpx;
+  line-height: 1.2;
+}
+
+.wd-amount-input {
+  flex: 1;
+  font-size: 56rpx;
+  font-weight: 600;
+  color: var(--ink);
+  height: 72rpx;
+}
+
+.wd-fee {
+  display: flex;
+  align-items: baseline;
+  margin-top: 16rpx;
+}
+
+.wd-fee-k {
+  font-size: 22rpx;
+  color: var(--ink-3);
+  flex-shrink: 0;
+  margin-right: 12rpx;
+}
+
+.wd-fee-v {
+  font-size: 22rpx;
+  color: var(--ink-2);
+  flex: 1;
+}
+
+/* ---------------- 规则与提交 ---------------- */
+.wd-rules {
+  margin: 22rpx 36rpx 0;
+}
+
+.wd-rule {
+  display: block;
+  font-size: 21rpx;
+  color: var(--ink-3);
+  line-height: 1.9;
+}
+
+.wd-submit {
+  margin: 28rpx 28rpx 0;
+}
+
+/* ---------------- 记录 ---------------- */
+.wd-records {
+  margin-top: 34rpx;
+}
+
+.wd-records-head {
+  padding: 0 28rpx 12rpx;
+}
+
+.wd-records-title {
+  font-size: 26rpx;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+
+.wd-rec-list {
+  margin: 0 28rpx;
+  padding: 0 26rpx;
+}
+
+.wd-rec {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20rpx 0;
+  border-bottom: 1rpx solid var(--line);
+}
+
+.wd-rec:last-child {
+  border-bottom: none;
+}
+
+.wd-rec-left {
+  flex: 1;
+  min-width: 0;
+  padding-right: 16rpx;
+}
+
+.wd-rec-title {
+  display: block;
+  font-size: 25rpx;
+  color: var(--ink);
+}
+
+.wd-rec-time {
+  display: block;
+  margin-top: 6rpx;
+  font-size: 21rpx;
+  color: var(--ink-3);
+}
+
+.wd-rec-amount {
+  font-size: 27rpx;
+  font-weight: 600;
+  color: #B0731F;
+}

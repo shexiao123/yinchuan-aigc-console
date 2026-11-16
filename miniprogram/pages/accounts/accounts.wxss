@@ -1,0 +1,202 @@
+.ac {
+  padding: 24rpx 28rpx 60rpx;
+}
+
+.ac-tip {
+  padding: 24rpx 26rpx;
+  background: var(--brand-soft);
+  border-color: #EFD9B4;
+}
+
+.ac-tip-title {
+  display: block;
+  font-size: 26rpx;
+  font-weight: 600;
+  color: #7A4A12;
+}
+
+.ac-tip-body {
+  display: block;
+  margin-top: 10rpx;
+  font-size: 22rpx;
+  color: var(--ink-2);
+  line-height: 1.7;
+}
+
+/* ---------------- 账户列表 ---------------- */
+.ac-list {
+  margin-top: 22rpx;
+}
+
+.ac-item {
+  display: flex;
+  align-items: center;
+  padding: 24rpx 26rpx;
+  margin-bottom: 16rpx;
+}
+
+.ac-icon {
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: 16rpx;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 30rpx;
+  font-weight: 600;
+  color: #FFFFFF;
+}
+
+.ac-icon-wechat {
+  background: #3E9E5B;
+}
+
+.ac-icon-alipay {
+  background: #2F77C9;
+}
+
+.ac-icon-bank {
+  background: #B4671F;
+}
+
+.ac-body {
+  flex: 1;
+  min-width: 0;
+  padding-left: 20rpx;
+}
+
+.ac-name-row {
+  display: flex;
+  align-items: center;
+}
+
+.ac-name {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.ac-default {
+  margin-left: 12rpx;
+  padding: 2rpx 12rpx;
+  border-radius: 999rpx;
+  background: var(--brand-soft);
+  color: #7A4A12;
+  font-size: 19rpx;
+}
+
+.ac-masked {
+  display: block;
+  margin-top: 8rpx;
+  font-size: 24rpx;
+  color: var(--ink-2);
+  letter-spacing: 1rpx;
+}
+
+.ac-holder {
+  display: block;
+  margin-top: 4rpx;
+  font-size: 21rpx;
+  color: var(--ink-3);
+}
+
+.ac-acts {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.ac-link {
+  font-size: 22rpx;
+  color: var(--brand);
+  padding: 4rpx 0;
+}
+
+.ac-del {
+  font-size: 22rpx;
+  color: #C0573A;
+  padding: 4rpx 0;
+  margin-top: 8rpx;
+}
+
+/* ---------------- 表单 ---------------- */
+.ac-form {
+  margin-top: 22rpx;
+  padding: 8rpx 26rpx 26rpx;
+}
+
+.ac-form-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 24rpx 0 8rpx;
+}
+
+.ac-form-title {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.ac-form-close {
+  font-size: 23rpx;
+  color: var(--ink-3);
+}
+
+.field {
+  padding: 22rpx 0;
+  border-bottom: 1rpx solid var(--line);
+}
+
+.field:last-of-type {
+  border-bottom: none;
+}
+
+.field-label {
+  display: block;
+  font-size: 23rpx;
+  color: var(--ink-3);
+  margin-bottom: 10rpx;
+}
+
+.field-input {
+  font-size: 28rpx;
+  color: var(--ink);
+  min-height: 56rpx;
+}
+
+.field-pick {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 28rpx;
+  color: var(--ink);
+  min-height: 56rpx;
+}
+
+.field-caret {
+  font-size: 20rpx;
+  color: var(--ink-3);
+}
+
+.ac-submit {
+  margin-top: 24rpx;
+}
+
+.ac-add {
+  margin-top: 22rpx;
+}
+
+.ac-note {
+  margin-top: 26rpx;
+  padding: 0 8rpx;
+}
+
+.ac-note-line {
+  display: block;
+  font-size: 21rpx;
+  color: var(--ink-3);
+  line-height: 1.9;
+}
