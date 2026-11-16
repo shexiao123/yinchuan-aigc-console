@@ -1,5 +1,5 @@
 <view class="page">
-  <!-- 顶部品牌区 -->
+  <!-- 顶部：品牌 + 轮播 + 工作台 -->
   <view class="hero">
     <view class="hero-row">
       <view class="hero-brand">
@@ -12,11 +12,9 @@
       </view>
     </view>
 
-    <!-- 轮播 -->
     <swiper class="banner-swiper" indicator-dots="{{false}}" autoplay="{{true}}" circular="{{true}}" interval="4200" duration="420">
       <swiper-item wx:for="{{banners}}" wx:key="id" bindtap="onBannerTap" data-slug="{{item.link_value}}" data-type="{{item.link_type}}">
-        <!-- 整幅包内主题插画（冷白实色，与网页端按内容匹配那套同源）。
-             用 <image> 而不是 WXSS background-image：小程序样式里不能引用包内本地图。 -->
+        <!-- 整幅包内主题插画。用 <image> 而不是 WXSS background-image：小程序样式不能引用包内本地图。 -->
         <view class="banner banner-has-img">
           <image class="banner-bg-img" src="{{item.imageUrl}}" mode="aspectFill"
                  data-field="banners" data-idx="{{index}}" data-key="imageUrl"
@@ -30,7 +28,7 @@
       </swiper-item>
     </swiper>
 
-    <!-- 接单工作台统计：与「订单」页同口径 -->
+    <!-- 工作台统计：与「订单」页同口径，点任意格进抢单大厅 -->
     <view class="work-grid">
       <view class="work-cell" bindtap="onGoHall">
         <text class="work-num hud-num">{{work.pending}}</text>
@@ -58,7 +56,27 @@
       </view>
     </view>
 
-    <!-- 平台公告滚动栏（垂直轮播，数据来自云数据库） -->
+    <!-- 快捷入口：把散落的入口收成 4 个 -->
+    <view class="quick-grid">
+      <view class="quick-item" bindtap="onGoHall">
+        <text class="quick-icon">⚡</text>
+        <text class="quick-label">抢单大厅</text>
+      </view>
+      <view class="quick-item" bindtap="onGoPublish">
+        <text class="quick-icon">📝</text>
+        <text class="quick-label">发布需求</text>
+      </view>
+      <view class="quick-item" bindtap="onGoIncome">
+        <text class="quick-icon">💰</text>
+        <text class="quick-label">我的收入</text>
+      </view>
+      <view class="quick-item" bindtap="onMerchantEntry">
+        <text class="quick-icon">🏬</text>
+        <text class="quick-label">企业商家</text>
+      </view>
+    </view>
+
+    <!-- 公告：只留一条滚动条，在线人数已并入轮播 HUD -->
     <view class="notice-bar" wx:if="{{notices.length}}">
       <view class="notice-label" bindtap="onNoticeAll">
         <text class="notice-label-icon">📢</text><text>公告</text>
@@ -76,52 +94,36 @@
       </swiper>
       <view class="notice-more" bindtap="onNoticeAll">全部</view>
     </view>
-
-    <!-- 企业商家入口 -->
-    <view class="merchant-entry" bindtap="onMerchantEntry">
-      <text class="merchant-entry-icon">🏬</text>
-      <view class="merchant-entry-txt">
-        <text class="merchant-entry-title">企业商家 · 在招任务</text>
-        <text class="merchant-entry-sub">店铺主页 / 发布任务 / 参考视频</text>
-      </view>
-      <text class="merchant-entry-arrow">›</text>
-    </view>
-
-    <!-- 平台在线人数（真实心跳） -->
-    <view class="online-bar">
-      <view class="online-dot"></view>
-      <text class="online-text">当前在线 <text class="online-num">{{onlineCount}}</text> 人</text>
-      <text class="online-hint">实时</text>
-    </view>
   </view>
 
-  <!-- 分类 -->
+  <!-- 业务分类：8 类归成 拍摄制作 / 后期剪辑 / AI 创作 -->
   <view class="container section">
     <view class="section-head">
-      <text class="section-title">服务分类</text>
+      <text class="section-title">业务分类</text>
       <text class="section-more" bindtap="onSeeAll">全部服务 ›</text>
     </view>
-    <view class="cat-grid">
-      <view class="cat-item {{item.imageUrl ? 'cat-item-has-img' : ''}}" wx:for="{{categories}}" wx:key="id" bindtap="onCategoryTap" data-slug="{{item.slug}}">
-        <view class="cat-icon-wrap" wx:if="{{!item.imageUrl}}">
-          <text class="cat-icon">{{item.icon}}</text>
-        </view>
-        <view class="cat-img-wrap" wx:else>
-          <image class="cat-img" src="{{item.imageUrl}}" mode="aspectFill"
-                 data-field="categories" data-idx="{{index}}" data-key="imageUrl"
+
+    <view class="cat-group" wx:for="{{catGroups}}" wx:key="key" wx:for-item="g" wx:for-index="gi">
+      <view class="cat-group-head">
+        <text class="cat-group-name">{{g.name}}</text>
+        <text class="cat-group-desc">{{g.desc}}</text>
+      </view>
+      <view class="cat-chips">
+        <view class="cat-chip" wx:for="{{g.items}}" wx:key="id" bindtap="onCategoryTap" data-slug="{{item.slug}}">
+          <image class="cat-chip-img" src="{{item.imageUrl}}" mode="aspectFill"
+                 data-field="catGroups[{{gi}}].items" data-idx="{{index}}" data-key="imageUrl"
                  data-fallback="{{item.localImage}}" binderror="onImageFallback" />
+          <text class="cat-chip-name">{{item.name}}</text>
         </view>
-        <text class="cat-name">{{item.name}}</text>
-        <text class="cat-desc ellipsis">{{item.description}}</text>
       </view>
     </view>
   </view>
 
-  <!-- 热门服务 -->
+  <!-- 精选服务：只留 3 条 -->
   <view class="container section" wx:if="{{!loading}}">
     <view class="section-head">
-      <text class="section-title">热销服务</text>
-      <text class="section-sub">按销量排序</text>
+      <text class="section-title">精选服务</text>
+      <text class="section-sub">按销量</text>
       <text class="section-more" bindtap="onSeeAll">更多 ›</text>
     </view>
 
@@ -151,39 +153,31 @@
     </view>
   </view>
 
-  <!-- 推荐服务者 -->
+  <!-- 推荐服务者：横滑，不占纵向空间 -->
   <view class="container section" wx:if="{{!loading && providers.length}}">
     <view class="section-head">
       <text class="section-title">推荐服务者</text>
       <text class="section-sub">按完成单量</text>
     </view>
-    <view class="prov-list">
-      <view class="prov-item card" wx:for="{{providers}}" wx:key="id" bindtap="onProviderTap" data-id="{{item.id}}">
+    <scroll-view class="prov-scroll" scroll-x enable-flex>
+      <view class="prov-card" wx:for="{{providers}}" wx:key="id" bindtap="onProviderTap" data-id="{{item.id}}">
         <view class="avatar avatar-md"><text>{{item.initial}}</text></view>
-        <view class="prov-body">
-          <view class="prov-name-row">
-            <text class="prov-name">{{item.nickname}}</text>
-            <text class="prov-verified" wx:if="{{item.is_verified}}">✓ 认证</text>
-          </view>
-          <view class="prov-meta">
-            <text class="prov-rate">★ {{item.ratingText}}</text>
-            <text class="prov-dot">·</text>
-            <text class="prov-count">完成 {{item.orders_done}} 单</text>
-            <text class="prov-dot">·</text>
-            <text class="prov-count">{{item.city}}</text>
-          </view>
+        <text class="prov-name ellipsis">{{item.nickname}}</text>
+        <view class="prov-meta">
+          <text class="prov-rate">★ {{item.ratingText}}</text>
+          <text class="prov-count">完成 {{item.orders_done}} 单</text>
         </view>
-        <text class="prov-arrow">›</text>
+        <text class="prov-verified" wx:if="{{item.is_verified}}">✓ 认证</text>
       </view>
-    </view>
+    </scroll-view>
   </view>
 
-  <!-- 平台说明 -->
+  <!-- 平台规则：压成一行 -->
   <view class="container section" wx:if="{{settings}}">
-    <view class="notice card card-pad">
-      <text class="notice-title">平台规则</text>
-      <text class="notice-text">{{settings.notice}}</text>
-      <text class="notice-text">最低下单金额 ¥{{settings.min_order_amount / 100}}，服务热线 {{settings.support_phone}}</text>
+    <view class="rule-line card">
+      <text class="rule-title">平台规则</text>
+      <text class="rule-text ellipsis">{{settings.notice}}</text>
+      <text class="rule-more" bindtap="onSeeAll">›</text>
     </view>
   </view>
 

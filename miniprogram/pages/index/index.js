@@ -17,6 +17,7 @@ Page({
     onlineCount: '–',
     notices: [],
     noticeCurrent: 0,
+    catGroups: [],
     work: { pending: 0, doing: 0, check: 0, refund: 0, done: 0, closed: 0 }
   },
 
@@ -51,6 +52,23 @@ Page({
       safe(api.getSettings(), null)
     ])
     const app = getApp()
+    // 8 个分类归成三大类，首页按组展示，避免一屏铺 8 张大卡
+    const CAT_GROUPS = [
+      { key: 'shoot', name: '拍摄制作', desc: '跟拍 · 微电影 · 宣传片 · 棚拍', slugs: ['wedding-shoot', 'wedding-film', 'brand-film', 'commercial-photo'] },
+      { key: 'post', name: '后期剪辑', desc: '短视频快剪 · AE 动效', slugs: ['short-video', 'ae-motion'] },
+      { key: 'ai', name: 'AI 创作', desc: 'AIGC 视觉 · 漫剧整案', slugs: ['ai-generate', 'comic-drama'] }
+    ]
+    const cats = (categories.length ? categories : media.demoCategories()).map((c) => ({
+      ...c,
+      imageUrl: c.imageUrl || media.coverFor(c),
+      localImage: c.localImage || media.coverFor(c)
+    }))
+    const catGroups = CAT_GROUPS.map((g) => ({
+      key: g.key,
+      name: g.name,
+      desc: g.desc,
+      items: g.slugs.map((s) => cats.find((c) => c.slug === s)).filter(Boolean)
+    }))
     this.setData({
       banners: (banners.length ? banners : media.demoBanners()).map((b, i) => ({
         ...b,
@@ -61,12 +79,9 @@ Page({
         localImage: b.localImage || media.bannerImage(b, i),
         hasImage: true
       })),
-      categories: (categories.length ? categories : media.demoCategories()).map((c) => ({
-        ...c,
-        imageUrl: c.imageUrl || media.coverFor(c),
-        localImage: c.localImage || media.coverFor(c)
-      })),
-      hotServices: (hotServices.length ? hotServices : media.demoServices()).slice(0, 6).map((s) => ({
+      categories: cats,
+      catGroups,
+      hotServices: (hotServices.length ? hotServices : media.demoServices()).slice(0, 3).map((s) => ({
         ...s,
         priceText: yuanShort(s.price),
         oldPriceText: s.original_price ? yuanShort(s.original_price) : '',
@@ -155,6 +170,15 @@ Page({
   /** 工作台统计格点进抢单大厅 */
   onGoHall() {
     wx.switchTab({ url: '/pages/hall/hall' })
+  },
+
+  /** 快捷入口：发布需求 / 我的收入 */
+  onGoPublish() {
+    wx.navigateTo({ url: '/pages/demand-publish/demand-publish' })
+  },
+
+  onGoIncome() {
+    wx.switchTab({ url: '/pages/wallet/wallet' })
   },
 
   onNoticeAll() {

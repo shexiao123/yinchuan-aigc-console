@@ -451,6 +451,184 @@
   height: 100%;
 }
 
+/* 快捷入口：4 个收口，圆形图标 + 标签 */
+.quick-grid {
+  display: flex;
+  margin: 18rpx 20rpx 0;
+  padding: 22rpx 8rpx;
+  background: var(--card);
+  border: 1rpx solid var(--line);
+  border-radius: 14rpx;
+}
+
+.quick-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.quick-icon {
+  width: 76rpx;
+  height: 76rpx;
+  line-height: 76rpx;
+  text-align: center;
+  border-radius: 50%;
+  background: var(--brand-soft);
+  font-size: 34rpx;
+}
+
+.quick-label {
+  margin-top: 10rpx;
+  font-size: 22rpx;
+  color: var(--ink-2);
+}
+
+/* 业务分类分组：组标题 + 横向小卡，替代 8 张大卡 */
+.cat-group {
+  margin-top: 22rpx;
+}
+
+.cat-group:first-child {
+  margin-top: 0;
+}
+
+.cat-group-head {
+  display: flex;
+  align-items: baseline;
+  margin-bottom: 14rpx;
+}
+
+.cat-group-name {
+  font-size: 27rpx;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.cat-group-desc {
+  margin-left: 14rpx;
+  font-size: 21rpx;
+  color: var(--ink-3);
+}
+
+.cat-chips {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.cat-chip {
+  width: calc(50% - 10rpx);
+  margin: 0 20rpx 16rpx 0;
+  display: flex;
+  align-items: center;
+  padding: 12rpx 14rpx;
+  background: var(--card);
+  border: 1rpx solid var(--line);
+  border-radius: 12rpx;
+}
+
+.cat-chip:nth-child(2n) {
+  margin-right: 0;
+}
+
+.cat-chip-img {
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: 10rpx;
+  flex-shrink: 0;
+  background: var(--brand-soft);
+}
+
+.cat-chip-name {
+  margin-left: 14rpx;
+  font-size: 25rpx;
+  color: var(--ink);
+  font-weight: 500;
+}
+
+/* 服务者横滑卡 */
+.prov-scroll {
+  display: flex;
+  white-space: nowrap;
+}
+
+.prov-card {
+  flex-shrink: 0;
+  width: 220rpx;
+  margin-right: 16rpx;
+  padding: 22rpx 16rpx;
+  background: var(--card);
+  border: 1rpx solid var(--line);
+  border-radius: 14rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.prov-name {
+  margin-top: 12rpx;
+  max-width: 100%;
+  font-size: 25rpx;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.prov-meta {
+  margin-top: 6rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.prov-rate {
+  font-size: 21rpx;
+  color: #B0731F;
+}
+
+.prov-count {
+  margin-top: 2rpx;
+  font-size: 20rpx;
+  color: var(--ink-3);
+}
+
+.prov-verified {
+  margin-top: 8rpx;
+  padding: 2rpx 12rpx;
+  border-radius: 999rpx;
+  background: var(--cyan-soft);
+  color: var(--olive);
+  font-size: 19rpx;
+}
+
+/* 平台规则压成一行 */
+.rule-line {
+  display: flex;
+  align-items: center;
+  padding: 20rpx 24rpx;
+}
+
+.rule-title {
+  flex-shrink: 0;
+  font-size: 23rpx;
+  font-weight: 600;
+  color: var(--ink-2);
+  margin-right: 14rpx;
+}
+
+.rule-text {
+  flex: 1;
+  min-width: 0;
+  font-size: 22rpx;
+  color: var(--ink-3);
+}
+
+.rule-more {
+  flex-shrink: 0;
+  margin-left: 12rpx;
+  font-size: 24rpx;
+  color: var(--ink-3);
+}
+
 /* 接单工作台统计格：冷白卡 + 冷蓝细线，数字走等宽字体 */
 .work-grid {
   display: flex;
