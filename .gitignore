@@ -64,3 +64,7 @@ tmp-gh-*/
 tools/.gh-sync-blobs.json
 __pycache__/
 *.pyc
+
+# AI 生图源素材（体积大、可重新生成，进包的是 miniprogram/assets/covers/*.jpg）
+assets/ai-covers/
+assets/ai-covers-warm/
