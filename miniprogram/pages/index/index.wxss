@@ -199,30 +199,30 @@
 .banner-title {
   font-size: 38rpx;
   font-weight: 700;
-  color: #0B1F33;
+  color: #33220F;
   letter-spacing: 2rpx;
-  /* 细白描边而不是半透明蒙层：插图保持全幅实色清晰 */
-  text-shadow: 0 1rpx 0 var(--card), 0 0 2rpx var(--card);
+  /* 暖色插画本身色块密，用「暖白柔光晕」把字托出来；仍然不叠半透明蒙层，插图保持清晰 */
+  text-shadow: 0 2rpx 12rpx rgba(255, 252, 245, 0.95), 0 0 4rpx #FFFAF0, 0 0 1rpx #FFFAF0;
 }
 
 .banner-sub {
   font-size: 24rpx;
-  color: #23405E;
+  color: #5A4530;
   margin-top: 12rpx;
   max-width: 460rpx;
-  text-shadow: 0 1rpx 0 var(--card), 0 0 2rpx var(--card);
+  text-shadow: 0 2rpx 10rpx rgba(255, 252, 245, 0.92), 0 0 3rpx #FFFAF0;
 }
 
-/* 右下角全息读数：实色白底 + 冷蓝细边，不叠模糊、不发灰 */
+/* 右下角全息读数：实色暖白底 + 暖边，不叠模糊、不发灰 */
 .banner-hud {
   position: absolute;
   right: 20rpx;
   bottom: 18rpx;
   z-index: 2;
   font-size: 18rpx;
-  color: #0B6F7A;
+  color: #7A4A12;
   background: var(--card);
-  border: 1rpx solid rgba(47, 107, 234, .24);
+  border: 1rpx solid rgba(180, 103, 31, 0.28);
   border-radius: 999rpx;
   padding: 6rpx 14rpx;
 }

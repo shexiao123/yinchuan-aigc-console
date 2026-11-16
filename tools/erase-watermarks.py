@@ -12,7 +12,7 @@ import sys
 import time
 
 SKILL = r"D:\下载\WorkBuddy\resources\app.asar.unpacked\resources\plugins\workbuddy-builtin\skills\buddy-image-processing\scripts\buddy-image-processing.py"
-SRC_DIR = "assets/ai-covers"
+SRC_DIR = os.environ.get("WB_ERASE_DIR", "assets/ai-covers")
 OUT_DIR = os.path.join(SRC_DIR, "noWM")
 PROMPT = "Remove the watermark text in the bottom-right corner"
 
