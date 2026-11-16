@@ -299,7 +299,7 @@
 }
 
 .pay-lines {
-  background: #F3F8FF;
+  background: #F7F1E6;
   border-radius: 18rpx;
   padding: 8rpx 24rpx;
 }

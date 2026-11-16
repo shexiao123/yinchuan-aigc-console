@@ -8,7 +8,7 @@
 .wt-hero {
   background: var(--brand);
   padding: 30rpx 28rpx 34rpx;
-  color: #FFFFFF;
+  color: var(--card);
 }
 
 .wt-hero-top {
@@ -82,7 +82,7 @@
   line-height: 84rpx;
   text-align: center;
   border-radius: 999rpx;
-  background: #FFFFFF;
+  background: var(--card);
   color: var(--brand);
   font-size: 30rpx;
   font-weight: 600;
@@ -191,7 +191,7 @@
   align-items: center;
   justify-content: center;
   font-size: 24rpx;
-  color: #FFFFFF;
+  color: var(--card);
   flex-shrink: 0;
   margin-right: 18rpx;
 }

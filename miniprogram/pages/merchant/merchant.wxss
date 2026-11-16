@@ -15,7 +15,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #FFFFFF;
+  color: var(--card);
   font-size: 58rpx;
   font-weight: 700;
   background: linear-gradient(135deg, #0EA5E9, #4F7DF3 55%, #7C5CF0);

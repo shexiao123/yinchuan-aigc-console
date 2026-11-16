@@ -26,14 +26,14 @@
   font-weight: 700;
   color: #0B1F33;
   letter-spacing: 2rpx;
-  text-shadow: 0 1rpx 0 #FFFFFF, 0 0 2rpx #FFFFFF;
+  text-shadow: 0 1rpx 0 var(--card), 0 0 2rpx var(--card);
 }
 
 .detail-cover-sub {
   font-size: 24rpx;
   color: #23405E;
   margin-top: 12rpx;
-  text-shadow: 0 1rpx 0 #FFFFFF, 0 0 2rpx #FFFFFF;
+  text-shadow: 0 1rpx 0 var(--card), 0 0 2rpx var(--card);
 }
 
 .detail-cover-mark {
@@ -334,7 +334,7 @@
 
 .review-reply {
   margin-top: 14rpx;
-  background: #F4F8FE;
+  background: #F5EEE2;
   border-radius: 14rpx;
   padding: 16rpx 18rpx;
 }

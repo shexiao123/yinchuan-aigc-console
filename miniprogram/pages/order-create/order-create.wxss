@@ -156,7 +156,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: #F4F8FE;
+  background: #F5EEE2;
   border-radius: 16rpx;
   padding: 22rpx 24rpx;
 }

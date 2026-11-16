@@ -248,7 +248,7 @@
   position: absolute;
   top: 0; left: 0; right: 0;
   height: 1rpx;
-  background: linear-gradient(90deg, #FFFFFF, #22D3EE, #FFFFFF);
+  background: linear-gradient(90deg, var(--card), #22D3EE, var(--card));
 }
 
 .viz-head {

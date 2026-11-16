@@ -78,7 +78,7 @@
   color: var(--ink-2);
   margin-right: 14rpx;
   flex-shrink: 0;
-  background: #F3F8FF;
+  background: #F7F1E6;
 }
 
 .filter-chip-active {

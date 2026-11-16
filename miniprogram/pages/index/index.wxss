@@ -68,18 +68,18 @@
   align-items: center;
   padding: 0 40rpx;
   overflow: hidden;
-  background: #F5F9FF;
+  background: var(--bg);
 }
 
-/* 蓝色科技动态背景：三档主题统一为浅蓝实色，与网页端首屏一致 */
-.banner-amber { background: linear-gradient(120deg, #F2F8FF 0%, #D8EAFF 100%); }
-.banner-olive { background: linear-gradient(120deg, #EAF7FF 0%, #CDEBFF 100%); }
-.banner-rose { background: linear-gradient(120deg, #F0F4FF 0%, #DDE7FF 100%); }
+/* 暖调背景：三档主题统一为米色实色，图片加载失败也不会露出冷蓝 */
+.banner-amber { background: linear-gradient(120deg, #FBF1E2 0%, #F0DCC0 100%); }
+.banner-olive { background: linear-gradient(120deg, #F7F2E6 0%, #E7DCC6 100%); }
+.banner-rose { background: linear-gradient(120deg, #FBF0EA 0%, #EFD9CE 100%); }
 
 .tech-motion {
   position: absolute; left: 0; top: 0; right: 0; bottom: 0; z-index: 0;
   overflow: hidden;
-  background: linear-gradient(120deg, #F7FBFF 0%, #E4F0FF 55%, #C7DFFF 100%);
+  background: linear-gradient(120deg, #FDF7ED 0%, #F5E9D6 55%, #EBD9BE 100%);
 }
 /* 整幅科技底图（最底层）：给画面「面」与色彩层次，动画层叠在其上 */
 .tech-stage-img {
@@ -202,7 +202,7 @@
   color: #0B1F33;
   letter-spacing: 2rpx;
   /* 细白描边而不是半透明蒙层：插图保持全幅实色清晰 */
-  text-shadow: 0 1rpx 0 #FFFFFF, 0 0 2rpx #FFFFFF;
+  text-shadow: 0 1rpx 0 var(--card), 0 0 2rpx var(--card);
 }
 
 .banner-sub {
@@ -210,7 +210,7 @@
   color: #23405E;
   margin-top: 12rpx;
   max-width: 460rpx;
-  text-shadow: 0 1rpx 0 #FFFFFF, 0 0 2rpx #FFFFFF;
+  text-shadow: 0 1rpx 0 var(--card), 0 0 2rpx var(--card);
 }
 
 /* 右下角全息读数：实色白底 + 冷蓝细边，不叠模糊、不发灰 */
@@ -221,7 +221,7 @@
   z-index: 2;
   font-size: 18rpx;
   color: #0B6F7A;
-  background: #FFFFFF;
+  background: var(--card);
   border: 1rpx solid rgba(47, 107, 234, .24);
   border-radius: 999rpx;
   padding: 6rpx 14rpx;
@@ -782,7 +782,7 @@
   box-sizing: border-box;
   margin: 20rpx 0 0;
   padding: 0 16rpx 0 8rpx;
-  background: #F3F8FF;
+  background: #F7F1E6;
   border: 1rpx solid rgba(79, 125, 243, .14);
   border-radius: 999rpx;
   box-shadow: 0 2rpx 12rpx rgba(15, 23, 42, .05);
@@ -795,7 +795,7 @@
   padding: 8rpx 16rpx;
   border-radius: 999rpx;
   background: linear-gradient(120deg, #0EA5E9, #4F7DF3 58%, #7C5CF0);
-  color: #FFFFFF;
+  color: var(--card);
   font-size: 22rpx;
   font-weight: 700;
 }

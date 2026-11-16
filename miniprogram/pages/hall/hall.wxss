@@ -107,7 +107,7 @@
 .cat-chip.on {
   background: var(--brand);
   border-color: var(--brand);
-  color: #FFFFFF;
+  color: var(--card);
   font-weight: 600;
 }
 
@@ -340,7 +340,7 @@
   padding: 8rpx 22rpx;
   border-radius: 999rpx;
   background: var(--brand);
-  color: #FFFFFF;
+  color: var(--card);
   font-size: 23rpx;
   font-weight: 600;
 }

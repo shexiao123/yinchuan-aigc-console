@@ -1,6 +1,7 @@
 .profile-head {
   padding: 36rpx 28rpx 30rpx;
-  background: linear-gradient(150deg, #E8B27A 0%, #2F6BEA 60%, #1D4FB8 100%);
+  /* 暖调头部：深焦糖 → 浅驼色，白字对比度够；不再用暖橙接冷蓝那种半冷半暖的过渡 */
+  background: linear-gradient(150deg, #B57A3C 0%, #C99A5E 55%, #A9682C 100%);
 }
 
 .profile-row {
@@ -41,7 +42,7 @@
 }
 
 .profile-btn {
-  background: #FFFFFF;
+  background: var(--card);
   color: var(--brand-deep);
   flex-shrink: 0;
 }

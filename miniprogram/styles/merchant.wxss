@@ -2,7 +2,7 @@
 .card {
   margin: 24rpx 28rpx;
   padding: 28rpx;
-  background: #FFFFFF;
+  background: var(--card);
   border-radius: 24rpx;
   box-shadow: 0 2rpx 16rpx rgba(15, 23, 42, .06);
 }
@@ -41,7 +41,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #FFFFFF;
+  color: var(--card);
   font-size: 42rpx;
   font-weight: 700;
   background: linear-gradient(135deg, #0EA5E9, #4F7DF3 55%, #7C5CF0);
@@ -63,7 +63,7 @@
 .task-card {
   padding: 26rpx;
   margin-bottom: 20rpx;
-  background: #FFFFFF;
+  background: var(--card);
   border-radius: 22rpx;
   box-shadow: 0 2rpx 16rpx rgba(15, 23, 42, .05);
 }
@@ -90,7 +90,7 @@
   line-height: 88rpx;
   border-radius: 18rpx;
   background: linear-gradient(120deg, #0EA5E9, #4F7DF3 58%, #7C5CF0);
-  color: #FFFFFF;
+  color: var(--card);
   font-size: 29rpx;
   font-weight: 700;
   border: none;
@@ -101,7 +101,7 @@
   height: 84rpx;
   line-height: 84rpx;
   border-radius: 18rpx;
-  background: #FFFFFF;
+  background: var(--card);
   color: #0284C7;
   font-size: 28rpx;
   border: 1rpx solid var(--line);

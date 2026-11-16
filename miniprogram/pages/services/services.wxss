@@ -151,7 +151,7 @@
   margin: 8rpx 0 20rpx;
   padding: 40rpx 32rpx;
   border-radius: 28rpx;
-  background: linear-gradient(120deg, #FFFFFF 0%, #F5F9FF 56%, #F8F5FF 100%);
+  background: linear-gradient(120deg, var(--card) 0%, var(--bg) 56%, #F8F5FF 100%);
   border: 2rpx solid rgba(79, 125, 243, .22);
   box-shadow: 0 12rpx 32rpx rgba(35, 72, 140, .07);
 }
@@ -161,7 +161,7 @@
   border-radius: 999rpx;
   font-size: 22rpx;
   font-weight: 700;
-  color: #FFFFFF;
+  color: var(--card);
   background: linear-gradient(100deg, #22A6E8, #7C5CF0);
 }
 .int-title {
@@ -187,7 +187,7 @@
   border-radius: 999rpx;
   font-size: 22rpx;
   color: #3D5A8A;
-  background: #FFFFFF;
+  background: var(--card);
   border: 2rpx solid rgba(79, 125, 243, .2);
 }
 .int-actions {
@@ -202,11 +202,11 @@
   border-radius: 16rpx;
   font-size: 27rpx;
   color: #4F7DF3;
-  background: #FFFFFF;
+  background: var(--card);
   border: 2rpx solid rgba(79, 125, 243, .35);
 }
 .int-btn-main {
-  color: #FFFFFF;
+  color: var(--card);
   background: linear-gradient(100deg, #22A6E8, #7C5CF0);
   border: none;
 }

@@ -4,22 +4,23 @@
    本主题为原创实现，未使用任何第三方皮肤插件的代码或素材。 */
 
 page {
+  /* 暖调商业版：米白底 + 暖白卡 + 暖棕分割线；电光蓝只做按钮与强调，不做大面积铺底 */
   --brand: #2F6BEA;
   --brand-deep: #1D4FB8;
-  --brand-soft: #E8F1FF;
-  --ink: #10233F;
-  --ink-2: #4A6285;
-  --ink-3: #8397B4;
-  --line: #DCE8F8;
-  --bg: #F5F9FF;
-  --card: #FFFFFF;
+  --brand-soft: #FBEFD9;
+  --ink: #2A2018;
+  --ink-2: #6B5A45;
+  --ink-3: #9C8A72;
+  --line: #EADDC8;
+  --bg: #FAF5EC;
+  --card: #FFFDF9;
   --cyan: #0AA5B4;
-  --cyan-soft: #E2F7F8;
+  --cyan-soft: #E4F4F0;
   --violet: #6C5CE0;
   --olive: #0F8A7E;
   --rose: #7C5CE0;
-  --shadow: 0 2rpx 16rpx rgba(30, 74, 140, 0.07);
-  --shadow-lg: 0 8rpx 32rpx rgba(30, 74, 140, 0.12);
+  --shadow: 0 2rpx 16rpx rgba(120, 90, 60, 0.08);
+  --shadow-lg: 0 8rpx 32rpx rgba(120, 90, 60, 0.14);
   --font-hud: 'DIN Alternate', 'Bahnschrift', 'Cascadia Mono', Consolas, monospace;
 
   background: var(--bg);
@@ -149,7 +150,7 @@ view, text, button, input, textarea, scroll-view, swiper, image {
 }
 
 .btn-ghost {
-  background: #FFFFFF;
+  background: var(--card);
   color: var(--brand);
   border: 2rpx solid var(--brand-soft);
 }
@@ -304,7 +305,7 @@ view, text, button, input, textarea, scroll-view, swiper, image {
 .input,
 .textarea {
   width: 100%;
-  background: #F4F8FE;
+  background: #F5EEE2;
   border-radius: 16rpx;
   padding: 22rpx 24rpx;
   font-size: 28rpx;
@@ -383,7 +384,7 @@ view, text, button, input, textarea, scroll-view, swiper, image {
   left: 0;
   right: 0;
   bottom: 0;
-  background: #FFFFFF;
+  background: var(--card);
   border-top: 1rpx solid var(--line);
   padding: 20rpx 28rpx calc(20rpx + env(safe-area-inset-bottom));
   display: flex;

@@ -2,7 +2,7 @@
   display: flex;
   flex-direction: column;
   height: 100vh;
-  background: #F5F9FD;
+  background: var(--bg);
   box-sizing: border-box;
 }
 
@@ -20,11 +20,11 @@
 .group-head {
   display: flex; align-items: center; justify-content: space-between; gap: 16rpx;
   padding: 22rpx 24rpx;
-  background: #fff; border-bottom: 1rpx solid #E7EEF6;
+  background: #fff; border-bottom: 1rpx solid var(--line);
 }
 .group-head-left { display: flex; flex-direction: column; gap: 6rpx; min-width: 0; }
 .group-head-name { font-size: 30rpx; font-weight: 700; color: #0B1F33; }
-.group-head-sub { font-size: 22rpx; color: #61738A; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.group-head-sub { font-size: 22rpx; color: var(--ink-2); overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .group-live {
   display: flex; align-items: center; gap: 8rpx; flex: 0 0 auto;
   font-size: 21rpx; font-weight: 700; color: #0E8F7E;
@@ -36,7 +36,7 @@
 .msg-tip { text-align: center; margin: 8rpx 0 26rpx; }
 .msg-tip text {
   font-size: 22rpx; color: #7A8BA0; line-height: 1.6;
-  background: #FFFFFF; border: 1rpx solid #E7EEF6;
+  background: var(--card); border: 1rpx solid var(--line);
   border-radius: 12rpx; padding: 12rpx 20rpx;
 }
 .msg-bottom { height: 12rpx; }
@@ -53,7 +53,7 @@
 .msg-row-mine .msg-body { align-items: flex-end; }
 .msg-sender { font-size: 21rpx; color: #7A8BA0; margin-bottom: 6rpx; }
 .msg-bubble {
-  background: #fff; border: 1rpx solid #E7EEF6;
+  background: #fff; border: 1rpx solid var(--line);
   border-radius: 20rpx 20rpx 20rpx 6rpx;
   padding: 18rpx 22rpx;
   box-shadow: 0 8rpx 20rpx -16rpx rgba(20,60,120,.6);
@@ -70,19 +70,19 @@
 .msg-sys {
   width: 100%; text-align: center;
   font-size: 22rpx; line-height: 1.7; color: #7A8BA0;
-  background: #FFFFFF; border: 1rpx solid #E7EEF6;
+  background: var(--card); border: 1rpx solid var(--line);
   border-radius: 12rpx; padding: 14rpx 20rpx; box-sizing: border-box;
 }
 
 .input-bar {
   display: flex; align-items: center; gap: 14rpx;
   padding: 16rpx 20rpx; background: #fff;
-  border-top: 1rpx solid #E7EEF6;
+  border-top: 1rpx solid var(--line);
 }
-.input-bar-login { justify-content: space-between; font-size: 24rpx; color: #61738A; }
+.input-bar-login { justify-content: space-between; font-size: 24rpx; color: var(--ink-2); }
 .input-bar-field {
   flex: 1; min-width: 0;
-  background: #F4F8FC; border: 1rpx solid #E3EBF4; border-radius: 36rpx;
+  background: #F5EEE2; border: 1rpx solid var(--line); border-radius: 36rpx;
   padding: 16rpx 24rpx; font-size: 26rpx; color: #0B1F33;
 }
 .input-placeholder { color: #A6B4C4; }

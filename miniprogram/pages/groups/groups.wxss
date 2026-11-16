@@ -1,6 +1,6 @@
 .groups-page {
   min-height: 100vh;
-  background: #F5F9FD;
+  background: var(--bg);
   padding: 24rpx 24rpx 60rpx;
   box-sizing: border-box;
 }
@@ -26,7 +26,7 @@
 }
 .groups-head-left { display: flex; flex-direction: column; gap: 6rpx; }
 .groups-head-title { font-size: 40rpx; font-weight: 700; color: #0B1F33; }
-.groups-head-sub { font-size: 24rpx; color: #61738A; }
+.groups-head-sub { font-size: 24rpx; color: var(--ink-2); }
 .groups-create {
   margin: 0;
   padding: 0 26rpx;
@@ -41,7 +41,7 @@
 .groups-list { display: flex; flex-direction: column; gap: 20rpx; }
 .group-item {
   background: #fff;
-  border: 1rpx solid #E7EEF6;
+  border: 1rpx solid var(--line);
   border-top: 6rpx solid #0EA5E9;
   border-radius: 20rpx;
   padding: 24rpx;
@@ -53,9 +53,9 @@
   display: flex; align-items: center; justify-content: center;
   border-radius: 20rpx; font-size: 38rpx;
 }
-.group-item-count { font-size: 22rpx; color: #61738A; background: #F4F7FB; border-radius: 24rpx; padding: 6rpx 16rpx; }
+.group-item-count { font-size: 22rpx; color: var(--ink-2); background: #F5EEE2; border-radius: 24rpx; padding: 6rpx 16rpx; }
 .group-item-name { font-size: 32rpx; font-weight: 700; color: #0B1F33; margin-bottom: 8rpx; }
-.group-item-desc { font-size: 25rpx; line-height: 1.6; color: #61738A; }
+.group-item-desc { font-size: 25rpx; line-height: 1.6; color: var(--ink-2); }
 .group-item-last {
   margin-top: 18rpx; padding-top: 18rpx;
   border-top: 1rpx solid #EEF2F7;
@@ -68,8 +68,8 @@
 .groups-login {
   display: flex; align-items: center; justify-content: space-between; gap: 16rpx;
   margin-top: 30rpx; padding: 24rpx;
-  background: #fff; border: 1rpx solid #E7EEF6; border-radius: 18rpx;
-  font-size: 24rpx; color: #61738A;
+  background: #fff; border: 1rpx solid var(--line); border-radius: 18rpx;
+  font-size: 24rpx; color: var(--ink-2);
 }
 
 .modal-mask {
@@ -87,7 +87,7 @@
 .modal-label { font-size: 25rpx; font-weight: 600; color: #4A5B6E; margin: 20rpx 0 10rpx; }
 .modal-input {
   width: 100%; box-sizing: border-box;
-  background: #F6F9FD; border: 1rpx solid #E3EBF4; border-radius: 14rpx;
+  background: #F7F1E6; border: 1rpx solid var(--line); border-radius: 14rpx;
   padding: 18rpx 20rpx; font-size: 27rpx; color: #0B1F33;
 }
 .modal-textarea { height: 150rpx; line-height: 1.6; }
