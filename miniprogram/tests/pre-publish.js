@@ -79,7 +79,7 @@ try {
 if (proj.appid === 'touristappid' || !proj.appid) {
   error('当前是游客 AppID —— 连模拟器都打不开，更无法上传/提审')
 } else if (rel.knownTestAppid && proj.appid === rel.knownTestAppid) {
-  error(`当前是开发者工具测试号（${proj.appid}）：只能跑模拟器，不能上传体验版 / 真机预览 / 提审发布`)
+  error(`当前是小程序测试号（${proj.appid}）：可上传开发版、可真机预览，但公众平台后台是沙箱页，没有版本管理/提交审核/发布入口，无法正式上线`)
 } else if (!rel.officialAppidConfirmed) {
   error(`AppID ${proj.appid} 尚未确认为正式企业 AppID（填入自有 AppID 后运行 node tools/confirm-release.js）`)
 } else {

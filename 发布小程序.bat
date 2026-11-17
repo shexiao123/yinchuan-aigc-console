@@ -30,8 +30,9 @@ echo  [1/6] 发布资格预检...
 node "%~dp0tools\check-release.js"
 if errorlevel 2 (
   echo.
-  echo   当前 AppID 是开发者工具分配的测试号，只能跑模拟器。
-  echo   上传体验版 / 提审发布需要你自己的小程序 AppID：
+  echo   当前 AppID 是小程序测试号。实测可上传开发版、可真机预览，
+  echo   但公众平台后台是沙箱页，没有提交审核 / 发布入口，无法正式上线。
+  echo   要正式上线，必须换成你自己注册的企业主体小程序 AppID：
   echo.
   echo     1. 打开 https://mp.weixin.qq.com 注册小程序（建议企业主体）
   echo     2. 开发管理 - 开发设置 - 复制 AppID

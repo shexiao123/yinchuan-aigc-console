@@ -4,5 +4,13 @@
   "demoMode": true,
   "demoNotice": "演示记账：保证金冻结、违约金、分账、退款、提现均在本机记账，不产生真实资金往来",
   "knownTestAppid": "wx4b4167c078603e6d",
-  "note": "knownTestAppid 是微信开发者工具分配的测试号，不能上传体验版、不能提审发布。填入自己注册的企业小程序 AppID 后，运行 node tools/confirm-release.js 完成确认；演示记账要转真实交易须先接后端支付与分账资质，再把 demoMode 改为 false。"
+  "note": "knownTestAppid 是微信公众平台的「小程序测试号」（后台落点 /wxamp/wadevelopecode/sandbox，页面标题「小程序测试号」）。2026-11-17 实测：开发者工具 CLI upload 可成功上传 1.4MB 开发版、preview 可生成真机预览二维码；但该测试号后台没有「版本管理/提交审核/发布」入口，因此永远无法正式发布。必须换成自己注册的企业主体小程序 AppID 才能提审。填入后运行 node tools/confirm-release.js 完成确认；演示记账要转真实交易须先接后端支付与分账资质，再把 demoMode 改为 false。",
+  "lastUpload": {
+    "at": "2026-11-17 14:47",
+    "appid": "wx4b4167c078603e6d",
+    "version": "1.0.0",
+    "packageBytes": 1497551,
+    "result": "upload success（开发版，非体验版/正式版）",
+    "previewQr": "shots/mp-preview-qr.png"
+  }
 }
