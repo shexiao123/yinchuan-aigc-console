@@ -35,10 +35,32 @@ if (!arg) {
   process.exit(0)
 }
 
-// 校验格式：以 wx 开头，18 位（wx + 16 位十六进制）
+// 常见误填 1：原始 ID（gh_ 开头），公众号 / 小程序都有，但不是 AppID
+if (/^gh_/i.test(arg)) {
+  console.error('✗ 你填的是「原始 ID」（gh_ 开头），不是 AppID')
+  console.error('  原始 ID 是微信体系内部的账号标识，用于搜索/展示，开发者工具不认。')
+  console.error('')
+  console.error('  正确获取路径（务必登录【小程序】账号，不是公众号）：')
+  console.error('    https://mp.weixin.qq.com → 扫码登录')
+  console.error('    → 开发管理 → 开发设置 → 开发者 ID → 复制「AppID(小程序ID)」')
+  console.error('    格式：wx 开头共 18 位，例如 wx1234567890abcdef')
+  console.error('')
+  console.error('  你填的是：' + arg)
+  console.error('  原始 ID 在「设置 → 账号信息 → 原始 ID」，别把它当 AppID。')
+  process.exit(1)
+}
+
+// 常见误填 2：填了别的东西 / wx 开头但长度不对
 if (!/^wx[0-9a-fA-F]{16}$/.test(arg)) {
-  console.error('AppID 格式不对，应为 wx 开头共 18 位，例如 wx1234567890abcdef')
-  console.error('你填的是：' + arg)
+  console.error('✗ AppID 格式不对，应为 wx 开头共 18 位（wx + 16 位十六进制）')
+  console.error('  正确示例：wx1234567890abcdef')
+  console.error('  你填的是：' + arg)
+  console.error('')
+  if (/^wx/i.test(arg)) {
+    console.error('  注意：wx 开头但长度不对，可能是复制不全或带上了空格。')
+    console.error('  另外「公众号 AppID」也是 wx 开头，但不能用于小程序——')
+    console.error('  必须复制【小程序后台】开发设置里的 AppID。')
+  }
   process.exit(1)
 }
 

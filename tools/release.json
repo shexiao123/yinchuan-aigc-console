@@ -12,5 +12,13 @@
     "packageBytes": 1497551,
     "result": "upload success（开发版，非体验版/正式版）",
     "previewQr": "shots/mp-preview-qr.png"
-  }
+  },
+  "rejectedIds": [
+    {
+      "at": "2026-11-17 15:02",
+      "value": "gh_a4c1a9e43584",
+      "reason": "gh_ 开头是「原始 ID」（微信内部账号标识），不是小程序 AppID；开发者工具会因 AppID 不合法拒绝。未写入 project.config.json，配置保持原样。",
+      "need": "小程序后台 开发管理 → 开发设置 → 开发者 ID → AppID(小程序ID)，wx 开头 18 位"
+    }
+  ]
 }
