@@ -13,6 +13,16 @@
     "result": "upload success（开发版，非体验版/正式版）",
     "previewQr": "shots/mp-preview-qr.png"
   },
+  "lastUploadAttempt": {
+    "at": "2026-11-17 17:34",
+    "appid": "wx8ea3314d3d01ff86",
+    "version": "1.0.1",
+    "result": "blocked: 错误 登录用户不是该小程序的开发者 (code 10)",
+    "appidValid": true,
+    "reason": "服务端已查到该小程序并执行开发者权限校验；若 AppID 不存在或是公众号 AppID，会报「不存在此 AppID」。因此该 ID 是有效的小程序 AppID，但当前登录开发者工具的微信号不在其项目成员/开发者列表中。",
+    "pending": "用该小程序管理员微信重新登录开发者工具，或在小程序后台 成员管理 → 项目成员 把当前微信号加为开发者（加完必须退出并重新登录工具）。权限通过后重跑 upload。",
+    "officialAppidConfirmed": false
+  },
   "rejectedIds": [
     {
       "at": "2026-11-17 15:02",
