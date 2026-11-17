@@ -11,8 +11,14 @@
       <text class="budget">{{task.budgetText}}</text>
       <text class="deadline">{{task.deadline || '长期有效'}}</text>
     </view>
-    <view class="card-title">需求说明</view>
-    <view class="card-text">{{task.description || '商家暂未填写详细说明。'}}</view>
+    <view class="card-title">项目需求 <text class="card-title-tip" wx:if="{{task.reqCatName}}">{{task.reqCatName}}</text></view>
+    <view class="req-rows" wx:if="{{task.hasReqRows}}">
+      <view class="req-row" wx:for="{{task.reqRows}}" wx:key="label">
+        <text class="req-k">{{item.label}}</text>
+        <text class="req-v">{{item.value}}</text>
+      </view>
+    </view>
+    <view class="card-text" wx:else>{{task.description || task.requirement || '商家暂未填写详细说明。'}}</view>
   </view>
 
   <view class="card">

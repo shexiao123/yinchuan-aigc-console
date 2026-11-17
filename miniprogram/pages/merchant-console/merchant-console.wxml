@@ -165,9 +165,38 @@
           </picker>
         </view>
       </view>
-      <view class="field">
-        <text class="label">需求说明</text>
-        <textarea class="textarea" placeholder="交付物、规格、风格与时间节点写清楚" value="{{form.desc}}" data-field="desc" bindinput="onInput" />
+      <!-- 品类专属需求字段：按「任务分类」动态切换 -->
+      <view class="req-sec">
+        <view class="req-sec-head">
+          <text class="req-sec-title">{{reqCatName}} · 项目需求</text>
+          <text class="req-sec-tip">按分类自动生成</text>
+        </view>
+        <view class="req-field" wx:for="{{reqFields}}" wx:key="key">
+          <text class="req-label">{{item.label}}</text>
+          <input wx:if="{{item.type === 'input'}}" class="req-input"
+                 placeholder="{{item.placeholder}}" value="{{item.value}}"
+                 maxlength="{{item.maxlength || 100}}"
+                 data-idx="{{index}}" bindinput="onReqInput" />
+          <textarea wx:elif="{{item.type === 'textarea'}}" class="req-input req-textarea"
+                    placeholder="{{item.placeholder}}" value="{{item.value}}"
+                    maxlength="{{item.maxlength || 300}}" auto-height
+                    data-idx="{{index}}" bindinput="onReqInput" />
+          <picker wx:elif="{{item.type === 'picker'}}" range="{{item.options}}"
+                  value="{{item.optionIndex}}" data-idx="{{index}}" bindchange="onReqPicker">
+            <view class="req-pick">
+              <text class="{{item.value ? '' : 'req-placeholder'}}">{{item.value || item.placeholder}}</text>
+              <text class="req-caret">▾</text>
+            </view>
+          </picker>
+          <picker wx:elif="{{item.type === 'date'}}" mode="date"
+                  value="{{item.value}}" data-idx="{{index}}" bindchange="onReqDate">
+            <view class="req-pick">
+              <text class="{{item.value ? '' : 'req-placeholder'}}">{{item.value || item.placeholder}}</text>
+              <text class="req-caret">▾</text>
+            </view>
+          </picker>
+        </view>
+        <text class="req-error" wx:if="{{reqError}}">{{reqError}}</text>
       </view>
       <view class="field">
         <text class="label">上传参考视频（≤{{videoLimit}}MB）</text>
@@ -214,6 +243,9 @@
         <text class="task-budget">{{item.budgetText}}</text>
       </view>
       <view class="task-title ellipsis-2">{{item.title}}</view>
+      <view class="task-req" wx:if="{{item.reqBriefRows.length}}">
+        <text wx:for="{{item.reqBriefRows}}" wx:for-item="r" wx:key="label" class="task-req-chip">{{r.label}} · {{r.value}}</text>
+      </view>
       <view class="task-foot" wx:if="{{item.isLocal}}">{{item.applicantCount}} 人报名 · 点击查看进度并处理交付 ›</view>
     </view>
     <view class="empty" wx:if="{{!tasks.length}}">还没有发布任务，填好上面的表单点「发布任务」</view>

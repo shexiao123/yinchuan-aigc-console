@@ -15,65 +15,130 @@
 
 const api = require('./api')
 const wallet = require('./wallet')
+const reqTpl = require('./requirement-templates')
 
 const KEY = 'gy_demand_v1'
 const DEPOSIT_RATE = 0.1
 const DEPOSIT_MIN = 10000 // 100.00 元
 const FEE_RATE = 0.08 // 平台服务费，真实值以 settings.commission_rate 为准
 
+/* 演示需求也按「品类专属字段」填写：规范文本 `【标签】值` 逐行，
+   展示端 buildRows 会反解析成键值行；老页面读到的是一段可读需求。 */
 const DEMO = [
   {
     title: '银川葡萄酒庄园 · 品牌宣传片 3 分钟',
     categoryId: 3,
     categoryName: '品牌宣传片',
+    reqCatId: 3,
     budget: 680000,
     deadline: '7 天内',
-    requirement: '需要航拍葡萄园全景 + 酿酒车间特写，访谈 2 位酿酒师，成片 3 分钟，含字幕与配乐。',
+    requirement: [
+      '【成片时长】3 分钟',
+      '【拍摄内容】航拍葡萄园全景 + 酿酒车间特写',
+      '【脚本分镜】需服务方策划',
+      '【访谈人数】1-2 位',
+      '【字幕】中文字幕',
+      '【配乐】商用授权配乐',
+      '【交付格式】横竖双版本',
+      '【修改轮次】2 轮',
+      '【补充说明】需体现贺兰山东麓产区特色，成片用于展会大屏与官网。'
+    ].join('\n'),
     customerName: '贺兰山酒庄'
   },
   {
     title: '婚礼跟拍 · 双机位全天（10 月 26 日）',
     categoryId: 1,
     categoryName: '婚礼跟拍',
+    reqCatId: 1,
     budget: 320000,
     deadline: '3 天内定档',
-    requirement: '早上 7 点新娘家集合，全天跟拍至晚宴结束，需双机位，当天出 9 张精修。',
+    requirement: [
+      '【拍摄日期】2026-10-26',
+      '【拍摄地点】银川 · 新娘家 + 阅海宾馆宴会厅',
+      '【机位要求】双机位',
+      '【服务时长】全天 + 晚宴',
+      '【精修张数】9 张',
+      '【交付物】底片 + 精修 + 当日快剪',
+      '【风格倾向】纪实自然',
+      '【补充说明】早上 7 点新娘家集合，希望多记录自然互动，当天出 9 张精修。'
+    ].join('\n'),
     customerName: '马先生'
   },
   {
     title: '短视频代运营 · 每周 5 条口播',
     categoryId: 4,
     categoryName: '短视频剪辑',
+    reqCatId: 4,
     budget: 400000,
     deadline: '长期合作',
-    requirement: '竖屏口播剪辑，含动态字幕、封面设计与统一调色，每周 5 条，按月结算。',
+    requirement: [
+      '【视频条数】每周 5 条',
+      '【单条时长】60 秒',
+      '【画幅】竖屏 9:16',
+      '【动态字幕】需要',
+      '【封面设计】需要',
+      '【统一调色】需要',
+      '【素材来源】客户提供',
+      '【结算方式】按月结算',
+      '【补充说明】宁小杞食品品牌号，需统一片头片尾与字体规范，按月结算。'
+    ].join('\n'),
     customerName: '宁小杞食品'
   },
   {
     title: '电商主图与详情页 · 20 款枸杞产品',
     categoryId: 5,
     categoryName: '商业摄影',
+    reqCatId: 5,
     budget: 260000,
     deadline: '10 天内',
-    requirement: '棚拍静物，白底 5 张/款 + 场景图 2 张/款，含精修与详情页切图。',
+    requirement: [
+      '【产品款数】20 款枸杞产品',
+      '【每款张数】白底 + 场景 7 张',
+      '【拍摄方式】组合方案',
+      '【是否含精修】含精修',
+      '【详情页切图】需要',
+      '【交付格式】RAW + JPG',
+      '【商用授权】需要商用授权',
+      '【补充说明】棚拍静物，白底 5 张/款 + 场景图 2 张/款，需详情页切图。'
+    ].join('\n'),
     customerName: '中宁枸杞旗舰店'
   },
   {
     title: 'AI 生成 · 文旅海报套组 8 张',
     categoryId: 7,
     categoryName: 'AI 生成',
+    reqCatId: 7,
     budget: 90000,
     deadline: '5 天内',
-    requirement: '以西夏陵、镇北堡、沙湖为主题生成海报，需商用授权，含 2 轮修改。',
+    requirement: [
+      '【生成主题】西夏陵、镇北堡、沙湖文旅海报',
+      '【生成数量】8 张',
+      '【画幅尺寸】竖版海报',
+      '【视觉风格】国潮',
+      '【商用授权】需要商用授权',
+      '【含文字排版】需要',
+      '【修改轮次】2 轮',
+      '【补充说明】需适配线下展板与公众号头图两种版式，交付可编辑源文件。'
+    ].join('\n'),
     customerName: '宁夏文旅推广中心'
   },
   {
     title: '漫剧制作 · 12 集竖屏短剧整案',
     categoryId: 8,
     categoryName: '漫剧制作',
+    reqCatId: 8,
     budget: 1200000,
     deadline: '30 天内',
-    requirement: '剧本已定，需要分镜、画格、配音对接与成片剪辑，每集 90 秒。',
+    requirement: [
+      '【集数】12 集',
+      '【每集时长】90 秒',
+      '【剧本状态】剧本已定',
+      '【画风】国漫',
+      '【配音】需配音对接',
+      '【交付范围】整案到成片',
+      '【更新节奏】按周更新',
+      '【补充说明】需要分镜、画格、配音对接与成片剪辑，人物设定需保持跨集一致。'
+    ].join('\n'),
     customerName: '西夏幻影工作室'
   }
 ]
@@ -101,7 +166,23 @@ function save(d) {
 /** 首次进入灌入演示需求，之后以用户自己的数据为准 */
 function seed() {
   const d = load()
-  if (d.items.length) return d
+  if (d.items.length) {
+    // 一次性升级：把早期只有纯文本 requirement 的演示项换成规范文本，
+    // 只匹配演示 id（L1001~L1006），绝不改动用户自己发布的需求。
+    if (!d.reqMigrated) {
+      DEMO.forEach((demo, i) => {
+        const old = d.items.filter((x) => String(x.id) === 'L' + (1001 + i))[0]
+        if (old && !old.reqCatId) {
+          old.requirement = demo.requirement
+          old.reqCatId = demo.reqCatId
+          old.reqCatName = demo.categoryName
+        }
+      })
+      d.reqMigrated = true
+      save(d)
+    }
+    return d
+  }
   const now = Date.now()
   DEMO.forEach((x, i) => {
     d.items.push({
@@ -114,6 +195,7 @@ function seed() {
     })
   })
   d.seq = 1001 + DEMO.length
+  d.reqMigrated = true
   save(d)
   return d
 }
@@ -147,6 +229,8 @@ function decorate(x) {
     completed: { text: '已完成', tone: 'done' },
     cancelled: { text: '已取消', tone: 'cancelled' }
   }[x.status] || { text: x.status || '未知', tone: 'pending' }
+  const brief = reqTpl.briefRows(x, 2)
+  const rows = reqTpl.buildRows(x)
   return {
     ...x,
     statusText: st.text,
@@ -155,7 +239,12 @@ function decorate(x) {
     depositText: yuanText(depositOf(x.budget || x.amount)),
     modeText: x.mode || '远程交付',
     hoursText: hoursText(x),
-    timeText: (x.createdAt || x.created_at || '').slice(5, 16).replace('T', ' ')
+    timeText: (x.createdAt || x.created_at || '').slice(5, 16).replace('T', ' '),
+    // 结构化需求：新数据走 reqFields，老数据自动降级为「需求说明」单行
+    reqRows: rows,
+    reqBriefRows: brief.rows,
+    reqMoreCount: Math.max(0, rows.length - brief.rows.length),
+    hasReqRows: rows.length > 0
   }
 }
 
@@ -228,7 +317,12 @@ function publish(payload) {
     categoryName: payload.categoryName || '综合服务',
     budget,
     deadline: payload.deadline || '待沟通',
-    requirement: payload.requirement || '',
+    // 规范文本 `【标签】值` 逐行，云端/老页面读到的仍是一段可读需求
+    requirement: payload.requirement || payload.reqText || '',
+    // 结构化副本，仅本地池保存，供键值渲染
+    reqCatId: Number(payload.reqCatId) || Number(payload.categoryId) || 0,
+    reqCatName: payload.reqCatName || payload.categoryName || '',
+    reqFields: payload.reqFields || null,
     customerName: payload.customerName || '我',
     status: 'open',
     isLocal: true,

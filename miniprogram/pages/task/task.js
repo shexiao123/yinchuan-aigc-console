@@ -1,5 +1,6 @@
 const merchant = require('../../utils/merchant')
 const chain = require('../../utils/taskchain')
+const reqTpl = require('../../utils/requirement-templates')
 
 Page({
   data: {
@@ -55,6 +56,12 @@ Page({
           ...t,
           timeText: String(t.at || '').slice(5, 16).replace('T', ' ')
         }))
+        // 云端任务没有 decorate，这里统一补齐结构化需求行
+        if (!task.hasReqRows) {
+          const rows = reqTpl.buildRows(task)
+          task.reqRows = rows
+          task.hasReqRows = rows.length > 0
+        }
       }
       const owner = local && !!chain.getMerchant()
       const selected = task && (task.selectedApplicant || '')

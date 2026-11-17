@@ -376,7 +376,9 @@ async function createOrder(payload) {
     service_id: payload.serviceId,
     provider_id: payload.providerId || null,
     title: payload.title,
-    requirement: payload.requirement || '',
+    // 品类需求模板把结构化字段汇总成 `【标签】值` 规范文本写回本列，
+    // 不新增云端列（orders 表结构未变），详情页再反解析成键值行。
+    requirement: payload.requirement || payload.reqText || '',
     shoot_date: payload.shootDate || null,
     budget: payload.budget || null,
     amount: payload.amount,

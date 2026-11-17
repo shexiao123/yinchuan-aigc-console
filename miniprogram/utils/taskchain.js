@@ -11,6 +11,7 @@
  * 说明：所有写操作先落本地池，云端由页面层尽力同步（失败不影响本地可用）。
  * 真实支付、后台审核、跨设备同步仍需服务端，本地池明确标注「演示」。
  */
+const reqTpl = require('./requirement-templates')
 const KEY = 'gy_taskchain_v1'
 
 const STATUS = {
@@ -166,6 +167,8 @@ function persistVideo(tempFilePath, tag) {
 
 function decorate(t) {
   const st = STATUS[t.status] || STATUS.open
+  const rows = reqTpl.buildRows(t)
+  const brief = reqTpl.briefRows(t, 2)
   return {
     ...t,
     isLocal: true,
@@ -177,7 +180,11 @@ function decorate(t) {
     deliveryUrl: t.deliveryVideoPath || '',
     merchantName: t.merchantName || '我的店铺',
     dateText: String(t.createdAt || '').slice(0, 10),
-    applicantCount: (t.applications || []).length
+    applicantCount: (t.applications || []).length,
+    reqRows: rows,
+    reqBriefRows: brief.rows,
+    reqMoreCount: Math.max(0, rows.length - brief.rows.length),
+    hasReqRows: rows.length > 0
   }
 }
 
@@ -200,8 +207,12 @@ function publishTask(payload) {
   const t = {
     id: nextId(state, 'task'),
     title,
-    description: String(p.description || '').trim().slice(0, 2000),
-    category_slug: String(p.category_slug || '').trim(),
+    // 规范文本写回原 description 字段，保证云端商家任务/老页面仍可读
+    description: String(p.description || p.reqText || '').trim().slice(0, 2000),
+    category_slug: String(p.category_slug || p.reqCategorySlug || '').trim(),
+    reqCatId: Number(p.reqCatId) || 0,
+    reqCatName: String(p.reqCatName || '').trim(),
+    reqFields: p.reqFields || null,
     budget: Math.max(0, Math.round(Number(p.budget) || 0)),
     deadline: p.deadline || '',
     referenceVideoPath: p.videoTempPath ? persistVideo(p.videoTempPath, 'ref') : '',

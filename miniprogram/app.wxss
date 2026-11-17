@@ -396,3 +396,130 @@ view, text, button, input, textarea, scroll-view, swiper, image {
 .action-bar-spacer {
   height: 140rpx;
 }
+
+/* ---------------- 品类需求模板（动态字段 / 结构化展示） ----------------
+   三个发布页（demand-publish / merchant-console / order-create）与三个展示端
+   （hall / task / order-detail）共用这一套类，避免各页重复写样式。 */
+
+/* 放在各页面已有 .card 内部，不另起一层卡片，避免双层边框 */
+.req-sec {
+  margin-top: 8rpx;
+  padding: 18rpx 0 4rpx;
+  border-top: 1rpx solid var(--line);
+}
+
+.req-sec-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding-bottom: 6rpx;
+}
+
+.req-sec-title {
+  font-size: 27rpx;
+  font-weight: 650;
+  color: var(--ink);
+}
+
+.req-sec-tip {
+  font-size: 21rpx;
+  color: var(--ink-3);
+}
+
+.req-field {
+  padding: 22rpx 0;
+  border-bottom: 1rpx solid var(--line);
+}
+
+.req-field:last-child {
+  border-bottom: none;
+}
+
+.req-label {
+  display: block;
+  font-size: 23rpx;
+  color: var(--ink-2);
+  margin-bottom: 12rpx;
+}
+
+.req-input {
+  width: 100%;
+  min-height: 56rpx;
+  font-size: 27rpx;
+  color: var(--ink);
+}
+
+.req-textarea {
+  min-height: 120rpx;
+  line-height: 1.6;
+}
+
+.req-pick {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 56rpx;
+  font-size: 27rpx;
+  color: var(--ink);
+}
+
+.req-placeholder {
+  color: var(--ink-3);
+}
+
+.req-caret {
+  font-size: 20rpx;
+  color: var(--ink-3);
+}
+
+.req-error {
+  display: block;
+  padding: 14rpx 0 4rpx;
+  font-size: 22rpx;
+  color: #C2402F;
+}
+
+/* 结构化键值行：详情页 / 大厅卡片 */
+.req-rows {
+  margin-top: 6rpx;
+}
+
+.req-row {
+  display: flex;
+  align-items: flex-start;
+  padding: 12rpx 0;
+  border-bottom: 1rpx dashed var(--line);
+}
+
+.req-row:last-child {
+  border-bottom: none;
+}
+
+.req-k {
+  flex: 0 0 168rpx;
+  font-size: 23rpx;
+  color: var(--ink-3);
+  line-height: 1.6;
+}
+
+.req-v {
+  flex: 1;
+  min-width: 0;
+  font-size: 25rpx;
+  color: var(--ink);
+  line-height: 1.6;
+  word-break: break-all;
+}
+
+.req-more {
+  padding: 10rpx 0 2rpx;
+  font-size: 22rpx;
+  color: var(--brand);
+}
+
+.card-title-tip {
+  margin-left: 10rpx;
+  font-size: 21rpx;
+  font-weight: 400;
+  color: var(--ink-3);
+}

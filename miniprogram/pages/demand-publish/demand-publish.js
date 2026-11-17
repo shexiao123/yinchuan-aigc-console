@@ -1,5 +1,7 @@
 const demand = require('../../utils/demand')
 const wallet = require('../../utils/wallet')
+const reqForm = require('../../utils/req-form')
+const reqTpl = require('../../utils/requirement-templates')
 
 const CATS = [
   { id: 1, name: '婚礼跟拍' },
@@ -14,8 +16,8 @@ const CATS = [
 
 const DEADLINES = ['3 天内', '7 天内', '15 天内', '30 天内', '长期合作']
 
-Page({
-  data: {
+Page(Object.assign({}, reqForm.methods, {
+  data: Object.assign({
     cats: CATS,
     catIdx: 0,
     deadlines: DEADLINES,
@@ -27,6 +29,10 @@ Page({
     submitting: false,
     balanceText: '0.00',
     canSubmit: false
+  }, reqForm.data()),
+
+  onLoad() {
+    this.setReqCategory(CATS[0].id)
   },
 
   onShow() {
@@ -40,34 +46,50 @@ Page({
     this.setData(patch, () => this.check())
   },
 
+  /** 切换品类：动态换成该品类的专属需求字段，同名项保留已填值 */
   onCatChange(e) {
-    this.setData({ catIdx: Number(e.detail.value) })
+    const idx = Number(e.detail.value)
+    this.setData({ catIdx: idx }, () => {
+      this.setReqCategory(CATS[idx].id)
+      this.check()
+    })
   },
 
   onDeadlineChange(e) {
     this.setData({ deadlineIdx: Number(e.detail.value) })
   },
 
+  /** mixin 在字段变化时回调，用于刷新底部按钮可用态 */
+  onReqChange() {
+    this.check()
+  },
+
   check() {
-    const ok = this.data.title.trim().length >= 4 && Number(this.data.budget) >= 100 && this.data.requirement.trim().length >= 6
-    this.setData({ canSubmit: ok })
+    const basic = this.data.title.trim().length >= 4 && Number(this.data.budget) >= 100
+    const reqOk = !reqTpl.validate(this.data.reqFields || [])
+    this.setData({ canSubmit: basic && reqOk })
   },
 
   submit() {
     if (this.data.submitting) return
     const title = this.data.title.trim()
     const budget = Number(this.data.budget)
-    const requirement = this.data.requirement.trim()
+    const err = this.reqValidate()
     if (title.length < 4) return wx.showToast({ title: '标题至少 4 个字', icon: 'none' })
     if (!(budget >= 100)) return wx.showToast({ title: '预算不能低于 100 元', icon: 'none' })
-    if (requirement.length < 6) return wx.showToast({ title: '需求描述再写细一点', icon: 'none' })
+    if (err) return wx.showToast({ title: err, icon: 'none' })
 
+    const req = this.reqPayload()
     this.setData({ submitting: true })
     try {
       demand.publish({
         title,
         budget: Math.round(budget * 100),
-        requirement,
+        // 规范文本写回原 requirement 字段，云端/老页面读到的是可读需求
+        requirement: req.reqText,
+        reqCatId: req.reqCatId,
+        reqCatName: req.reqCatName,
+        reqFields: req.reqFields,
         deadline: DEADLINES[this.data.deadlineIdx],
         categoryId: CATS[this.data.catIdx].id,
         categoryName: CATS[this.data.catIdx].name,
@@ -84,4 +106,4 @@ Page({
       })
     }
   }
-})
+}))

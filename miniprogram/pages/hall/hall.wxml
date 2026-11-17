@@ -83,7 +83,25 @@
 
       <text class="d-sub">{{item.categoryName}} / {{item.modeText}} / {{item.deadline || '交期待沟通'}}</text>
 
-      <text class="d-req {{expanded === item.id ? 'd-req-full' : ''}}">{{item.requirement}}</text>
+      <!-- 结构化需求：新数据按品类键值行展示，老数据自动降级为纯文本 -->
+      <view class="req-rows" wx:if="{{item.hasReqRows}}">
+        <block wx:if="{{expanded === item.id}}">
+          <view class="req-row" wx:for="{{item.reqRows}}" wx:for-item="r" wx:key="label">
+            <text class="req-k">{{r.label}}</text>
+            <text class="req-v">{{r.value}}</text>
+          </view>
+        </block>
+        <block wx:else>
+          <view class="req-row" wx:for="{{item.reqBriefRows}}" wx:for-item="r" wx:key="label">
+            <text class="req-k">{{r.label}}</text>
+            <text class="req-v">{{r.value}}</text>
+          </view>
+        </block>
+        <text class="req-more" wx:if="{{item.reqMoreCount > 0}}">
+          {{expanded === item.id ? '点击收起' : '还有 ' + item.reqMoreCount + ' 项 · 点击展开'}}
+        </text>
+      </view>
+      <text wx:else class="d-req {{expanded === item.id ? 'd-req-full' : ''}}">{{item.requirement}}</text>
 
       <view class="d-foot">
         <view class="d-foot-left">

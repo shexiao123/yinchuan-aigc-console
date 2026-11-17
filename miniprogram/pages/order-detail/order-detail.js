@@ -1,5 +1,6 @@
 const api = require('../../utils/api')
 const { orderStatus, yuan, fromNow } = require('../../utils/util')
+const reqTpl = require('../../utils/requirement-templates')
 
 Page({
   data: {
@@ -45,6 +46,8 @@ Page({
       const uid = session.user.id
       const st = orderStatus(order.status)
       const timeline = Array.isArray(order.timeline) ? order.timeline : []
+      // 云端 orders 只存规范文本 `【标签】值`，这里反解析成结构化行
+      const reqRows = reqTpl.buildRows(order)
       // 是否已评价（决定按钮显示「写评价」还是「修改评价」）
       const existingReview = order.status === 'completed' ? await api.getReviewByOrder(order.id) : null
       this.setData({
@@ -55,7 +58,9 @@ Page({
           amountText: yuan(order.amount),
           feeText: yuan(order.platform_fee),
           timeText: fromNow(order.created_at),
-          timeline: timeline.map((t) => ({ ...t, timeText: fromNow(t.at) }))
+          timeline: timeline.map((t) => ({ ...t, timeText: fromNow(t.at) })),
+          reqRows,
+          hasReqRows: reqRows.length > 0
         },
         service,
         provider: provider ? { ...provider, initial: provider.nickname ? provider.nickname.charAt(0) : '影' } : null,

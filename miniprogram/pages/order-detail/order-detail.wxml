@@ -44,7 +44,14 @@
           <text class="spec-label">期望日期</text>
           <text class="spec-value">{{order.shoot_date}}</text>
         </view>
-        <view class="spec-row">
+        <!-- 结构化需求：云端只存规范文本，反解析后按品类键值行展示 -->
+        <view class="req-rows" wx:if="{{order.hasReqRows}}">
+          <view class="req-row" wx:for="{{order.reqRows}}" wx:key="label">
+            <text class="req-k">{{item.label}}</text>
+            <text class="req-v">{{item.value}}</text>
+          </view>
+        </view>
+        <view class="spec-row" wx:else>
           <text class="spec-label">需求描述</text>
           <text class="spec-value spec-value-wrap">{{order.requirement || '客户未填写额外要求'}}</text>
         </view>

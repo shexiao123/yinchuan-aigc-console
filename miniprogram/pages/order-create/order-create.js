@@ -1,9 +1,11 @@
 const api = require('../../utils/api')
 const media = require('../../utils/local-media')
 const { yuan, yuanShort, coverTheme } = require('../../utils/util')
+const reqForm = require('../../utils/req-form')
+const reqTpl = require('../../utils/requirement-templates')
 
-Page({
-  data: {
+Page(Object.assign({}, reqForm.methods, {
+  data: Object.assign({
     loading: true,
     submitting: false,
     serviceId: null,
@@ -22,7 +24,7 @@ Page({
     feeText: '0',
     dateError: '',
     formError: ''
-  },
+  }, reqForm.data()),
 
   onLoad(options) {
     const serviceId = Number((options && options.serviceId) || 0)
@@ -65,6 +67,20 @@ Page({
         amountText: yuan(service.price),
         feeText: yuan(fee),
         loading: false
+      }, () => {
+        // 品类由所属服务决定，用户下单时不需要再选
+        const catKey = service.category_id || service.categoryId || service.category_slug || 0
+        const resolved = reqTpl.resolve(catKey)
+        this.setReqCategory(resolved.id)
+        // 服务的标题/标签里往往带规格，预填到「补充说明」作为参考
+        const tags = (service.tags || []).join('、')
+        if (tags) {
+          const fields = (this.data.reqFields || []).slice()
+          const idx = fields.findIndex((f) => f.key === 'extra')
+          if (idx >= 0 && !fields[idx].value) {
+            this.setData({ ['reqFields[' + idx + '].value']: '服务包含：' + tags })
+          }
+        }
       })
     } catch (e) {
       this.setData({ loading: false })
@@ -79,10 +95,6 @@ Page({
   /** 发布方式：指定服务者 / 公开需求大厅抢单 */
   onModeChange(e) {
     this.setData({ publishMode: e.currentTarget.dataset.mode })
-  },
-
-  onRequirementInput(e) {
-    this.setData({ requirement: e.detail.value })
   },
 
   onDateChange(e) {
@@ -104,12 +116,19 @@ Page({
       this.setData({ formError: '请填写订单标题' })
       return
     }
+    const reqErr = this.reqValidate()
+    if (reqErr) {
+      this.setData({ formError: reqErr })
+      wx.showToast({ title: reqErr, icon: 'none' })
+      return
+    }
     const minAmount = (this.data.settings && this.data.settings.min_order_amount) || 0
     if (this.data.amount < minAmount) {
       this.setData({ formError: `该服务低于平台最低下单金额 ¥${yuanShort(minAmount)}` })
       return
     }
 
+    const req = this.reqPayload()
     this.setData({ submitting: true, formError: '' })
     try {
       const publishMode = this.data.publishMode
@@ -119,7 +138,8 @@ Page({
         serviceId: this.data.serviceId,
         providerId: assignedProviderId,
         title,
-        requirement: this.data.requirement.trim(),
+        // 规范文本写回云端 orders.requirement，不新增列
+        requirement: req.reqText,
         shootDate: this.data.shootDate || null,
         amount: this.data.amount,
         platformFee: this.data.platformFee,
@@ -137,4 +157,4 @@ Page({
       wx.showToast({ title: msg, icon: 'none' })
     }
   }
-})
+}))

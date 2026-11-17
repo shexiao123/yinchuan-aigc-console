@@ -1,6 +1,7 @@
 const merchant = require('../../utils/merchant')
 const api = require('../../utils/api')
 const chain = require('../../utils/taskchain')
+const reqForm = require('../../utils/req-form')
 
 const FALLBACK_CATS = [
   { name: '短视频剪辑', slug: 'short-video' },
@@ -11,8 +12,8 @@ const FALLBACK_CATS = [
   { name: '其他', slug: 'other' }
 ]
 
-Page({
-  data: {
+Page(Object.assign({}, reqForm.methods, {
+  data: Object.assign({
     loading: true,
     logged: false,
     shop: null,
@@ -44,7 +45,7 @@ Page({
     videoTempPath: '',
     videoSize: 0,
     submitting: false
-  },
+  }, reqForm.data()),
 
   onLoad() {
     this.init()
@@ -101,7 +102,7 @@ Page({
         payTxn: pendingOrder ? (pendingOrder.transaction_id || '') : '',
         payRemark: pendingOrder ? (pendingOrder.remark || '') : '',
         loading: false
-      })
+      }, () => this.syncReqCategory())
     } catch (e) {
       // 云端整体不可用时，仍要保证本地工作台可用
       this.setData({
@@ -115,8 +116,17 @@ Page({
         demoPaid: demoInfo.active,
         payInfo: demoInfo,
         loading: false
-      })
+      }, () => this.syncReqCategory())
     }
+  },
+
+  /** 品类可能来自云端或 FALLBACK，统一交给模板层按 slug/id/中文名解析 */
+  syncReqCategory() {
+    const cat = (this.data.categories || [])[this.data.catIndex] || {}
+    // 只在品类真正变化时重建字段，避免 onShow 反复刷新把用户已填内容清掉
+    if (this._reqCatKey && this._reqCatKey === (cat.slug || cat.name || cat.id)) return
+    this._reqCatKey = cat.slug || cat.name || cat.id
+    this.setReqCategory(cat)
   },
 
   currentPlanId() {
@@ -130,7 +140,11 @@ Page({
   },
 
   onCat(e) {
-    this.setData({ catIndex: Number(e.detail.value) })
+    const idx = Number(e.detail.value)
+    this.setData({ catIndex: idx }, () => {
+      this._reqCatKey = null
+      this.syncReqCategory()
+    })
   },
 
   onJoinPlan(e) {
@@ -369,11 +383,21 @@ Page({
       wx.showToast({ title: '任务标题至少 4 个字', icon: 'none' })
       return
     }
+    const err = this.reqValidate()
+    if (err) {
+      wx.showToast({ title: err, icon: 'none' })
+      return
+    }
     const cat = this.data.categories[this.data.catIndex] || {}
+    const req = this.reqPayload()
     const payload = {
       title: f.title,
-      description: f.desc,
-      category_slug: cat.slug || '',
+      // 规范文本写回原 description 字段，云端商家任务无需改表结构
+      description: req.reqText,
+      category_slug: cat.slug || req.reqCategorySlug || '',
+      reqCatId: req.reqCatId,
+      reqCatName: req.reqCatName,
+      reqFields: req.reqFields,
       budget: Math.round(Number(f.budget || 0) * 100),
       deadline: f.deadline || '',
       videoTempPath: this.data.videoTempPath,
@@ -419,6 +443,7 @@ Page({
       'form.title': '', 'form.budget': '', 'form.deadline': '', 'form.desc': '', 'form.videoUrl': '',
       videoTempPath: '', videoSize: 0, videoName: ''
     })
+    this.resetReqFields()
     await this.init()
     this.setData({ submitting: false })
   },
@@ -438,4 +463,4 @@ Page({
   onTask(e) {
     wx.navigateTo({ url: '/pages/task/task?id=' + e.currentTarget.dataset.id })
   }
-})
+}))

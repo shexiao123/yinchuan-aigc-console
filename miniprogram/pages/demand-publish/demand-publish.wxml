@@ -28,18 +28,38 @@
       />
     </view>
 
-    <view class="field">
-      <text class="field-label">需求描述</text>
-      <textarea
-        class="field-textarea"
-        placeholder="拍摄内容 / 成片时长 / 交付格式 / 修改轮次，写得越细接单越快"
-        value="{{requirement}}"
-        data-field="requirement"
-        bindinput="onInput"
-        maxlength="400"
-        auto-height
-      />
-      <text class="field-count">{{requirement.length}}/400</text>
+    <!-- 品类专属需求字段：按所选业务品类动态切换 -->
+    <view class="req-sec">
+      <view class="req-sec-head">
+        <text class="req-sec-title">{{reqCatName}} · 项目需求</text>
+        <text class="req-sec-tip">按项目类型生成</text>
+      </view>
+      <view class="req-field" wx:for="{{reqFields}}" wx:key="key">
+        <text class="req-label">{{item.label}}</text>
+        <input wx:if="{{item.type === 'input'}}" class="req-input"
+               placeholder="{{item.placeholder}}" value="{{item.value}}"
+               maxlength="{{item.maxlength || 100}}"
+               data-idx="{{index}}" bindinput="onReqInput" />
+        <textarea wx:elif="{{item.type === 'textarea'}}" class="req-input req-textarea"
+                  placeholder="{{item.placeholder}}" value="{{item.value}}"
+                  maxlength="{{item.maxlength || 300}}" auto-height
+                  data-idx="{{index}}" bindinput="onReqInput" />
+        <picker wx:elif="{{item.type === 'picker'}}" range="{{item.options}}"
+                value="{{item.optionIndex}}" data-idx="{{index}}" bindchange="onReqPicker">
+          <view class="req-pick">
+            <text class="{{item.value ? '' : 'req-placeholder'}}">{{item.value || item.placeholder}}</text>
+            <text class="req-caret">▾</text>
+          </view>
+        </picker>
+        <picker wx:elif="{{item.type === 'date'}}" mode="date"
+                value="{{item.value}}" data-idx="{{index}}" bindchange="onReqDate">
+          <view class="req-pick">
+            <text class="{{item.value ? '' : 'req-placeholder'}}">{{item.value || item.placeholder}}</text>
+            <text class="req-caret">▾</text>
+          </view>
+        </picker>
+      </view>
+      <text class="req-error" wx:if="{{reqError}}">{{reqError}}</text>
     </view>
 
     <view class="field field-row">

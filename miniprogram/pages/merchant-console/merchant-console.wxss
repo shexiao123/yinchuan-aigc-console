@@ -62,3 +62,5 @@
 /* 演示通道 + 任务列表补充 */
 .demo-btn { margin-top: 18rpx; background: #FFF4E2; color: #9A5B12; border: 1rpx solid #F0D9AE; }
 .task-foot { margin-top: 10rpx; font-size: 21rpx; color: var(--ink-3, #8A7A62); }
+.task-req { display: flex; flex-wrap: wrap; gap: 8rpx; margin-top: 12rpx; }
+.task-req-chip { max-width: 100%; padding: 4rpx 12rpx; border-radius: 8rpx; background: var(--brand-soft, #FBEFD9); color: #8A6640; font-size: 20rpx; line-height: 1.5; }
