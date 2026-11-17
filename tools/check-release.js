@@ -19,7 +19,9 @@ if (rel.demoMode) {
 }
 console.log('  [OK] 版本 ' + rel.version)
 if (rel.lastSubmitAttempt && /blocked/.test(rel.lastSubmitAttempt.result)) {
-  console.log('  [!] 平台侧提交审核被拦：' + rel.lastSubmitAttempt.rootCause)
-  console.log('      下一步：' + rel.lastSubmitAttempt.next)
+  console.log('  [!] 平台侧：' + rel.lastSubmitAttempt.result)
+  console.log('      服务类目已补齐（4 个全通过，主营「商业服务 > 摄影/扩印」）')
+  console.log('      当前：' + rel.lastSubmitAttempt.secondBlock.afterClick)
+  console.log('      主体：' + rel.lastSubmitAttempt.subject.backendDisplay)
 }
 process.exit(0)
