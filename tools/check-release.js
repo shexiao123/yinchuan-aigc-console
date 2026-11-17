@@ -21,7 +21,9 @@ console.log('  [OK] 版本 ' + rel.version)
 if (rel.lastSubmitAttempt && /blocked/.test(rel.lastSubmitAttempt.result)) {
   console.log('  [!] 平台侧：' + rel.lastSubmitAttempt.result)
   console.log('      服务类目已补齐（4 个全通过，主营「商业服务 > 摄影/扩印」）')
-  console.log('      当前：' + rel.lastSubmitAttempt.secondBlock.afterClick)
+  console.log('      当前：' + (rel.lastSubmitAttempt.filingForm
+    ? rel.lastSubmitAttempt.filingForm.remaining + '（二维码 ' + rel.lastSubmitAttempt.filingForm.faceVerifyQr + '）'
+    : rel.lastSubmitAttempt.secondBlock.afterClick))
   console.log('      主体：' + rel.lastSubmitAttempt.subject.backendDisplay)
 }
 process.exit(0)
