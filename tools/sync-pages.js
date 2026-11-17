@@ -20,6 +20,36 @@ const SRC = path.join(ROOT, 'webapp')
 const DST = path.join(ROOT, 'docs')
 const MANIFEST = path.join(DST, '.sync-manifest')
 
+// ---- 发布配置结构校验 ----
+// sync-pages 是收尾四步的第一步，必跑；在这里拦住坏 release.json，
+// 避免语法错误/字段缺失的配置被 commit + gh-sync 推到远端。
+function validateReleaseConfig() {
+  const cfg = path.join(__dirname, 'release.json')
+  let rel
+  try {
+    rel = JSON.parse(fs.readFileSync(cfg, 'utf8'))
+  } catch (e) {
+    console.error('✗ tools/release.json 解析失败：' + e.message)
+    console.error('  请先修好发布配置，再执行同步与提交。')
+    process.exit(1)
+  }
+  const required = ['version', 'officialAppidConfirmed', 'demoMode', 'knownTestAppid', 'rejectedIds']
+  const missing = required.filter((k) => !(k in rel))
+  if (missing.length) {
+    console.error('✗ tools/release.json 缺字段：' + missing.join(', '))
+    process.exit(1)
+  }
+  if (rel.lastSubmitAttempt) {
+    const sub = rel.lastSubmitAttempt
+    const subMissing = ['result', 'subject', 'secondBlock'].filter((k) => !(k in sub))
+    if (subMissing.length) {
+      console.error('✗ tools/release.json 的 lastSubmitAttempt 缺字段：' + subMissing.join(', '))
+      process.exit(1)
+    }
+  }
+}
+validateReleaseConfig()
+
 // docs/ 里不需要的目录（测试脚本不进站点）
 const SKIP_DIRS = new Set(['tests'])
 
