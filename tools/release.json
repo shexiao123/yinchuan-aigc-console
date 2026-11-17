@@ -1,17 +1,21 @@
 {
-  "version": "1.0.0",
-  "officialAppidConfirmed": false,
+  "version": "1.0.1",
+  "officialAppidConfirmed": true,
+  "officialAppid": "wx8ea3314d3d01ff86",
   "demoMode": true,
   "demoNotice": "演示记账：保证金冻结、违约金、分账、退款、提现均在本机记账，不产生真实资金往来",
   "knownTestAppid": "wx4b4167c078603e6d",
-  "note": "knownTestAppid 是微信公众平台的「小程序测试号」（后台落点 /wxamp/wadevelopecode/sandbox，页面标题「小程序测试号」）。2026-11-17 实测：开发者工具 CLI upload 可成功上传 1.4MB 开发版、preview 可生成真机预览二维码；但该测试号后台没有「版本管理/提交审核/发布」入口，因此永远无法正式发布。必须换成自己注册的企业主体小程序 AppID 才能提审。填入后运行 node tools/confirm-release.js 完成确认；演示记账要转真实交易须先接后端支付与分账资质，再把 demoMode 改为 false。",
+  "note": "knownTestAppid 是微信公众平台的「小程序测试号」（后台落点 /wxamp/wadevelopecode/sandbox，页面标题「小程序测试号」）。2026-11-17 实测：测试号可用 cli.bat upload 上传开发版、preview 可出真机预览二维码，但后台没有「版本管理/提交审核/发布」入口，永远无法正式发布。2026-11-17 17:51 已换为正式小程序 AppID 并用管理员微信重新登录开发者工具，1.0.1 上传成功且在公众平台「版本管理 → 开发版本」可见，故 officialAppidConfirmed 置 true。注意：这只是「账号可用」的确认，不等于已上线 —— 服务类目未补充导致提交审核被拦，ICP 备案未完成导致不能发布，demoMode=true 导致不能作为真实交易版本提审。演示记账转真实交易须先接后端支付与分账资质，再把 demoMode 改为 false。",
   "lastUpload": {
-    "at": "2026-11-17 14:47",
-    "appid": "wx4b4167c078603e6d",
-    "version": "1.0.0",
+    "at": "2026-11-17 17:51",
+    "appid": "wx8ea3314d3d01ff86",
+    "version": "1.0.1",
     "packageBytes": 1497551,
-    "result": "upload success（开发版，非体验版/正式版）",
-    "previewQr": "shots/mp-preview-qr.png"
+    "result": "upload success（正式小程序账号的开发版本，非体验版/正式版）",
+    "desc": "official-appid-after-admin-login-20261117",
+    "developer": "雾",
+    "previewQr": "shots/mp-preview-qr-official.png",
+    "verifiedInConsole": "版本管理 → 开发版本 1.0.1，提交时间 2026-11-17 17:51:46，提交审核按钮绿色可点"
   },
   "lastUploadAttempt": {
     "at": "2026-11-17 17:34",
@@ -19,9 +23,29 @@
     "version": "1.0.1",
     "result": "blocked: 错误 登录用户不是该小程序的开发者 (code 10)",
     "appidValid": true,
-    "reason": "服务端已查到该小程序并执行开发者权限校验；若 AppID 不存在或是公众号 AppID，会报「不存在此 AppID」。因此该 ID 是有效的小程序 AppID，但当前登录开发者工具的微信号不在其项目成员/开发者列表中。",
-    "pending": "用该小程序管理员微信重新登录开发者工具，或在小程序后台 成员管理 → 项目成员 把当前微信号加为开发者（加完必须退出并重新登录工具）。权限通过后重跑 upload。",
-    "officialAppidConfirmed": false
+    "reason": "服务端已查到该小程序并执行开发者权限校验；若 AppID 不存在或是公众号 AppID，会报「不存在此 AppID」。因此该 ID 是有效的小程序 AppID，但当时登录开发者工具的微信号不在其项目成员/开发者列表中。",
+    "resolved": "2026-11-17 17:51 用管理员微信重新登录开发者工具后重传成功；后台「添加开发者」显示已添加 1 个开发者。见 lastUpload。",
+    "officialAppidConfirmed": true
+  },
+  "lastSubmitAttempt": {
+    "at": "2026-11-17 17:54",
+    "version": "1.0.1",
+    "action": "公众平台 版本管理 → 提交审核",
+    "result": "blocked: 无法提交审核",
+    "officialMessage": "请先完成小程序基本资料填写后，方可提交审核，可参照小程序发布流程",
+    "rootCause": "服务类目未补充。账号设置页原文：「请先设置小程序类目 / 请先补充小程序服务类目，才能继续下一步，或前往账号注销」。",
+    "consoleState": {
+      "线上版本": "尚未提交线上版本",
+      "审核版本": "你暂无提交审核的版本或者版本已发布上线",
+      "开发版本": "1.0.1 已在列，绿色「提交审核」按钮可点",
+      "小程序基础信息": "已完成（山下有戏）",
+      "小程序类目": "未补充 ← 当前硬拦截",
+      "添加开发者": "已添加 1 个开发者",
+      "小程序备案": "未备案；官方说明「备案可与小程序代码开发并行，在小程序上架发布前完成即可」",
+      "微信认证": "未认证；官方说明「未完成微信认证不影响后续版本发布」"
+    },
+    "blockedAt": "服务类目页 添加类目 → 弹窗「添加类目」+ 二维码「请使用管理员微信扫码验证身份」，见 shots/mp-admin-verify-qr.png",
+    "next": "管理员微信扫码 → 选择服务类目（部分类目需资质材料）→ 设置主营类目 → 回版本管理重新提交审核 → 填审核表单 → 审核通过 → 发布（发布前须完成 ICP 备案）"
   },
   "rejectedIds": [
     {
