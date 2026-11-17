@@ -1,5 +1,6 @@
 const demand = require('../../utils/demand')
 const wallet = require('../../utils/wallet')
+const guarantee = require('../../utils/guarantee')
 
 const CATS = [
   { id: 0, name: '全部' },
@@ -53,10 +54,21 @@ Page({
       if (sortIdx === 2) {
         items = items.slice().sort((a, b) => String(b.createdAt || b.created_at || '').localeCompare(String(a.createdAt || a.created_at || '')))
       }
+      // 进入大厅时对每个我接的单做一次逾期判定（扣款在履约层落库）
+      const mine = demand.myTaken().map((x) => {
+        const gp = guarantee.checkOverdue(x.guaranteeId)
+        if (!gp) return x
+        return {
+          ...x,
+          dueText: gp.dueText,
+          guaranteeText: gp.overdue ? '已逾期，按违约扣款' : x.guaranteeText,
+          statusText: gp.status === 'breached' ? '违约已扣款' : x.statusText
+        }
+      })
       this.setData({
         items,
         source: hall.source,
-        mine: demand.myTaken(),
+        mine,
         wallet: wallet.summary(),
         loading: false
       })
@@ -108,8 +120,8 @@ Page({
       return
     }
     wx.showModal({
-      title: '接单需冻结保证金',
-      content: `接「${item.title}」将冻结保证金 ${item.depositText} 元，验收通过后全额解冻。确定接单？`,
+      title: '接单需缴纳 15% 保证金',
+      content: `接「${item.title}」需缴纳项目金额 15% 的履约保证金 ${item.depositText} 元。截止日期前未交付作品将扣除违约金（平台 30% / 发布者 70%）；审核通过后自动返还原支付账户。确定接单？`,
       confirmText: '确定接单',
       success: (res) => {
         if (!res.confirm) return
@@ -149,6 +161,12 @@ Page({
         }
       }
     })
+  },
+
+  /** 每个单子的统一上传 / 审核通道 */
+  onDelivery(e) {
+    const id = e.currentTarget.dataset.id
+    wx.navigateTo({ url: `/pages/delivery/delivery?source=demand&id=${encodeURIComponent(id)}` })
   },
 
   onPublish() {

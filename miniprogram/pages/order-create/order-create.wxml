@@ -77,6 +77,17 @@
           </picker>
         </view>
 
+        <view class="field">
+          <text class="field-label">交付截止日期 *</text>
+          <picker mode="date" value="{{deliveryDue}}" start="{{minDue}}" bindchange="onDeliveryDueChange">
+            <view class="picker-box">
+              <text class="picker-text">{{deliveryDue || '选择交付截止日期'}}</text>
+              <text class="picker-arrow">›</text>
+            </view>
+          </picker>
+          <text class="field-hint">发布方保证金 10%、接单方履约保证金 15%；逾期未交付扣违约金，审核通过后双方保证金原路退回（演示记账）。</text>
+        </view>
+
         <!-- 品类专属需求字段：由所属服务的业务品类自动决定 -->
         <view class="req-sec">
           <view class="req-sec-head">

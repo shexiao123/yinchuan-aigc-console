@@ -2,7 +2,13 @@
 
   <view class="dp-tip card">
     <text class="dp-tip-title">发布需求 = 进需求池，让服务者来抢</text>
-    <text class="dp-tip-body">发布时冻结预算全额作为预付款，验收通过后才结算给服务方；没人接单可随时取消并全额解冻。当前可用余额 ¥{{balanceText}}。</text>
+    <text class="dp-tip-body">发布时冻结预算全额作为预付款 + 发布方保证金（10%），验收通过后结算给服务方并自动返还保证金。当前可用余额 ¥{{balanceText}}。</text>
+  </view>
+
+  <view class="dp-tip card dp-merchant" wx:if="{{!isMerchant}}">
+    <text class="dp-tip-title">发布者必须是已注册商家</text>
+    <text class="dp-tip-body">按平台规则，只有完成企业商家入驻的账号才能发布项目。可先启用本机演示店铺体验完整流程（不产生真实付款）。</text>
+    <view class="dp-link" bindtap="onGoMerchant">去注册 / 启用演示店铺 ›</view>
   </view>
 
   <view class="card dp-form">
@@ -86,6 +92,16 @@
     </view>
 
     <view class="field">
+      <text class="field-label">交付截止日期 *（逾期未交付扣违约金）</text>
+      <picker mode="date" value="{{dueDate}}" start="{{minDue}}" bindchange="onDueChange">
+        <view class="field-pick">
+          <text>{{dueDate}}</text>
+          <text class="field-caret">▾</text>
+        </view>
+      </picker>
+    </view>
+
+    <view class="field">
       <text class="field-label">联系人 / 称呼</text>
       <input
         class="field-input"
@@ -99,9 +115,12 @@
   </view>
 
   <view class="dp-note">
-    <text class="dp-note-line">· 预付款冻结在平台，验收通过才付款</text>
-    <text class="dp-note-line">· 服务方接单需冻结 10% 保证金（最低 100 元）</text>
-    <text class="dp-note-line">· 取消订单，预付款与保证金全额解冻</text>
+    <text class="dp-note-line">· 发布者须为已注册商家，需缴 10% 发布方保证金</text>
+    <text class="dp-note-line">· 接单方须缴项目金额 15% 履约保证金</text>
+    <text class="dp-note-line">· 每单有独立上传通道，交付后由发布者审核；不通过须填修改意见 + 新提交日期</text>
+    <text class="dp-note-line">· 逾期未交付扣违约金（平台 30% / 发布者 70%，默认值）</text>
+    <text class="dp-note-line">· 审核通过后双方保证金自动返还原支付账户</text>
+    <text class="dp-note-line">· 演示态为冻结记账，不产生真实付款</text>
   </view>
 
   <view class="dp-actions">

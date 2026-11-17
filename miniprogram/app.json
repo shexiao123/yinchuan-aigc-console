@@ -17,6 +17,7 @@
     "pages/merchant-join/merchant-join",
     "pages/merchant/merchant",
     "pages/task/task",
+    "pages/delivery/delivery",
     "pages/merchant-console/merchant-console",
     "pages/order-create/order-create",
     "pages/orders/orders",

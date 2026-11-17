@@ -27,7 +27,7 @@ const ORDER_ALLOWED = {
   open: ['taken', 'cancelled'],
   taken: ['producing', 'refund', 'cancelled'],
   producing: ['delivered', 'refund', 'cancelled'],
-  delivered: ['completed', 'refund', 'cancelled'],
+  delivered: ['completed', 'producing', 'refund', 'cancelled'],
   completed: ['refund'],
   refund: ['cancelled'],
   cancelled: []

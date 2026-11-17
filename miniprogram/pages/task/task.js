@@ -1,6 +1,7 @@
 const merchant = require('../../utils/merchant')
 const chain = require('../../utils/taskchain')
 const reqTpl = require('../../utils/requirement-templates')
+const guarantee = require('../../utils/guarantee')
 
 Page({
   data: {
@@ -10,6 +11,7 @@ Page({
     isLocal: false,
     isOwner: false,
     canDeliver: false,
+    guarantee: null,
     deliveryName: '',
     deliveryTempPath: '',
     submitting: false
@@ -66,12 +68,26 @@ Page({
       const owner = local && !!chain.getMerchant()
       const selected = task && (task.selectedApplicant || '')
       const canDeliver = !!(local && !owner && (applied && applied.status === 'selected' || selected))
+      // 进入项目即判定逾期违约，并把履约档案带给页面
+      let gp = null
+      if (local) {
+        chain.syncOverdue(this.taskId)
+        if (task && task.guaranteeId) gp = guarantee.get(task.guaranteeId)
+        task = chain.getTask(this.taskId) || task
+        if (task) {
+          task.timelineText = (task.timeline || []).map((t) => ({
+            ...t,
+            timeText: String(t.at || '').slice(5, 16).replace('T', ' ')
+          }))
+        }
+      }
       this.setData({
         task,
         applied,
         isLocal: local,
         isOwner: owner,
-        canDeliver,
+        canDeliver: canDeliver && !(gp && gp.status === 'breached'),
+        guarantee: gp,
         loading: false
       })
     } catch (e) {
@@ -145,16 +161,14 @@ Page({
     })
   },
 
+  /** 审核不通过必须填「修改意见 + 新提交日期」，统一走交付页的完整表单 */
   onReject() {
-    wx.showModal({
-      title: '打回重做',
-      content: '',
-      editable: true,
-      placeholderText: '写清楚需要修改的地方',
-      success: (r) => {
-        if (r.confirm) this.act(() => chain.rejectDelivery(this.taskId, r.content || ''), '已打回，等待重新交付')
-      }
-    })
+    wx.navigateTo({ url: `/pages/delivery/delivery?source=task&id=${encodeURIComponent(this.taskId)}` })
+  },
+
+  /** 每个项目的统一上传 / 审核通道（云端任务也走本地履约档案，演示记账） */
+  onDeliveryChannel() {
+    wx.navigateTo({ url: `/pages/delivery/delivery?source=task&id=${encodeURIComponent(this.taskId)}` })
   },
 
   onCancelTask() {

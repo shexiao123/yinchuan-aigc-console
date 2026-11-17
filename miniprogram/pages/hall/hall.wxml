@@ -105,7 +105,7 @@
 
       <view class="d-foot">
         <view class="d-foot-left">
-          <text class="d-foot-k">总保证金 </text>
+          <text class="d-foot-k">接单保证金 15% </text>
           <text class="d-foot-v">¥{{item.depositText}}</text>
           <text class="d-foot-k">　时限 </text>
           <text class="d-foot-v">{{item.hoursText}}</text>
@@ -139,6 +139,9 @@
         <text class="d-status d-status-{{item.tone}}">{{item.statusText}}</text>
         <text class="d-sub d-sub-inline">{{item.modeText}} / 时限 {{item.hoursText}}</text>
       </view>
+      <view class="d-meta" wx:if="{{item.dueText}}">
+        <text class="d-sub d-sub-inline">交付截止 {{item.dueText}} · {{item.guaranteeText}}</text>
+      </view>
 
       <view class="d-steps">
         <view class="d-step {{item.status !== 'open' ? 'on' : ''}}">
@@ -166,19 +169,11 @@
           bindtap="onAdvance"
         >开始制作</view>
         <view
-          class="btn btn-primary btn-sm"
-          wx:if="{{item.status === 'producing'}}"
+          class="btn btn-ghost btn-sm"
+          wx:if="{{item.status !== 'completed' && item.status !== 'cancelled'}}"
           data-id="{{item.id}}"
-          data-next="delivered"
-          bindtap="onAdvance"
-        >提交交付</view>
-        <view
-          class="btn btn-primary btn-sm"
-          wx:if="{{item.status === 'delivered'}}"
-          data-id="{{item.id}}"
-          data-next="completed"
-          bindtap="onAdvance"
-        >验收通过</view>
+          bindtap="onDelivery"
+        >项目交付通道 ›</view>
         <view
           class="btn btn-ghost btn-sm"
           wx:if="{{item.status !== 'completed' && item.status !== 'cancelled'}}"

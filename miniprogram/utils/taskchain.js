@@ -12,6 +12,7 @@
  * 真实支付、后台审核、跨设备同步仍需服务端，本地池明确标注「演示」。
  */
 const reqTpl = require('./requirement-templates')
+const guarantee = require('./guarantee')
 const KEY = 'gy_taskchain_v1'
 
 const STATUS = {
@@ -169,10 +170,13 @@ function decorate(t) {
   const st = STATUS[t.status] || STATUS.open
   const rows = reqTpl.buildRows(t)
   const brief = reqTpl.briefRows(t, 2)
+  const pid = t.guaranteeId || guarantee.projectId('task', t.id)
+  const gp = guarantee.get(pid)
+  const checked = gp ? guarantee.checkOverdue(pid) : null
   return {
     ...t,
     isLocal: true,
-    statusText: st.text,
+    statusText: checked && checked.status === 'breached' ? '违约已扣款' : st.text,
     tone: st.tone,
     budgetText: fmtMoney(t.budget),
     hasVideo: !!t.referenceVideoPath,
@@ -181,6 +185,11 @@ function decorate(t) {
     merchantName: t.merchantName || '我的店铺',
     dateText: String(t.createdAt || '').slice(0, 10),
     applicantCount: (t.applications || []).length,
+    guaranteeId: pid,
+    guaranteeText: gp ? `接单保证金 15%（¥${checked ? checked.providerDepositText : gp.providerDepositText}）` : '',
+    dueText: checked ? checked.dueText : (t.dueAt || t.deadline || '待定'),
+    isOverdue: !!(checked && checked.overdue),
+    reviewCount: checked ? checked.reviewList.length : 0,
     reqRows: rows,
     reqBriefRows: brief.rows,
     reqMoreCount: Math.max(0, rows.length - brief.rows.length),
@@ -204,6 +213,20 @@ function publishTask(payload) {
   const title = String(p.title || '').trim()
   if (title.length < 4) throw new Error('任务标题至少 4 个字')
   const m = state.merchant || {}
+  const budget = Math.max(0, Math.round(Number(p.budget) || 0))
+  const dueAt = /^\d{4}-\d{2}-\d{2}$/.test(String(p.deadline || ''))
+    ? String(p.deadline) : guarantee.defaultDueAt()
+  const gid = guarantee.projectId('task', 'p' + state.seq)
+  // 发布者必须是注册商家 + 冻结发布方保证金（内部校验，幂等）
+  const gp = guarantee.createProject({
+    projectId: gid,
+    source: 'task',
+    refId: 'p' + state.seq,
+    title,
+    budget,
+    publisherName: m.name || '我的店铺',
+    dueAt
+  })
   const t = {
     id: nextId(state, 'task'),
     title,
@@ -213,8 +236,12 @@ function publishTask(payload) {
     reqCatId: Number(p.reqCatId) || 0,
     reqCatName: String(p.reqCatName || '').trim(),
     reqFields: p.reqFields || null,
-    budget: Math.max(0, Math.round(Number(p.budget) || 0)),
-    deadline: p.deadline || '',
+    budget,
+    deadline: p.deadline || dueAt,
+    dueAt,
+    guaranteeId: gp.id,
+    publisherDepositText: gp.publisherDepositText,
+    providerDepositText: gp.providerDepositText,
     referenceVideoPath: p.videoTempPath ? persistVideo(p.videoTempPath, 'ref') : '',
     referenceVideoUrl: String(p.reference_video_path || p.videoUrl || '').trim(),
     referenceVideoName: String(p.videoName || '').trim(),
@@ -266,6 +293,37 @@ function mutate(id, fn) {
   return decorate(t)
 }
 
+/** 历史任务补建履约档案（不重复冻结发布方保证金） */
+function ensureFor(t) {
+  const pid = t.guaranteeId || guarantee.projectId('task', t.id)
+  if (!guarantee.get(pid)) {
+    const d = /^\d{4}-\d{2}-\d{2}$/.test(String(t.deadline || '')) ? String(t.deadline) : guarantee.defaultDueAt()
+    guarantee.ensureProject({
+      projectId: pid, source: 'task', refId: t.id, title: t.title, budget: t.budget,
+      publisherName: t.merchantName || '发布商家', dueAt: t.dueAt || d
+    })
+    t.guaranteeId = pid
+    t.dueAt = t.dueAt || d
+  }
+  return pid
+}
+
+/** 进入项目时同步逾期违约状态（扣款由 guarantee 落库，这里只同步任务状态） */
+function syncOverdue(id) {
+  const state = load()
+  const t = state.tasks.filter((x) => String(x.id) === String(id))[0]
+  if (!t) return null
+  const pid = ensureFor(t)
+  const gp = guarantee.checkOverdue(pid)
+  if (gp && gp.status === 'breached' && t.status !== 'cancelled' && t.status !== 'completed') {
+    t.status = 'cancelled'
+    pushTimeline(t, 'cancelled', '逾期未交付，已按违约扣除保证金')
+    t.updatedAt = now()
+    save(state)
+  }
+  return gp || guarantee.get(pid)
+}
+
 /** 服务者报名 */
 function applyTask(id, message) {
   const u = currentUser()
@@ -293,49 +351,67 @@ function myApplication(id) {
   return (t.applications || []).filter((a) => String(a.applicantId) === String(uid))[0] || null
 }
 
-/** 商家选定承接方 → 制作中 */
+/** 商家选定承接方 → 制作中，同时冻结接单方 15% 履约保证金 */
 function selectApplicant(id, appId) {
   return mutate(id, (t) => {
     if (t.status !== 'open') throw new Error('当前状态不能选定承接方')
     const a = (t.applications || []).filter((x) => String(x.id) === String(appId))[0]
     if (!a) throw new Error('报名记录不存在')
+    const pid = ensureFor(t)
+    guarantee.holdProviderDeposit(pid, a.applicantName)
     ;(t.applications || []).forEach((x) => { x.status = String(x.id) === String(appId) ? 'selected' : 'rejected' })
     t.selectedApplicant = a.applicantName
     t.selectedApplicantId = a.applicantId
     t.status = 'taken'
-    pushTimeline(t, 'taken', '承接方：' + a.applicantName)
+    pushTimeline(t, 'taken', '承接方：' + a.applicantName + '（15% 履约保证金已冻结）')
   })
 }
 
-/** 承接方交付成片（上传视频或填链接） */
+/** 承接方上传成片（每个单子都有此通道），由 guarantee 判定是否逾期 */
 function deliverTask(id, payload) {
   const p = payload || {}
   return mutate(id, (t) => {
     if (!ALLOWED[t.status] || ALLOWED[t.status].indexOf('delivered') < 0) {
       throw new Error('当前状态不能交付成片')
     }
-    t.deliveryVideoPath = p.videoTempPath ? persistVideo(p.videoTempPath, 'delivery') : (p.videoUrl || '')
+    const pid = ensureFor(t)
+    const path = p.videoTempPath ? persistVideo(p.videoTempPath, 'delivery') : String(p.videoUrl || '')
+    guarantee.submitDelivery(pid, {
+      videoPath: path,
+      videoName: p.videoName || '成片.mp4',
+      note: p.note || ''
+    })
+    t.deliveryVideoPath = path
     t.deliveryVideoName = String(p.videoName || '成片.mp4').trim()
     t.deliveryNote = String(p.note || '').trim().slice(0, 500)
     t.status = 'delivered'
-    pushTimeline(t, 'delivered', t.deliveryNote)
+    pushTimeline(t, 'delivered', '作品已上传，等待发布者审核' + (t.deliveryNote ? ' · ' + t.deliveryNote : ''))
   })
 }
 
-/** 商家验收通过 / 打回重做 */
+/** 发布者审核通过：无需意见，双方保证金自动返还原支付账户 */
 function acceptTask(id, note) {
   return mutate(id, (t) => {
-    if (t.status !== 'delivered') throw new Error('请等待承接方交付成片')
+    if (t.status !== 'delivered') throw new Error('请等待承接方上传成片')
+    const pid = ensureFor(t)
+    guarantee.approve(pid)
     t.status = 'completed'
-    pushTimeline(t, 'completed', note)
+    pushTimeline(t, 'completed', note || '发布者审核通过，双方保证金已返还原支付账户')
   })
 }
 
-function rejectDelivery(id, note) {
+/** 发布者审核不通过：必须给修改意见 + 新的提交日期（由 guarantee 强校验） */
+function rejectDelivery(id, opinion, newDueAt) {
   return mutate(id, (t) => {
-    if (t.status !== 'delivered') throw new Error('当前没有待验收的成片')
+    if (t.status !== 'delivered') throw new Error('当前没有待审核的成片')
+    const pid = ensureFor(t)
+    const r = guarantee.reject(pid, { opinion, newDueAt })
     t.status = 'taken'
-    pushTimeline(t, 'taken', '成片打回重做：' + String(note || '需要修改').trim().slice(0, 200))
+    t.dueAt = r.dueAt
+    t.deliveryVideoPath = ''
+    t.deliveryVideoName = ''
+    t.deliveryNote = ''
+    pushTimeline(t, 'taken', `审核不通过：${String(opinion || '').trim()} · 新提交日期 ${r.dueAt}`)
   })
 }
 
@@ -344,6 +420,8 @@ function cancelTask(id, note) {
     if (!ALLOWED[t.status] || ALLOWED[t.status].indexOf('cancelled') < 0) {
       throw new Error('当前状态不能关闭任务')
     }
+    const pid = ensureFor(t)
+    guarantee.cancel(pid, note || '商家主动关闭')
     t.status = 'cancelled'
     pushTimeline(t, 'cancelled', note)
   })
@@ -400,6 +478,8 @@ module.exports = {
   acceptTask,
   rejectDelivery,
   cancelTask,
+  syncOverdue,
+  ensureFor,
   statsFrom,
   mergeStats,
   fmtMoney,

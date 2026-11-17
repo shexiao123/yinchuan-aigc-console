@@ -27,6 +27,8 @@ global.getApp = () => ({
 })
 
 const chain = require(path.join(__dirname, '../miniprogram/utils/taskchain'))
+const guarantee = require(path.join(__dirname, '../miniprogram/utils/guarantee'))
+const wallet = require(path.join(__dirname, '../miniprogram/utils/wallet'))
 
 let passed = 0
 function ok(name, fn) {
@@ -43,6 +45,8 @@ function ok(name, fn) {
 console.log('\n统一任务链闭环测试\n')
 
 chain.reset()
+guarantee.reset()
+wallet.reset()
 ok('初始态为空', () => {
   assert.strictEqual(chain.listTasks().length, 0)
   assert.strictEqual(chain.isDemoActive(), false)
@@ -123,18 +127,48 @@ ok('承接方交付成片', () => {
   assert.strictEqual(t.deliveryVideoName, '成片v1.mp4')
 })
 
-ok('商家打回重做 → 回到制作中', () => {
-  const t = chain.rejectDelivery(taskId, '片头字幕要改')
-  assert.strictEqual(t.status, 'taken')
-  assert.ok(t.timeline.some((x) => x.text.indexOf('打回') >= 0))
+const newDue = (() => {
+  const d = new Date(Date.now() + 5 * 86400000)
+  const p = (n) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`
+})()
+
+ok('接单方 15% 保证金已冻结', () => {
+  const t = chain.getTask(taskId)
+  const gp = guarantee.get(t.guaranteeId)
+  assert.strictEqual(gp.providerDepositState, 'held')
+  assert.strictEqual(gp.providerDeposit, Math.round(t.budget * 0.15))
 })
 
-ok('重新交付后商家验收通过', () => {
+ok('审核不通过缺修改意见被拒', () => {
+  assert.throws(() => chain.rejectDelivery(taskId, '', newDue), /修改意见/)
+})
+
+ok('审核不通过缺新提交日期被拒', () => {
+  assert.throws(() => chain.rejectDelivery(taskId, '片头字幕要改', ''), /提交日期/)
+})
+
+ok('商家审核不通过 → 回到制作中并更新提交日期', () => {
+  const t = chain.rejectDelivery(taskId, '片头字幕要改，配乐重做', newDue)
+  assert.strictEqual(t.status, 'taken')
+  assert.strictEqual(guarantee.get(t.guaranteeId).dueAt, newDue)
+  assert.ok(t.timeline.some((x) => x.text.indexOf('审核不通过') >= 0))
+})
+
+ok('重新交付后发布者审核通过（无需意见）', () => {
   chain.deliverTask(taskId, { videoTempPath: '/tmp/final2.mp4', videoName: '成片v2.mp4' })
   const t = chain.acceptTask(taskId, '验收通过')
   assert.strictEqual(t.status, 'completed')
   assert.strictEqual(t.statusText, '已完成')
   assert.ok(t.timeline.length >= 6, '时间线应记录完整流转')
+})
+
+ok('验收完成后双方保证金自动返还原支付账户', () => {
+  const gp = guarantee.get(chain.getTask(taskId).guaranteeId)
+  assert.strictEqual(gp.providerDepositState, 'refunded')
+  assert.strictEqual(gp.publisherDepositState, 'refunded')
+  assert.strictEqual(wallet.summary().frozenText, '0.00')
+  assert.ok(wallet.summary().ledger.some((x) => x.title.indexOf('原路退回') >= 0))
 })
 
 ok('已完成任务不能再推进', () => {

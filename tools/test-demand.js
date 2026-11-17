@@ -44,10 +44,21 @@ function assert(cond, msg) {
 }
 
 async function main() {
+  // 2026-11-17 新规则：发布者必须是已注册商家（这里注册本机演示店铺）
+  store['gy_taskchain_v1'] = {
+    seq: 1,
+    merchant: {
+      id: 'shop-test', name: '砚生测试店铺', city: '银川',
+      demoPaid: true, status: 'active', planCode: 'demo',
+      paidAt: new Date().toISOString(),
+      paidUntil: new Date(Date.now() + 365 * 86400000).toISOString()
+    },
+    tasks: []
+  }
   let w = wallet.summary()
   assert(w.balanceText === '5000.00', '初始余额 5000.00，实际 ' + w.balanceText)
 
-  // 1. 发单：冻结预算全额
+  // 1. 发单：冻结预算全额 + 发布方保证金 10%
   const item = demand.publish({
     title: '测试需求 · 银川文旅宣传片',
     budget: 100000, // 1000 元
@@ -57,19 +68,19 @@ async function main() {
     categoryName: '品牌宣传片'
   })
   w = wallet.summary()
-  assert(w.balanceText === '4000.00', '发单后可用余额 4000.00，实际 ' + w.balanceText)
-  assert(w.frozenText === '1000.00', '发单后冻结 1000.00，实际 ' + w.frozenText)
+  assert(w.balanceText === '3900.00', '发单后可用余额 3900.00（预付款 1000 + 发布方保证金 100），实际 ' + w.balanceText)
+  assert(w.frozenText === '1100.00', '发单后冻结 1100.00，实际 ' + w.frozenText)
 
   // 2. 大厅可见
   const hall = await demand.listHall(0)
   assert(hall.items.some((x) => String(x.id) === String(item.id)), '新发需求出现在大厅')
   assert(hall.source === 'local', '云端不可达时标记本地池，实际 ' + hall.source)
 
-  // 3. 抢单：冻结 10% 保证金（1000×10%=100）
+  // 3. 抢单：冻结 15% 履约保证金（1000×15%=150）
   demand.take(item.id, { name: '测试服务者' })
   w = wallet.summary()
-  assert(w.balanceText === '3900.00', '抢单后可用余额 3900.00，实际 ' + w.balanceText)
-  assert(w.frozenText === '1100.00', '抢单后冻结 1100.00（预付 1000 + 保证金 100），实际 ' + w.frozenText)
+  assert(w.balanceText === '3750.00', '抢单后可用余额 3750.00，实际 ' + w.balanceText)
+  assert(w.frozenText === '1250.00', '抢单后冻结 1250.00（预付 1000 + 发布方 100 + 接单方 150），实际 ' + w.frozenText)
 
   // 4. 重复抢单应被拒
   let dup = ''
@@ -86,11 +97,15 @@ async function main() {
   const done = demand.advance(item.id, 'completed')
   assert(done.statusText === '已完成', '流转到已完成，实际 ' + done.statusText)
 
-  // 6. 结算：预付款划出、保证金解冻、扣 8% 服务费入账
+  // 6. 发布者审核通过：双方保证金原路退回；预付款划出，扣 8% 服务费入账
   w = wallet.summary()
   assert(w.frozenText === '0.00', '结算后冻结清零，实际 ' + w.frozenText)
-  // 3900 + 100(保证金解冻) + 920(1000 - 80 服务费) = 4920
+  // 3750 + 100(发布方退回) + 150(接单方退回) + 920(1000 - 80 服务费) = 4920
   assert(w.balanceText === '4920.00', '结算后余额 4920.00，实际 ' + w.balanceText)
+  assert(
+    w.ledger.filter((x) => x.title.indexOf('原路退回') >= 0).length >= 2,
+    '双方保证金各有一条原路退回流水'
+  )
 
   // 7. 余额不足保护
   let noBal = ''

@@ -159,8 +159,8 @@
           <input class="input" type="digit" placeholder="8000" value="{{form.budget}}" data-field="budget" bindinput="onInput" />
         </view>
         <view class="field half">
-          <text class="label">截止日期</text>
-          <picker mode="date" value="{{form.deadline}}" bindchange="onDate">
+          <text class="label">交付截止日期 *</text>
+          <picker mode="date" value="{{form.deadline}}" start="{{minDue}}" bindchange="onDate">
             <view class="picker">{{form.deadline || '选择日期'}}</view>
           </picker>
         </view>
@@ -210,6 +210,7 @@
         <text class="label">或粘贴视频链接</text>
         <input class="input" placeholder="https://.../reference.mp4" value="{{form.videoUrl}}" data-field="videoUrl" bindinput="onInput" />
       </view>
+      <view class="card-hint rule-hint">发布即冻结发布方保证金 10%；接单方须缴 15% 履约保证金；遴选后每个项目都有独立上传通道，逾期未交付扣违约金（平台 30% / 发布者 70%），审核通过后双方保证金原路退回。演示态为冻结记账。</view>
       <button class="btn-primary" bindtap="onPublish" disabled="{{submitting}}">发布任务</button>
       <view class="card-hint">视频会保存到本机供任务详情播放；正式缴费店铺会同时同步到云存储</view>
     </view>

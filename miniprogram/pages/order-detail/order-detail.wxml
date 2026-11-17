@@ -103,21 +103,32 @@
       </view>
     </view>
 
+    <!-- 项目履约：保证金 / 截止 / 违约金 -->
+    <view class="card card-pad" wx:if="{{guarantee}}">
+      <view class="spec-row"><text class="spec-label">交付截止</text><text class="spec-value">{{guarantee.dueText}} · {{guarantee.remainText}}</text></view>
+      <view class="spec-row"><text class="spec-label">发布方保证金</text><text class="spec-value">¥{{guarantee.publisherDepositText}} · {{guarantee.publisherStateText}}</text></view>
+      <view class="spec-row"><text class="spec-label">接单方保证金 15%</text><text class="spec-value">¥{{guarantee.providerDepositText}} · {{guarantee.providerStateText}}</text></view>
+      <view class="spec-row" wx:if="{{guarantee.hasPenalty}}"><text class="spec-label">违约金</text><text class="spec-value">¥{{guarantee.penaltyText}}（平台 ¥{{guarantee.penaltyPlatformText}} / 发布者 ¥{{guarantee.penaltyPublisherText}}）</text></view>
+      <view class="spec-row"><text class="spec-label">返还账户</text><text class="spec-value">{{guarantee.channelText}}</text></view>
+    </view>
+
     <!-- 底部操作 -->
     <view class="action-bar" wx:if="{{order.status !== 'cancelled'}}">
+      <button class="btn btn-soft action-btn" wx:if="{{order.status !== 'completed'}}" bindtap="onDeliveryChannel" disabled="{{acting}}">项目交付通道（上传 / 审核）›</button>
       <!-- 客户视角 -->
       <block wx:if="{{isCustomer}}">
         <button class="btn btn-ghost action-cancel" wx:if="{{order.status !== 'completed'}}" bindtap="onCancel" disabled="{{acting}}">取消订单</button>
         <button class="btn btn-soft action-btn" wx:if="{{order.status === 'taken' || order.status === 'producing' || order.status === 'delivered'}}" bindtap="onRefund" disabled="{{acting}}">申请退款</button>
-        <button class="btn btn-primary action-btn" wx:if="{{order.status === 'delivered'}}" bindtap="onConfirm" disabled="{{acting}}">确认完成</button>
+        <button class="btn btn-primary action-btn" wx:if="{{order.status === 'delivered'}}" bindtap="onConfirm" disabled="{{acting}}">审核通过（返还保证金）</button>
+        <button class="btn btn-ghost action-btn" wx:if="{{order.status === 'delivered'}}" bindtap="onReject" disabled="{{acting}}">审核不通过</button>
         <button class="btn btn-primary action-btn" wx:if="{{order.status === 'completed' && !reviewed}}" bindtap="onEvaluate" disabled="{{acting}}">写评价</button>
         <button class="btn btn-soft action-btn" wx:if="{{order.status === 'completed' && reviewed}}" bindtap="onEvaluate" disabled="{{acting}}">修改评价</button>
       </block>
       <!-- 服务者视角 -->
       <block wx:if="{{isProvider}}">
         <button class="btn btn-primary action-btn" wx:if="{{order.status === 'taken'}}" bindtap="onStartProducing" disabled="{{acting}}">开始制作</button>
-        <button class="btn btn-primary action-btn" wx:if="{{order.status === 'producing'}}" bindtap="onDeliver" disabled="{{acting}}">交付成片</button>
-        <button class="btn btn-primary action-btn" wx:if="{{order.status === 'open'}}" bindtap="onTakeOrder" disabled="{{acting}}">确认接单，开始制作</button>
+        <button class="btn btn-primary action-btn" wx:if="{{order.status === 'producing'}}" bindtap="onDeliver" disabled="{{acting}}">上传成片</button>
+        <button class="btn btn-primary action-btn" wx:if="{{order.status === 'open'}}" bindtap="onTakeOrder" disabled="{{acting}}">确认接单并缴 15% 保证金</button>
       </block>
     </view>
   </block>

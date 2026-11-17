@@ -3,6 +3,7 @@ const media = require('../../utils/local-media')
 const { yuan, yuanShort, coverTheme } = require('../../utils/util')
 const reqForm = require('../../utils/req-form')
 const reqTpl = require('../../utils/requirement-templates')
+const guarantee = require('../../utils/guarantee')
 
 Page(Object.assign({}, reqForm.methods, {
   data: Object.assign({
@@ -17,6 +18,8 @@ Page(Object.assign({}, reqForm.methods, {
     title: '',
     requirement: '',
     shootDate: '',
+    deliveryDue: guarantee.defaultDueAt(),
+    minDue: guarantee.dateStr(new Date()),
     amount: 0,
     platformFee: 0,
     commissionRate: 10,
@@ -102,6 +105,10 @@ Page(Object.assign({}, reqForm.methods, {
   },
 
   /** 校验并提交订单 */
+  onDeliveryDueChange(e) {
+    this.setData({ deliveryDue: e.detail.value })
+  },
+
   async onSubmit() {
     if (this.data.submitting) return
     const app = getApp()
@@ -146,6 +153,21 @@ Page(Object.assign({}, reqForm.methods, {
         customerName: session.user.name || null,
         customerAvatar: session.user.avatarUrl || null
       })
+      // 为云端订单建立本地履约档案：发布方保证金 10%（下单是消费行为，不校验商家资质）
+      // 云端订单资金以服务端为准，这里做的是演示记账 + 交付审核/违约金规则联动
+      try {
+        guarantee.createProject({
+          source: 'order',
+          refId: order.id,
+          title,
+          budget: this.data.amount,
+          publisherName: session.user.name || '下单客户',
+          dueAt: this.data.deliveryDue || guarantee.defaultDueAt(),
+          requireMerchant: false
+        })
+      } catch (ge) {
+        console.warn('[order-create] guarantee project skipped', ge && ge.message)
+      }
       wx.showToast({ title: '下单成功', icon: 'success' })
       setTimeout(() => {
         wx.redirectTo({ url: `/pages/order-detail/order-detail?id=${order.id}` })

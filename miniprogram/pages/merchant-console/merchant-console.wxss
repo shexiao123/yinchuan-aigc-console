@@ -45,6 +45,7 @@
 .notice-text { margin-top: 10rpx; font-size: 23rpx; line-height: 1.8; color: #5C6F8C; }
 .link { margin-top: 22rpx; text-align: center; font-size: 23rpx; color: #4F7DF3; }
 .card-hint { margin-top: 14rpx; font-size: 21rpx; color: #8A9AAE; }
+.rule-hint { padding: 16rpx 18rpx; border-radius: 12rpx; background: #FDF8EE; color: #8A6640; line-height: 1.65; }
 .order-no { font-size: 26rpx; font-weight: 720; color: #2B4BC4; margin: 12rpx 0; }
 .pay-row { display: flex; justify-content: space-between; gap: 20rpx; padding: 14rpx 0; border-bottom: 1rpx dashed #E4ECF8; font-size: 23rpx; color: #7A8BA5; }
 .pay-row .b { color: #233B5D; font-weight: 650; text-align: right; word-break: break-all; }

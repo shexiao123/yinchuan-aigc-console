@@ -6,20 +6,22 @@
  * 2) 本地演示需求池：测试号 / 断网 / 云端不可达时，大厅也要有单可看可抢，
  *    否则页面永远是空的。本地单带 isLocal 标记，抢单与流转全程走本地 + 钱包记账。
  *
- * 资金规则（先用记账替代真实支付）：
- * - 需求方发单：冻结预算全额作为预付款
- * - 服务方抢单：冻结预算 10%（最低 100 元）作为履约保证金
- * - 验收通过：预付款结算划出，保证金解冻，服务方余额入账（扣平台服务费）
- * - 取消/争议：预付款解冻退回，保证金解冻
+ * 资金规则（先用记账替代真实支付，2026-11-17 起按项目履约层统一）：
+ * - 需求方发单：必须是已注册商家；冻结预算全额作为预付款 + 发布方保证金（默认 10%）
+ * - 服务方抢单：冻结项目金额 15% 作为履约保证金（不再有 10%/最低 100 元旧规则）
+ * - 交付需上传成片，由发布者审核；审核不通过需填修改意见 + 新提交日期
+ * - 逾期未交付：从接单方保证金扣违约金，平台/发布者按 3:7 分账（默认值）
+ * - 验收通过：双方保证金自动返还原支付账户；预付款结算，服务方入账（扣平台服务费）
+ * - 取消：预付款与双方保证金全额解冻
+ * 保证金/审核/违约金的唯一规则真源是 utils/guarantee.js，本文件只负责联动。
  */
 
 const api = require('./api')
 const wallet = require('./wallet')
 const reqTpl = require('./requirement-templates')
+const guarantee = require('./guarantee')
 
 const KEY = 'gy_demand_v1'
-const DEPOSIT_RATE = 0.1
-const DEPOSIT_MIN = 10000 // 100.00 元
 const FEE_RATE = 0.08 // 平台服务费，真实值以 settings.commission_rate 为准
 
 /* 演示需求也按「品类专属字段」填写：规范文本 `【标签】值` 逐行，
@@ -207,8 +209,14 @@ function yuanText(cents) {
   return n % 1 === 0 ? String(n) : n.toFixed(2)
 }
 
+/** 接单保证金：项目金额 15%（规则真源在 guarantee.js） */
 function depositOf(budget) {
-  return Math.max(Math.round((Number(budget) || 0) * DEPOSIT_RATE), DEPOSIT_MIN)
+  return guarantee.providerDepositOf(budget)
+}
+
+/** 项目履约档案 id：三套单子统一 source:原id */
+function guaranteeId(id) {
+  return guarantee.projectId('demand', id)
 }
 
 /** 时限：优先取 hours，其次从「7 天内 / 长期合作」这类交期文案里换算 */
@@ -244,7 +252,12 @@ function decorate(x) {
     reqRows: rows,
     reqBriefRows: brief.rows,
     reqMoreCount: Math.max(0, rows.length - brief.rows.length),
-    hasReqRows: rows.length > 0
+    hasReqRows: rows.length > 0,
+    // 履约信息：保证金比例、交付截止日、是否已逾期
+    guaranteeId: x.guaranteeId || guaranteeId(x.id),
+    guaranteeText: '接单保证金 15%（¥' + yuanText(depositOf(x.budget || x.amount)) + '）',
+    dueText: x.dueAt || hoursText(x),
+    deliveryVideoPath: x.deliveryVideoPath || ''
   }
 }
 
@@ -299,7 +312,16 @@ function getLocal(id) {
 
 /* ------------------------------------------------------------------ 写操作 */
 
-/** 发单：冻结预算全额作为预付款 */
+/** 交付截止日：优先取页面日历，其次从「7 天内」这类交期文案换算 */
+function dueAtFrom(deadline, explicit) {
+  if (explicit && /^\d{4}-\d{2}-\d{2}$/.test(String(explicit))) return String(explicit)
+  const m = String(deadline || '').match(/(\d+)\s*天/)
+  const dt = new Date()
+  dt.setDate(dt.getDate() + (m ? Number(m[1]) : 7))
+  return guarantee.dateStr(dt)
+}
+
+/** 发单：发布者须为已注册商家 → 冻结预算全额 + 发布方保证金 */
 function publish(payload) {
   const d = seed()
   const budget = Math.round(Number(payload.budget || 0))
@@ -308,6 +330,25 @@ function publish(payload) {
     e.code = 'BAD_BUDGET'
     throw e
   }
+  // 资金预检：避免「保证金冻结成功、预付款冻结失败」造成半截账
+  const pubDeposit = guarantee.publisherDepositOf(budget)
+  if (wallet.load().balance < budget + pubDeposit) {
+    const e = new Error('可用余额不足（需覆盖预付款与发布方保证金），请先充值')
+    e.code = 'NO_BALANCE'
+    throw e
+  }
+  const pid = guarantee.projectId('demand', 'L' + d.seq)
+  const dueAt = dueAtFrom(payload.deadline, payload.dueAt)
+  // 内部校验商家资质 + 冻结发布方保证金（幂等）
+  guarantee.createProject({
+    projectId: pid,
+    source: 'demand',
+    refId: 'L' + d.seq,
+    title: payload.title,
+    budget,
+    publisherName: payload.customerName || '我',
+    dueAt
+  })
   const id = 'L' + d.seq++
   wallet.freeze(budget, '需求预付款冻结 · ' + payload.title, id)
   const item = {
@@ -317,6 +358,8 @@ function publish(payload) {
     categoryName: payload.categoryName || '综合服务',
     budget,
     deadline: payload.deadline || '待沟通',
+    dueAt,
+    guaranteeId: pid,
     // 规范文本 `【标签】值` 逐行，云端/老页面读到的仍是一段可读需求
     requirement: payload.requirement || payload.reqText || '',
     // 结构化副本，仅本地池保存，供键值渲染
@@ -328,7 +371,7 @@ function publish(payload) {
     isLocal: true,
     mine: true,
     createdAt: new Date().toISOString(),
-    timeline: [{ key: 'open', text: '需求已发布，预付款已冻结', at: new Date().toISOString() }]
+    timeline: [{ key: 'open', text: '需求已发布，预付款与发布方保证金已冻结', at: new Date().toISOString() }]
   }
   d.items.unshift(item)
   save(d)
@@ -358,25 +401,108 @@ function take(id, opts = {}) {
     throw e
   }
   const deposit = depositOf(item.budget)
-  wallet.freeze(deposit, '接单保证金冻结 · ' + item.title, item.id)
+  const pid = item.guaranteeId || guaranteeId(item.id)
+  // 历史演示单没有履约档案：懒建一份（不重复冻结发布方保证金）
+  if (!item.guaranteeId) {
+    guarantee.ensureProject({
+      projectId: pid, source: 'demand', refId: item.id,
+      title: item.title, budget: item.budget,
+      publisherName: item.customerName || '发布商家',
+      dueAt: item.dueAt || dueAtFrom(item.deadline)
+    })
+    item.guaranteeId = pid
+  }
+  const takenBy = (opts && opts.name) || '我'
+  // 冻结 15% 履约保证金（幂等，资金动作由 guarantee 统一执行）
+  guarantee.holdProviderDeposit(pid, takenBy)
   item.status = 'taken'
   item.deposit = deposit
-  item.takenBy = (opts && opts.name) || '我'
+  item.takenBy = takenBy
   item.timeline = (item.timeline || []).concat({
     key: 'taken',
-    text: `服务者已接单，保证金 ${yuanText(deposit)} 元已冻结`,
+    text: `服务者已接单，保证金 ${yuanText(deposit)} 元（15%）已冻结`,
     at: new Date().toISOString()
   })
   save(d)
   return decorate(item)
 }
 
-/** 推进状态：producing → delivered → completed / cancelled */
-function advance(id, next) {
+/** 上传成片（每个单子都有此通道）：同步履约档案 + 需求池状态 */
+function deliver(id, opts) {
+  const p = opts || {}
+  const d = load()
+  const item = d.items.find((x) => String(x.id) === String(id))
+  if (!item) {
+    const e = new Error('订单不存在')
+    e.code = 'NOT_FOUND'
+    throw e
+  }
+  const pid = item.guaranteeId || guaranteeId(item.id)
+  if (!guarantee.get(pid)) {
+    guarantee.ensureProject({
+      projectId: pid, source: 'demand', refId: item.id,
+      title: item.title, budget: item.budget,
+      publisherName: item.customerName || '发布商家',
+      dueAt: item.dueAt || dueAtFrom(item.deadline)
+    })
+    item.guaranteeId = pid
+  }
+  guarantee.submitDelivery(pid, {
+    videoPath: p.videoPath || '',
+    videoName: p.videoName || '成片.mp4',
+    note: p.note || ''
+  })
+  item.deliveryVideoPath = p.videoPath || ''
+  item.deliveryVideoName = p.videoName || ''
+  item.deliveryNote = p.note || ''
+  item.status = 'delivered'
+  item.timeline = (item.timeline || []).concat({
+    key: 'delivered', text: '作品已上传，等待发布者审核', at: new Date().toISOString()
+  })
+  save(d)
+  return decorate(item)
+}
+
+/** 发布者审核：通过（无需意见，自动返还保证金）/ 驳回（必须意见 + 新提交日期） */
+function review(id, action, payload) {
+  const p = payload || {}
+  const d = load()
+  const item = d.items.find((x) => String(x.id) === String(id))
+  if (!item) {
+    const e = new Error('订单不存在')
+    e.code = 'NOT_FOUND'
+    throw e
+  }
+  const pid = item.guaranteeId || guaranteeId(item.id)
+  const budget = Number(item.budget || 0)
+  if (action === 'approve') {
+    guarantee.approve(pid) // 双方保证金原路退回原支付账户
+    const fee = Math.round(budget * FEE_RATE)
+    wallet.settle(budget, '预付款结算 · ' + item.title, item.id)
+    wallet.earn(budget - fee, `接单收入（扣平台服务费 ${yuanText(fee)} 元）· ` + item.title, item.id)
+    item.status = 'completed'
+    item.timeline = (item.timeline || []).concat({
+      key: 'completed', text: '发布者审核通过，双方保证金已返还原支付账户', at: new Date().toISOString()
+    })
+  } else {
+    const r = guarantee.reject(pid, { opinion: p.opinion, newDueAt: p.newDueAt })
+    item.status = 'taken'
+    item.dueAt = r.dueAt
+    item.deliveryVideoPath = ''
+    item.timeline = (item.timeline || []).concat({
+      key: 'taken', text: `审核不通过：${String(p.opinion || '').trim()} · 新提交日期 ${r.dueAt}`, at: new Date().toISOString()
+    })
+  }
+  save(d)
+  return decorate(item)
+}
+
+/** 兼容旧的状态推进入口；资金动作统一由 guarantee 承担，避免重复解冻 */
+function advance(id, next, opts) {
+  if (next === 'delivered') return deliver(id, opts)
+  if (next === 'completed') return review(id, 'approve', opts)
   const text = {
     producing: '开始制作',
-    delivered: '成片已交付，等待验收',
-    completed: '验收通过，预付款已结算，保证金已解冻',
     cancelled: '订单取消，资金已全额解冻'
   }[next] || next
   const d = load()
@@ -387,19 +513,11 @@ function advance(id, next) {
     throw e
   }
   const budget = Number(item.budget || 0)
-  const deposit = Number(item.deposit || depositOf(budget))
-
-  if (next === 'completed') {
-    const fee = Math.round(budget * FEE_RATE)
-    wallet.settle(budget, '预付款结算 · ' + item.title, item.id)
-    wallet.unfreeze(deposit, '保证金解冻 · ' + item.title, item.id)
-    wallet.earn(budget - fee, `接单收入（扣平台服务费 ${yuanText(fee)} 元）· ` + item.title, item.id)
-  } else if (next === 'cancelled') {
-    // 需求方取消：预付款退回；已接单则保证金也解冻
+  if (next === 'cancelled') {
+    const pid = item.guaranteeId || guaranteeId(item.id)
+    if (guarantee.get(pid)) guarantee.cancel(pid, '需求取消')
     wallet.unfreeze(budget, '预付款解冻 · ' + item.title, item.id)
-    if (item.status !== 'open') wallet.unfreeze(deposit, '保证金解冻 · ' + item.title, item.id)
   }
-
   item.status = next
   item.timeline = (item.timeline || []).concat({ key: next, text, at: new Date().toISOString() })
   save(d)
@@ -422,9 +540,13 @@ module.exports = {
   getLocal,
   publish,
   take,
+  deliver,
+  review,
   advance,
   decorate,
   depositOf,
+  guaranteeId,
+  dueAtFrom,
   yuanText,
   reset
 }

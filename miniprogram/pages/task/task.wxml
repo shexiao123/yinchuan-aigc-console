@@ -45,6 +45,20 @@
     </view>
   </view>
 
+  <!-- 项目履约：保证金 / 截止日期 / 违约金 / 返还账户 -->
+  <view class="card" wx:if="{{guarantee}}">
+    <view class="card-title">项目履约 <text class="card-title-tip">演示记账</text></view>
+    <view class="req-rows">
+      <view class="req-row"><text class="req-k">交付截止</text><text class="req-v">{{guarantee.dueText}} · {{guarantee.remainText}}</text></view>
+      <view class="req-row"><text class="req-k">发布方保证金</text><text class="req-v">¥{{guarantee.publisherDepositText}} · {{guarantee.publisherStateText}}</text></view>
+      <view class="req-row"><text class="req-k">接单方保证金</text><text class="req-v">¥{{guarantee.providerDepositText}}（15%）· {{guarantee.providerStateText}}</text></view>
+      <view class="req-row" wx:if="{{guarantee.hasPenalty}}"><text class="req-k">违约金</text><text class="req-v">¥{{guarantee.penaltyText}}（平台 ¥{{guarantee.penaltyPlatformText}} / 发布者 ¥{{guarantee.penaltyPublisherText}}）</text></view>
+      <view class="req-row"><text class="req-k">返还账户</text><text class="req-v">{{guarantee.channelText}}</text></view>
+    </view>
+    <view class="card-text" wx:if="{{guarantee.hasReview}}">已有 {{guarantee.reviewList.length}} 条审核记录，修改意见与新提交日期见交付通道。</view>
+    <button class="btn-ghost" bindtap="onDeliveryChannel">项目交付通道（上传 / 审核）›</button>
+  </view>
+
   <!-- 任务进度时间线 -->
   <view class="card" wx:if="{{task.timelineText.length}}">
     <view class="card-title">任务进度</view>
@@ -73,10 +87,10 @@
     </view>
 
     <view class="card" wx:if="{{task.status === 'delivered'}}">
-      <view class="card-title">成片验收</view>
-      <view class="card-text">确认成片符合需求后验收通过；有问题可打回让承接方重新交付。</view>
-      <button class="btn-primary" bindtap="onAccept" disabled="{{submitting}}">验收通过，任务完成</button>
-      <button class="btn-soft" bindtap="onReject" disabled="{{submitting}}">打回重做</button>
+      <view class="card-title">发布者审核</view>
+      <view class="card-text">审核通过无需填写意见，通过后双方保证金自动返还原支付账户；不通过必须填写修改意见和新的提交日期。</view>
+      <button class="btn-primary" bindtap="onAccept" disabled="{{submitting}}">审核通过，完成任务并返还保证金</button>
+      <button class="btn-soft" bindtap="onReject" disabled="{{submitting}}">审核不通过（填意见 + 新日期）</button>
     </view>
 
     <view class="card" wx:if="{{task.status === 'open' || task.status === 'taken'}}">
@@ -119,6 +133,7 @@
     <button wx:else class="btn-disabled" disabled>任务已结束</button>
   </block>
 
+  <button class="btn-ghost" wx:if="{{!guarantee}}" bindtap="onDeliveryChannel">项目交付通道（上传 / 审核）›</button>
   <button class="btn-ghost" bindtap="onAllTasks">看看其他任务</button>
 </view>
 

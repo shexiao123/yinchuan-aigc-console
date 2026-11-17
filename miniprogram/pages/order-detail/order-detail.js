@@ -1,6 +1,7 @@
 const api = require('../../utils/api')
 const { orderStatus, yuan, fromNow } = require('../../utils/util')
 const reqTpl = require('../../utils/requirement-templates')
+const guarantee = require('../../utils/guarantee')
 
 Page({
   data: {
@@ -13,7 +14,8 @@ Page({
     isCustomer: false,
     isProvider: false,
     reviewed: false,
-    loggedIn: false
+    loggedIn: false,
+    guarantee: null
   },
 
   onLoad(options) {
@@ -50,6 +52,19 @@ Page({
       const reqRows = reqTpl.buildRows(order)
       // 是否已评价（决定按钮显示「写评价」还是「修改评价」）
       const existingReview = order.status === 'completed' ? await api.getReviewByOrder(order.id) : null
+      // 履约档案：老订单懒建，进入即判定逾期违约
+      const pid = guarantee.projectId('order', order.id)
+      if (!guarantee.get(pid)) {
+        guarantee.ensureProject({
+          projectId: pid, source: 'order', refId: order.id,
+          title: order.title, budget: order.amount,
+          publisherName: order.customer_name || '下单客户',
+          dueAt: /^\d{4}-\d{2}-\d{2}$/.test(String(order.shoot_date || ''))
+            ? String(order.shoot_date).slice(0, 10) : guarantee.defaultDueAt(),
+          requireMerchant: false
+        })
+      }
+      const gp = guarantee.checkOverdue(pid)
       this.setData({
         order: {
           ...order,
@@ -68,7 +83,8 @@ Page({
         isProvider: !!app.globalData.provider && order.provider_id === app.globalData.provider.id,
         reviewed: !!existingReview,
         loggedIn: true,
-        loading: false
+        loading: false,
+        guarantee: gp
       })
     } catch (e) {
       this.setData({ loading: false })
@@ -93,7 +109,23 @@ Page({
     }
   },
 
+  _pid() {
+    return guarantee.projectId('order', this.data.orderId)
+  },
+
+  /** 每个单子的统一上传 / 发布者审核通道 */
+  onDeliveryChannel() {
+    wx.navigateTo({ url: `/pages/delivery/delivery?source=order&id=${this.data.orderId}` })
+  },
+
   onTakeOrder() {
+    // 接单须缴项目金额 15% 履约保证金（本地演示记账必成）
+    try {
+      guarantee.holdProviderDeposit(this._pid(), '服务者')
+    } catch (e) {
+      wx.showToast({ title: e.message || '保证金冻结失败', icon: 'none' })
+      return
+    }
     this.advance('taken')
   },
 
@@ -102,11 +134,23 @@ Page({
   },
 
   onDeliver() {
-    this.advance('delivered')
+    this.onDeliveryChannel()
   },
 
+  /** 发布者审核通过：无需意见，双方保证金自动返还原支付账户 */
   onConfirm() {
+    try {
+      guarantee.approve(this._pid())
+    } catch (e) {
+      wx.showToast({ title: '请先在「项目交付通道」完成作品上传与审核', icon: 'none' })
+      return
+    }
     this.advance('completed')
+  },
+
+  /** 审核不通过必须填修改意见 + 新的提交日期，走交付页完整表单 */
+  onReject() {
+    this.onDeliveryChannel()
   },
 
   onRefund() {
@@ -128,7 +172,11 @@ Page({
       confirmText: '确定取消',
       confirmColor: '#C0574A',
       success: (res) => {
-        if (res.confirm) this.advance('cancelled')
+        if (res.confirm) {
+          // 取消时未违约的双方保证金原路退回
+          try { guarantee.cancel(this._pid(), '订单取消') } catch (e) {}
+          this.advance('cancelled')
+        }
       }
     })
   },

@@ -2,6 +2,7 @@ const demand = require('../../utils/demand')
 const wallet = require('../../utils/wallet')
 const reqForm = require('../../utils/req-form')
 const reqTpl = require('../../utils/requirement-templates')
+const guarantee = require('../../utils/guarantee')
 
 const CATS = [
   { id: 1, name: '婚礼跟拍' },
@@ -22,6 +23,10 @@ Page(Object.assign({}, reqForm.methods, {
     catIdx: 0,
     deadlines: DEADLINES,
     deadlineIdx: 1,
+    dueDate: guarantee.defaultDueAt(),
+    minDue: guarantee.dateStr(new Date()),
+    isMerchant: false,
+    merchantName: '',
     title: '',
     requirement: '',
     budget: '',
@@ -36,7 +41,20 @@ Page(Object.assign({}, reqForm.methods, {
   },
 
   onShow() {
-    this.setData({ balanceText: wallet.summary().balanceText })
+    const pub = guarantee.isRegisteredPublisher()
+    this.setData({
+      balanceText: wallet.summary().balanceText,
+      isMerchant: pub.ok,
+      merchantName: pub.name || ''
+    }, () => this.check())
+  },
+
+  onDueChange(e) {
+    this.setData({ dueDate: e.detail.value })
+  },
+
+  onGoMerchant() {
+    wx.navigateTo({ url: '/pages/merchant-console/merchant-console' })
   },
 
   onInput(e) {
@@ -67,11 +85,20 @@ Page(Object.assign({}, reqForm.methods, {
   check() {
     const basic = this.data.title.trim().length >= 4 && Number(this.data.budget) >= 100
     const reqOk = !reqTpl.validate(this.data.reqFields || [])
-    this.setData({ canSubmit: basic && reqOk })
+    this.setData({ canSubmit: basic && reqOk && this.data.isMerchant })
   },
 
   submit() {
     if (this.data.submitting) return
+    if (!this.data.isMerchant) {
+      wx.showModal({
+        title: '需要先注册商家',
+        content: '按平台规则，发布者必须是已注册的企业商家。是否前往注册 / 启用演示店铺？',
+        confirmText: '去注册',
+        success: (r) => { if (r.confirm) this.onGoMerchant() }
+      })
+      return
+    }
     const title = this.data.title.trim()
     const budget = Number(this.data.budget)
     const err = this.reqValidate()
@@ -91,18 +118,23 @@ Page(Object.assign({}, reqForm.methods, {
         reqCatName: req.reqCatName,
         reqFields: req.reqFields,
         deadline: DEADLINES[this.data.deadlineIdx],
+        dueAt: this.data.dueDate,
         categoryId: CATS[this.data.catIdx].id,
         categoryName: CATS[this.data.catIdx].name,
-        customerName: this.data.contact.trim() || '我'
+        customerName: this.data.contact.trim() || this.data.merchantName || '我'
       })
       wx.showToast({ title: '发布成功', icon: 'success' })
       setTimeout(() => wx.navigateBack(), 700)
     } catch (e) {
       this.setData({ submitting: false })
       wx.showModal({
-        title: '发布失败',
+        title: e && e.code === 'NOT_MERCHANT' ? '需要先注册商家' : '发布失败',
         content: (e && e.message) || '请稍后重试',
-        showCancel: false
+        confirmText: e && e.code === 'NOT_MERCHANT' ? '去注册' : '知道了',
+        showCancel: !!(e && e.code === 'NOT_MERCHANT'),
+        success: (r) => {
+          if (e && e.code === 'NOT_MERCHANT' && r.confirm) this.onGoMerchant()
+        }
       })
     }
   }

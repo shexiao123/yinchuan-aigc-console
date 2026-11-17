@@ -1,0 +1,115 @@
+<view class="page" wx:if="{{project}}">
+
+  <!-- 项目概览 -->
+  <view class="d-card">
+    <view class="d-tags">
+      <text class="d-tag">{{project.statusText}}</text>
+      <text class="d-tag warn" wx:if="{{project.overdue}}">已逾期</text>
+      <text class="d-tag demo">演示记账</text>
+    </view>
+    <view class="d-title">{{project.title}}</view>
+    <view class="d-meta">项目预算 ¥{{project.budgetText}} · 交付截止 {{project.dueText}} · {{project.remainText}}</view>
+    <view class="d-alert" wx:if="{{project.overdue}}">已超过交付截止日期且未交付作品，按规则扣除接单方违约金。</view>
+  </view>
+
+  <!-- 规则说明 -->
+  <view class="d-card">
+    <view class="d-sec-title">履约规则</view>
+    <view class="d-rule"><text>接单方保证金</text><text class="b">项目金额 {{project.providerRateText}}</text></view>
+    <view class="d-rule"><text>发布方保证金</text><text class="b">项目金额 {{project.publisherRateText}}（默认）</text></view>
+    <view class="d-rule"><text>逾期违约金</text><text class="b">没收接单方保证金，{{project.splitText}}</text></view>
+    <view class="d-rule"><text>返还方式</text><text class="b">验收通过后原路退回{{project.channelText}}</text></view>
+    <view class="d-note">⚠️ 演示态为冻结记账，不产生真实付款；真实分账、退款与定时任务需服务端与支付资质。</view>
+  </view>
+
+  <!-- 保证金 -->
+  <view class="d-card">
+    <view class="d-sec-title">保证金</view>
+    <view class="d-dep">
+      <view class="d-dep-row">
+        <view><view class="d-dep-k">发布方 · {{project.publisherName}}</view><view class="d-dep-sub">原支付账户 {{project.channelText}}</view></view>
+        <view class="d-dep-right"><text class="d-dep-v">¥{{project.publisherDepositText}}</text><text class="d-dep-s">{{project.publisherStateText}}</text></view>
+      </view>
+      <view class="d-dep-row">
+        <view><view class="d-dep-k">接单方 · {{project.providerName || '待接单'}}</view><view class="d-dep-sub">项目金额 15%</view></view>
+        <view class="d-dep-right"><text class="d-dep-v">¥{{project.providerDepositText}}</text><text class="d-dep-s">{{project.providerStateText}}</text></view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 违约金 -->
+  <view class="d-card d-penalty" wx:if="{{project.hasPenalty}}">
+    <view class="d-sec-title">违约金扣除</view>
+    <view class="d-rule"><text>扣除金额</text><text class="b">¥{{project.penaltyText}}</text></view>
+    <view class="d-rule"><text>平台</text><text class="b">¥{{project.penaltyPlatformText}}</text></view>
+    <view class="d-rule"><text>发布者</text><text class="b">¥{{project.penaltyPublisherText}}</text></view>
+    <view class="d-note">发布方保证金已原路退回。</view>
+  </view>
+
+  <!-- 上传项目通道 -->
+  <view class="d-card" wx:if="{{project.canUpload}}">
+    <view class="d-sec-title">上传成片 <text class="d-sec-tip">承接方</text></view>
+    <view class="d-note">每个项目都有独立上传通道；提交后由发布者审核。截止 {{project.dueText}}，逾期未交付将扣违约金。</view>
+    <view class="d-pick" bindtap="onChooseVideo">
+      <text wx:if="{{deliveryName}}">▶ {{deliveryName}}</text>
+      <text wx:else>＋ 选择成片视频（≤100MB）</text>
+    </view>
+    <view class="d-clear" wx:if="{{deliveryName}}" bindtap="clearVideo">移除已选视频</view>
+    <textarea class="d-textarea" placeholder="交付说明（可选）：版本、修改点、素材说明" value="{{deliveryNote}}" bindinput="onNote" maxlength="300" auto-height />
+    <button class="d-btn primary" bindtap="onUpload" disabled="{{submitting}}">提交作品，等待审核</button>
+  </view>
+
+  <!-- 已交付作品 -->
+  <view class="d-card" wx:if="{{project.hasDelivery}}">
+    <view class="d-sec-title">已提交作品</view>
+    <video class="d-video" src="{{project.deliveryVideoPath}}" controls object-fit="contain"></video>
+    <view class="d-video-cap">{{project.deliveryVideoName}}{{project.deliveryNote ? ' · ' + project.deliveryNote : ''}}</view>
+  </view>
+
+  <!-- 发布者审核 -->
+  <view class="d-card" wx:if="{{project.canReview}}">
+    <view class="d-sec-title">发布者审核 <text class="d-sec-tip">本机演示：你同时扮演发布者与接单者</text></view>
+    <view class="d-note">审核通过无需填写意见，通过后双方保证金自动返还原支付账户。</view>
+    <button class="d-btn primary" bindtap="onApprove" disabled="{{submitting}}">审核通过，完成项目</button>
+    <button class="d-btn soft" bindtap="toggleReject" disabled="{{submitting}}">{{showReject ? '收起驳回表单' : '审核不通过'}}</button>
+
+    <block wx:if="{{showReject}}">
+      <view class="d-form">
+        <view class="d-label">修改意见 *（至少 4 个字）</view>
+        <textarea class="d-textarea" placeholder="写清楚需要改什么：片头字幕、配乐、时长、交付格式…" value="{{rejectOpinion}}" bindinput="onOpinion" maxlength="500" auto-height />
+        <view class="d-label">新的提交日期 *</view>
+        <picker mode="date" value="{{rejectDue}}" start="{{minDue}}" bindchange="onRejectDue">
+          <view class="d-picker">{{rejectDue || '选择新的交付截止日期'}} ▾</view>
+        </picker>
+        <view class="d-note">驳回后项目回到制作中，承接方须在新日期前重新上传作品；再次逾期同样触发违约金。</view>
+        <button class="d-btn danger" bindtap="onRejectSubmit" disabled="{{submitting}}">提交驳回意见</button>
+      </view>
+    </block>
+  </view>
+
+  <!-- 审核历史 -->
+  <view class="d-card" wx:if="{{project.hasReview}}">
+    <view class="d-sec-title">审核记录</view>
+    <view class="d-review" wx:for="{{project.reviewList}}" wx:key="index">
+      <view class="d-review-head"><text class="d-review-tag {{item.action === 'approve' ? 'ok' : 'no'}}">{{item.actionText}}</text><text class="d-time">{{item.timeText}}</text></view>
+      <view class="d-review-body" wx:if="{{item.opinion}}">修改意见：{{item.opinion}}</view>
+      <view class="d-review-body" wx:if="{{item.newDueAt}}">新提交日期：{{item.newDueAt}}</view>
+      <view class="d-review-body muted" wx:if="{{item.action === 'approve'}}">审核通过无需填写意见</view>
+    </view>
+  </view>
+
+  <!-- 履约时间线 -->
+  <view class="d-card">
+    <view class="d-sec-title">履约时间线</view>
+    <view class="d-tl" wx:for="{{project.timelineText}}" wx:key="index">
+      <view class="d-tl-dot"></view>
+      <view class="d-tl-body"><view class="d-tl-text">{{item.text}}</view><view class="d-time">{{item.timeText}}</view></view>
+    </view>
+  </view>
+
+  <view class="d-err" wx:if="{{errText}}">{{errText}}</view>
+
+  <button class="d-btn ghost" wx:if="{{project.canCancel}}" bindtap="onCancelProject" disabled="{{submitting}}">关闭项目并退回保证金</button>
+</view>
+
+<view class="page" wx:elif="{{!loading}}"><view class="d-empty">项目不存在</view></view>

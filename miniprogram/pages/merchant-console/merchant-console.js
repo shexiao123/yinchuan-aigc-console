@@ -2,6 +2,7 @@ const merchant = require('../../utils/merchant')
 const api = require('../../utils/api')
 const chain = require('../../utils/taskchain')
 const reqForm = require('../../utils/req-form')
+const guarantee = require('../../utils/guarantee')
 
 const FALLBACK_CATS = [
   { name: '短视频剪辑', slug: 'short-video' },
@@ -39,11 +40,12 @@ Page(Object.assign({}, reqForm.methods, {
     // 店铺 / 任务表单
     form: {
       shopName: '', city: '银川', intro: '', contact: '', phone: '',
-      title: '', budget: '', deadline: '', desc: '', videoUrl: ''
+      title: '', budget: '', deadline: guarantee.defaultDueAt(), desc: '', videoUrl: ''
     },
     videoName: '',
     videoTempPath: '',
     videoSize: 0,
+    minDue: guarantee.dateStr(new Date()),
     submitting: false
   }, reqForm.data()),
 
@@ -81,6 +83,8 @@ Page(Object.assign({}, reqForm.methods, {
       const pendingOrder = orderList.filter((o) => o.status === 'pending')[0] || null
       let cloudTasks = []
       if (cloudShop && cloudInfo.paid) {
+        // 正式缴费商家也要通过「发布者必须是注册商家」的本地门槛
+        guarantee.registerPublisher(cloudShop.name || '已注册商家', { source: 'cloud' })
         cloudTasks = await merchant.listTasks({ merchantId: cloudShop.id }).catch(() => [])
       }
       this.setData({
@@ -412,8 +416,16 @@ Page(Object.assign({}, reqForm.methods, {
       published = chain.publishTask(payload)
     } catch (e) {
       wx.hideLoading()
-      wx.showToast({ title: e.message || '发布失败', icon: 'none' })
       this.setData({ submitting: false })
+      if (e && e.code === 'NOT_MERCHANT') {
+        wx.showModal({
+          title: '需要先注册商家',
+          content: '按平台规则，只有已注册并完成入驻的商家才能发布项目。',
+          showCancel: false
+        })
+      } else {
+        wx.showToast({ title: e.message || '发布失败', icon: 'none' })
+      }
       return
     }
 
@@ -440,7 +452,7 @@ Page(Object.assign({}, reqForm.methods, {
     wx.hideLoading()
     wx.showToast({ title: '任务已发布' + cloudMsg, icon: 'none' })
     this.setData({
-      'form.title': '', 'form.budget': '', 'form.deadline': '', 'form.desc': '', 'form.videoUrl': '',
+      'form.title': '', 'form.budget': '', 'form.deadline': guarantee.defaultDueAt(), 'form.desc': '', 'form.videoUrl': '',
       videoTempPath: '', videoSize: 0, videoName: ''
     })
     this.resetReqFields()
