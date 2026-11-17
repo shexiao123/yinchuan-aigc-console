@@ -1,4 +1,10 @@
 <view class="page">
+  <!-- 演示态合规标识：体验版 / 提审版必须让用户一眼看出不是真实交易 -->
+  <view class="demo-strip">
+    <text class="demo-strip-tag">演示版</text>
+    <text>保证金、违约金、提现均为本机演示记账，不产生真实资金往来</text>
+  </view>
+
   <!-- 顶部：品牌 + 轮播 + 工作台 -->
   <view class="hero">
     <view class="hero-row">

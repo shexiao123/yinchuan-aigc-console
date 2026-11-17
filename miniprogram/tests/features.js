@@ -12,6 +12,39 @@ const fail = (m) => {
   failCount++
 }
 
+/**
+ * 收集页面通过 mixin 注入的方法与 data 字段。
+ *
+ * 三个发布页用 Page(Object.assign({}, reqForm.methods, {...})) 复用
+ * utils/req-form.js，事件 onReq* 并不写在页面 .js 里；静态扫描若不认
+ * mixin 就会误报「绑定了方法但 JS 里没有」。
+ */
+function mixinParts(js, jsPath) {
+  const out = { methods: new Set(), dataKeys: new Set() }
+  const reqs = new Map()
+  ;[...js.matchAll(/const\s+([A-Za-z_$][\w$]*)\s*=\s*require\(\s*['"]([^'"]+)['"]\s*\)/g)].forEach((m) => {
+    reqs.set(m[1], m[2])
+  })
+  const used = [...js.matchAll(/Object\.assign\(\s*\{\s*\}\s*,\s*([A-Za-z_$][\w$]*)\.methods/g)].map((m) => m[1])
+  used.forEach((varName) => {
+    const rel = reqs.get(varName)
+    if (!rel) return
+    const file = path.resolve(path.dirname(jsPath), rel.endsWith('.js') ? rel : rel + '.js')
+    if (!fs.existsSync(file)) return
+    const src = fs.readFileSync(file, 'utf8')
+    const mi = src.indexOf('const methods =')
+    const end = src.indexOf('module.exports', mi > -1 ? mi : 0)
+    const block = mi > -1 ? src.slice(mi, end > -1 ? end : src.length) : src
+    ;[...block.matchAll(/^\s{2}([A-Za-z_$][\w$]*)\s*\([^)]*\)\s*\{/gm)].forEach((m) => out.methods.add(m[1]))
+    const di = src.indexOf('function data(')
+    if (di > -1) {
+      const dblock = src.slice(di, mi > -1 ? mi : di + 1200)
+      ;[...dblock.matchAll(/^\s{4}([A-Za-z_$][\w$]*)\s*:/gm)].forEach((m) => out.dataKeys.add(m[1]))
+    }
+  })
+  return out
+}
+
 console.log('=== 宁夏云辇文化科技有限公司 · 小程序功能校验 ===')
 console.log('')
 
@@ -33,9 +66,10 @@ appJson.pages.forEach((p) => {
   if (!fs.existsSync(wxmlPath) || !fs.existsSync(jsPath)) return
   const wxml = fs.readFileSync(wxmlPath, 'utf8')
   const js = fs.readFileSync(jsPath, 'utf8')
+  const injected = mixinParts(js, jsPath).methods
   const handlers = [...new Set([...wxml.matchAll(/(?:bind|catch)(?:tap|input|change|confirm|submit|longpress|scrolltolower|load|error|blur|focus)=\s*"([a-zA-Z_$][\w$]*)"/g)].map((m) => m[1]))]
   handlers.forEach((h) => {
-    if (!new RegExp('\\b' + h + '\\s*(\\(|:)').test(js)) {
+    if (!new RegExp('\\b' + h + '\\s*(\\(|:)').test(js) && !injected.has(h)) {
       fail(`${p}.wxml 绑定了 ${h}，但 ${p}.js 里没有这个方法`)
     }
   })
@@ -55,10 +89,12 @@ appJson.pages.forEach((p) => {
   const dm = js.match(/data:\s*\{([\s\S]*?)\n  \}/)
   if (!dm) return
   const declared = new Set([...dm[1].matchAll(/([a-zA-Z_$][\w$]*)\s*:/g)].map((m) => m[1]))
+  // mixin 的 data() 字段同样属于页面 data
+  mixinParts(js, jsPath).dataKeys.forEach((k) => declared.add(k))
 
-  // 收集所有 wx:for 声明的循环变量（默认 item，也可能是 wx:for-item 指定的名字）
-  const loopVars = new Set(['item'])
-  ;[...wxml.matchAll(/wx:for-item\s*=\s*"([\w$]+)"/g)].forEach((m) => loopVars.add(m[1]))
+  // 收集所有 wx:for 声明的循环变量（默认 item，也可能是 wx:for-item / wx:for-index 指定的名字）
+  const loopVars = new Set(['item', 'index'])
+  ;[...wxml.matchAll(/wx:for-(?:item|index)\s*=\s*"([\w$]+)"/g)].forEach((m) => loopVars.add(m[1]))
 
   // 关键：表达式里第一个标识符若是循环变量 → 整个表达式跳过（含 item.xxx 形式）
   // 若是已声明的 data 字段 → 合法

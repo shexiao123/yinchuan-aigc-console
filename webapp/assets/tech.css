@@ -1717,4 +1717,11 @@ body.offline-mode::after {
   body.offline-mode::after { bottom: 78px; }
 }
 
+/* 上线自检补齐：以下四个类此前只有 HTML/JS 引用、无 CSS 定义。
+   mc-task-main / mc-task-side 是 .mc-task-detail 两列 grid 的子项，
+   min-width:0 防止长文本撑破列宽；其余两条只做排版兜底。 */
+.notice-label-text { white-space: nowrap; }
+.notice-modal-body { font-size: 13px; line-height: 1.8; color: var(--ink-2); }
+.mc-task-main, .mc-task-side { min-width: 0; }
+
 

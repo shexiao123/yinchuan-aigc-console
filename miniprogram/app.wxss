@@ -1,6 +1,6 @@
 /* 宁夏云辇文化科技有限公司 - 全局样式
-   调性：深海全息 · 商业科技感。冷白底 + 电光蓝主色 + 1px 冷蓝细线，
-   青色只用于状态提示；不做黑底、不做毛玻璃、不做模糊。
+   调性：暖调商业版。米白底 + 暖白卡 + 暖棕细线，电光蓝只做按钮与强调，
+   不做大面积铺底；不做黑底、不做毛玻璃、不做模糊。
    本主题为原创实现，未使用任何第三方皮肤插件的代码或素材。 */
 
 page {
@@ -49,6 +49,29 @@ view, text, button, input, textarea, scroll-view, swiper, image {
 
 .page-with-tabbar {
   padding-bottom: 140rpx;
+}
+
+/* 演示态合规标识：体验版 / 提审版必须让用户一眼看出不是真实交易 */
+.demo-strip {
+  display: flex;
+  align-items: center;
+  gap: 10rpx;
+  padding: 12rpx 28rpx;
+  background: #FFF3DC;
+  border-bottom: 1rpx solid var(--line);
+  color: #8A5A1E;
+  font-size: 22rpx;
+  line-height: 1.5;
+}
+
+.demo-strip-tag {
+  flex-shrink: 0;
+  padding: 2rpx 12rpx;
+  border-radius: 999rpx;
+  background: #C8812F;
+  color: #FFFDF9;
+  font-size: 20rpx;
+  font-weight: 600;
 }
 
 .container {

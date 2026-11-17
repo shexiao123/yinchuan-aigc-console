@@ -32,7 +32,10 @@ const html = fs.readFileSync(path.join(WEB, 'index.html'), 'utf8')
 const refs = [...html.matchAll(/(?:src|href)="([^"]+)"/g)].map((m) => m[1])
 refs.forEach((r) => {
   if (r.startsWith('http') || r.startsWith('#') || r.startsWith('data:')) return
-  const target = path.join(WEB, r.replace(/^\.?\//, ''))
+  // 带 `?v=20261108a` 之类的缓存戳时，先剥掉 query/hash 再查文件
+  const clean = r.split(/[?#]/)[0]
+  if (!clean) return
+  const target = path.join(WEB, clean.replace(/^\.?\//, ''))
   if (!fs.existsSync(target)) fail(`index.html 引用了不存在的资源: ${r}`)
 })
 ok('本地资源引用有效')
@@ -116,9 +119,12 @@ console.log('')
 console.log('7. 样式类引用')
 // 必须同时读 style.css 和 admin.css —— 管理端页面用 admin.css，
 // 只扫 style.css 会把 .data / .td-strong 这类误报为「未定义」
-const cssFiles = ['style.css', 'admin.css']
-  .map((f) => path.join(WEB, 'assets', f))
-  .filter((f) => fs.existsSync(f))
+// 动态扫描 assets 下所有 .css：项目陆续加了 tech.css 等分文件，
+// 写死 ['style.css','admin.css'] 会把新样式表里的类全报成「未定义」
+const assetsDir = path.join(WEB, 'assets')
+const cssFiles = fs.readdirSync(assetsDir)
+  .filter((f) => f.endsWith('.css'))
+  .map((f) => path.join(assetsDir, f))
 const css = cssFiles.map((f) => fs.readFileSync(f, 'utf8')).join('\n')
 // 只取合法的 CSS 类名（字母开头，允许 - 和 _）
 const cssClasses = new Set([...css.matchAll(/\.(-?[A-Za-z_][\w-]*)/g)].map((m) => m[1]))

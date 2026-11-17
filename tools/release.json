@@ -1,0 +1,8 @@
+{
+  "version": "1.0.0",
+  "officialAppidConfirmed": false,
+  "demoMode": true,
+  "demoNotice": "演示记账：保证金冻结、违约金、分账、退款、提现均在本机记账，不产生真实资金往来",
+  "knownTestAppid": "wx4b4167c078603e6d",
+  "note": "knownTestAppid 是微信开发者工具分配的测试号，不能上传体验版、不能提审发布。填入自己注册的企业小程序 AppID 后，运行 node tools/confirm-release.js 完成确认；演示记账要转真实交易须先接后端支付与分账资质，再把 demoMode 改为 false。"
+}
