@@ -295,7 +295,11 @@
 
 .svc-cover {
   width: 200rpx;
-  height: 200rpx;
+  /* 不写死高度，跟随卡片由右侧内容撑出的实际高度，避免左下角露白 */
+  height: auto;
+  align-self: stretch;
+  position: relative;
+  overflow: hidden;
   border-radius: 0;
   display: flex;
   align-items: center;
@@ -435,8 +439,11 @@
   line-height: 1.8;
 }
 
-/* 服务封面图 */
+/* 服务封面图：绝对定位铺满封面区，父级高度由卡片内容决定 */
 .svc-cover-img {
+  position: absolute;
+  left: 0;
+  top: 0;
   width: 100%;
   height: 100%;
 }
