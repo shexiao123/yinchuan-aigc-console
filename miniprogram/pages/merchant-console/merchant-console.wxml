@@ -1,17 +1,13 @@
 <view class="page">
   <view wx:if="{{loading}}" class="center"><view class="card-text">加载中…</view></view>
 
-  <!-- 未登录 -->
-  <view wx:if="{{!loading && !logged}}" class="card center">
-    <view class="big-icon">🔐</view>
-    <view class="card-title">请先登录，再开通企业店铺</view>
-    <view class="card-text">企业商家入驻为付费服务，登录后可选择套餐并生成缴费订单</view>
-    <button class="btn-primary" bindtap="onLogin">去登录</button>
-    <view class="link" bindtap="onJoin">先看入驻套餐与费用 ›</view>
-  </view>
-
-  <!-- 未开通店铺：资料 + 套餐 -->
-  <block wx:if="{{!loading && logged && !shop}}">
+  <!-- 未开通店铺：资料 + 套餐（登录与否都可填，演示态无需登录） -->
+  <block wx:if="{{!loading && !shop}}">
+    <view class="notice" wx:if="{{!logged}}">
+      <view class="notice-title">未登录也可以先试用演示店铺</view>
+      <view class="notice-text">正式入驻需登录并走对公缴费审核；本机演示态可立即体验发布任务与上传参考视频。</view>
+      <view class="link" bindtap="onLogin">去登录（正式入驻）›</view>
+    </view>
     <view class="notice">
       <view class="notice-title">企业商家入驻需缴纳额外费用</view>
       <view class="notice-text">费用 = 入驻服务费（年）＋ 一次性开店服务费 ＋ 可退履约保证金。提交资料后生成缴费订单，平台确认到账即可开通。</view>
@@ -44,21 +40,28 @@
         </view>
       </view>
       <view class="field">
-        <text class="label">入驻套餐 *</text>
+        <text class="label">入驻套餐</text>
         <picker mode="selector" range="{{planNames}}" value="{{planIndex}}" bindchange="onJoinPlan">
           <view class="picker">{{planNames.length ? planNames[planIndex] : '加载套餐中'}}</view>
         </picker>
       </view>
       <button class="btn-primary" bindtap="onOpenShop" disabled="{{submitting}}">提交资料并生成缴费订单</button>
+      <button class="btn-soft demo-btn" bindtap="onDemoJoin" disabled="{{submitting}}">启用演示店铺（本机试用，立即可发任务）</button>
       <view class="link" bindtap="onJoin">查看完整费用说明 ›</view>
     </view>
   </block>
 
   <!-- 有店铺但未缴费 / 已到期 -->
-  <block wx:if="{{!loading && logged && shop && !paid}}">
+  <block wx:if="{{!loading && shop && !paid}}">
     <view class="notice">
       <view class="notice-title">{{payInfo.expired ? '入驻服务已到期，续费后恢复展示' : '资料已提交，等待缴费与平台审核'}}</view>
-      <view class="notice-text">店铺「{{shop.name}}」暂未对外展示。完成缴费并经平台确认后，立即开通店铺、任务发布与参考视频权限。</view>
+      <view class="notice-text">店铺「{{shop.name}}」暂未对外展示。正式开通需平台确认到账；也可先启用本机演示态试用任务发布与参考视频。</view>
+    </view>
+
+    <view class="card">
+      <view class="card-title">本机演示通道</view>
+      <view class="card-text">不产生真实付款、不改变云端审核状态、任务不会同步给其他用户。启用后可立即发布任务、上传参考视频并跑完整交付验收链路。</view>
+      <button class="btn-soft demo-btn" bindtap="onDemoActivate">启用演示店铺</button>
     </view>
 
     <block wx:if="{{pendingOrder}}">
@@ -120,13 +123,13 @@
     </view>
   </block>
 
-  <!-- 已缴费：正常工作台 -->
-  <block wx:if="{{!loading && logged && shop && paid}}">
+  <!-- 已开通：正常工作台 -->
+  <block wx:if="{{!loading && shop && paid}}">
     <view class="paid-bar">
       <text class="paid-icon">✓</text>
       <view>
-        <view class="paid-title">入驻服务中 · {{payInfo.planCode === 'legacy' ? '历史入驻商家' : '已缴费'}}</view>
-        <view class="paid-sub">有效期至 {{payInfo.paidUntil}} · 剩余 {{payInfo.daysLeft}} 天 · 每年任务 {{payInfo.taskLimit > 0 ? payInfo.taskLimit : '不限'}} · 视频 {{videoLimit}}MB</view>
+        <view class="paid-title">{{demoPaid ? '演示店铺 · 仅本机有效' : '入驻服务中 · ' + (payInfo.planCode === 'legacy' ? '历史入驻商家' : '已缴费')}}</view>
+        <view class="paid-sub">{{demoPaid ? '不产生真实付款，数据仅存本机' : '有效期至 ' + payInfo.paidUntil + ' · 剩余 ' + payInfo.daysLeft + ' 天 · 每年任务 ' + (payInfo.taskLimit > 0 ? payInfo.taskLimit : '不限')}} · 视频 {{videoLimit}}MB</view>
       </view>
     </view>
 
@@ -179,9 +182,10 @@
         <input class="input" placeholder="https://.../reference.mp4" value="{{form.videoUrl}}" data-field="videoUrl" bindinput="onInput" />
       </view>
       <button class="btn-primary" bindtap="onPublish" disabled="{{submitting}}">发布任务</button>
+      <view class="card-hint">视频会保存到本机供任务详情播放；正式缴费店铺会同时同步到云存储</view>
     </view>
 
-    <view class="card">
+    <view class="card" wx:if="{{!demoPaid}}">
       <view class="card-title">续费 / 升级入驻套餐</view>
       <view class="card-text">服务期内续费会从原到期日顺延，升级套餐可解锁更多任务与更大的参考视频额度</view>
       <view class="field">
@@ -204,12 +208,14 @@
     <view class="section-head"><text class="section-title">我发布的任务</text></view>
     <view class="task-card" wx:for="{{tasks}}" wx:key="id" bindtap="onTask" data-id="{{item.id}}">
       <view class="task-top">
-        <text class="task-badge">{{item.status === 'open' ? '招募中' : '已结束'}}</text>
+        <text class="task-badge">{{item.statusText || (item.status === 'open' ? '招募中' : '已结束')}}</text>
         <text class="task-video" wx:if="{{item.hasVideo}}">▶ 参考视频</text>
+        <text class="task-video" wx:if="{{item.isLocal}}">本机</text>
         <text class="task-budget">{{item.budgetText}}</text>
       </view>
       <view class="task-title ellipsis-2">{{item.title}}</view>
+      <view class="task-foot" wx:if="{{item.isLocal}}">{{item.applicantCount}} 人报名 · 点击查看进度并处理交付 ›</view>
     </view>
-    <view class="empty" wx:if="{{!tasks.length}}">还没有发布任务</view>
+    <view class="empty" wx:if="{{!tasks.length}}">还没有发布任务，填好上面的表单点「发布任务」</view>
   </block>
 </view>

@@ -78,7 +78,8 @@
         <text>④ 平台担保交付</text>
       </view>
       <view class="int-actions">
-        <view class="int-btn int-btn-main" bindtap="onComicTasks">查看在招漫剧项目 ›</view>
+        <view class="int-btn int-btn-main" bindtap="onPublishTask">发布任务并上传参考视频 ›</view>
+        <view class="int-btn" bindtap="onComicTasks">查看在招项目</view>
         <view class="int-btn" bindtap="onComicGroups">去群聊沟通</view>
       </view>
     </view>

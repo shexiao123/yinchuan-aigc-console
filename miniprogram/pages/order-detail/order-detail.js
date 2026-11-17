@@ -104,6 +104,18 @@ Page({
     this.advance('completed')
   },
 
+  onRefund() {
+    wx.showModal({
+      title: '申请退款',
+      content: '提交后订单进入「退款中」，由平台核实处理。确定申请吗？',
+      confirmText: '申请退款',
+      confirmColor: '#C0574A',
+      success: (res) => {
+        if (res.confirm) this.advance('refund', '客户发起退款申请')
+      }
+    })
+  },
+
   onCancel() {
     wx.showModal({
       title: '取消订单',

@@ -1,5 +1,5 @@
 const { cloud } = require('./cloud')
-const { unwrap, makeOrderNo, friendlyError } = require('./util')
+const { unwrap, makeOrderNo, friendlyError, canAdvance } = require('./util')
 const samples = require('./samples')
 const commission = require('./commission')
 const media = require('./local-media')
@@ -570,12 +570,17 @@ async function markAllNotificationsRead() {
 async function advanceOrder(id, nextStatus, note, actorUid) {
   const current = await getOrder(id)
   if (!current) throw new Error('订单不存在')
+  // 兜底校验：防止绕过按钮直接把订单从任意状态跳到任意状态
+  if (!canAdvance(current.status, nextStatus)) {
+    throw new Error(`当前状态「${current.status}」不能推进到「${nextStatus}」`)
+  }
   const timeline = Array.isArray(current.timeline) ? current.timeline.slice() : []
   const label = {
     taken: '服务者已接单',
     producing: '开始制作',
     delivered: '成片已交付',
     completed: '订单完成',
+    refund: '发起退款',
     cancelled: '订单取消'
   }[nextStatus] || nextStatus
   timeline.push({
@@ -676,9 +681,20 @@ async function takeOrder(id, providerId, providerOwnerId) {
   // 公开需求池的订单在下单时还不知服务者是谁，佣金按平台基准算的。
   // 接单人确定后，按其会员档位重算佣金。
   let feePatch = {}
+  let timelinePatch = {}
   try {
     const cur = await getOrder(id)
     if (cur) {
+      // 公开需求池被认领后必须同步推进状态，否则订单永远停在 open，
+      // 服务者视角的「开始制作」按钮不会出现。
+      const tl = Array.isArray(cur.timeline) ? cur.timeline.slice() : []
+      tl.push({
+        key: 'taken',
+        text: '服务者已接单',
+        at: new Date().toISOString(),
+        by: providerOwnerId || ''
+      })
+      timelinePatch = { timeline: tl }
       const settings = await getSettings()
       const resolved = await commission.resolveCommissionRate(
         cloud.database,
@@ -700,7 +716,7 @@ async function takeOrder(id, providerId, providerOwnerId) {
 
   const res = await cloud.database
     .from('orders')
-    .update({ provider_id: providerId, provider_owner_id: providerOwnerId, ...feePatch })
+    .update({ provider_id: providerId, provider_owner_id: providerOwnerId, status: 'taken', ...feePatch, ...timelinePatch })
     .eq('id', id)
     .is('provider_id', null)
     .select()
@@ -902,9 +918,11 @@ async function claimAdminInvite(code) {
   return rows[0]
 }
 
-/** 后台统计：订单量、成交额、待处理数 */
+/** 后台统计：订单量、成交额、待处理数 + 三张可视化图表所需数据 */
 async function adminStats() {
-  const res = await cloud.database.from('orders').select('id, amount, status, created_at')
+  const res = await cloud.database
+    .from('orders')
+    .select('id, amount, status, created_at, service_id, category_slug, title')
   const rows = unwrap(res, '统计加载失败') || []
   const stats = {
     total: rows.length,
@@ -916,12 +934,67 @@ async function adminStats() {
       .filter((o) => o.status === 'completed')
       .reduce((sum, o) => sum + Number(o.amount || 0), 0)
   }
-  const providers = await cloud.database.from('providers').select('id')
-  const services = await cloud.database.from('services').select('id')
-  const cats = await cloud.database.from('categories').select('id')
-  stats.providers = (unwrap(providers, '') || []).length
-  stats.services = (unwrap(services, '') || []).length
-  stats.categories = (unwrap(cats, '') || []).length
+
+  // 近 7 日趋势（dataviz.renderTrend 读 date / count / amount）
+  const pad = (v) => String(v).padStart(2, '0')
+  const days = []
+  const dayMap = {}
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date()
+    d.setDate(d.getDate() - i)
+    const key = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
+    const item = { key, date: `${pad(d.getMonth() + 1)}-${pad(d.getDate())}`, count: 0, amount: 0 }
+    dayMap[key] = item
+    days.push(item)
+  }
+  rows.forEach((o) => {
+    const bucket = dayMap[String(o.created_at || '').slice(0, 10)]
+    if (!bucket) return
+    bucket.count += 1
+    bucket.amount += Number(o.amount || 0) / 100
+  })
+  stats.trend = days
+
+  // 分类分布（renderDonut 读 count，图例读 name）
+  const catCount = {}
+  rows.forEach((o) => {
+    const k = o.category_slug || '未分类'
+    catCount[k] = (catCount[k] || 0) + 1
+  })
+  // 查询构造器未必实现 .catch，统一用 try/catch 容错，图表缺数据时也不影响统计主体
+  const safeSelect = async (table, fields) => {
+    try {
+      return unwrap(await cloud.database.from(table).select(fields), '') || []
+    } catch (e) {
+      return []
+    }
+  }
+  const catRows = await safeSelect('categories', 'id, slug, name')
+  const catName = {}
+  catRows.forEach((c) => { catName[c.slug] = c.name })
+  stats.byCategory = Object.keys(catCount)
+    .map((k) => ({ name: catName[k] || k, count: catCount[k] }))
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 6)
+
+  // 服务 TOP5（renderTopBars 读 title / sales / price）
+  const svcMap = {}
+  rows.forEach((o) => {
+    if (!o.service_id) return
+    if (!svcMap[o.service_id]) {
+      svcMap[o.service_id] = { title: o.title || ('服务 ' + o.service_id), sales: 0, price: 0 }
+    }
+    svcMap[o.service_id].sales += 1
+    svcMap[o.service_id].price = Math.max(svcMap[o.service_id].price, Number(o.amount || 0) / 100)
+  })
+  stats.topServices = Object.values(svcMap).sort((a, b) => b.sales - a.sales).slice(0, 5)
+
+  const providerRows = await safeSelect('providers', 'id')
+  const serviceRows = await safeSelect('services', 'id, status')
+  stats.providers = providerRows.length
+  stats.services = serviceRows.length
+  stats.categories = catRows.length
+  stats.onShelf = serviceRows.filter((s) => !s.status || s.status === 'on').length
   return stats
 }
 

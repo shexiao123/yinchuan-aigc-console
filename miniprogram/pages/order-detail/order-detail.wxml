@@ -101,6 +101,7 @@
       <!-- 客户视角 -->
       <block wx:if="{{isCustomer}}">
         <button class="btn btn-ghost action-cancel" wx:if="{{order.status !== 'completed'}}" bindtap="onCancel" disabled="{{acting}}">取消订单</button>
+        <button class="btn btn-soft action-btn" wx:if="{{order.status === 'taken' || order.status === 'producing' || order.status === 'delivered'}}" bindtap="onRefund" disabled="{{acting}}">申请退款</button>
         <button class="btn btn-primary action-btn" wx:if="{{order.status === 'delivered'}}" bindtap="onConfirm" disabled="{{acting}}">确认完成</button>
         <button class="btn btn-primary action-btn" wx:if="{{order.status === 'completed' && !reviewed}}" bindtap="onEvaluate" disabled="{{acting}}">写评价</button>
         <button class="btn btn-soft action-btn" wx:if="{{order.status === 'completed' && reviewed}}" bindtap="onEvaluate" disabled="{{acting}}">修改评价</button>
@@ -109,7 +110,7 @@
       <block wx:if="{{isProvider}}">
         <button class="btn btn-primary action-btn" wx:if="{{order.status === 'taken'}}" bindtap="onStartProducing" disabled="{{acting}}">开始制作</button>
         <button class="btn btn-primary action-btn" wx:if="{{order.status === 'producing'}}" bindtap="onDeliver" disabled="{{acting}}">交付成片</button>
-        <button class="btn btn-soft action-btn" wx:if="{{order.status === 'open'}}" disabled="{{acting}}">等待客户确认接单</button>
+        <button class="btn btn-primary action-btn" wx:if="{{order.status === 'open'}}" bindtap="onTakeOrder" disabled="{{acting}}">确认接单，开始制作</button>
       </block>
     </view>
   </block>

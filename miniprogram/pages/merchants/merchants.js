@@ -1,4 +1,5 @@
 const merchant = require('../../utils/merchant')
+const chain = require('../../utils/taskchain')
 
 Page({
   data: {
@@ -23,15 +24,41 @@ Page({
   },
 
   async loadData() {
+    const localTasks = chain.listTasks({ publicOnly: true })
+    const localShop = chain.getMerchant()
     try {
-      const [shops, tasks] = await Promise.all([
-        merchant.listMerchants(),
-        merchant.listTasks({ publicOnly: true, limit: 100 })
+      const [cloudShops, cloudTasks] = await Promise.all([
+        merchant.listMerchants().catch(() => []),
+        merchant.listTasks({ publicOnly: true, limit: 100 }).catch(() => [])
       ])
-      this.setData({ shops, tasks, loading: false })
+      const shops = (cloudShops || []).slice()
+      if (localShop && chain.isDemoActive()) {
+        shops.unshift({
+          id: localShop.id,
+          name: localShop.name,
+          city: localShop.city || '银川',
+          intro: localShop.intro || '本机演示店铺 · 可发布任务与上传参考视频',
+          initial: String(localShop.name || '商').charAt(0),
+          is_verified: false,
+          openTaskCount: localTasks.length,
+          isLocal: true
+        })
+      }
+      this.setData({
+        shops,
+        tasks: localTasks.concat(cloudTasks || []),
+        loading: false
+      })
     } catch (e) {
-      this.setData({ loading: false })
-      wx.showToast({ title: e.message || '加载失败', icon: 'none' })
+      this.setData({
+        shops: localShop ? [{
+          id: localShop.id, name: localShop.name, city: localShop.city || '银川',
+          intro: localShop.intro || '本机演示店铺', initial: String(localShop.name || '商').charAt(0),
+          openTaskCount: localTasks.length, isLocal: true
+        }] : [],
+        tasks: localTasks,
+        loading: false
+      })
     }
   },
 
@@ -40,7 +67,12 @@ Page({
   },
 
   onShop(e) {
-    wx.navigateTo({ url: '/pages/merchant/merchant?id=' + e.currentTarget.dataset.id })
+    const id = e.currentTarget.dataset.id
+    if (chain.isLocalId(id)) {
+      wx.navigateTo({ url: '/pages/merchant-console/merchant-console' })
+      return
+    }
+    wx.navigateTo({ url: '/pages/merchant/merchant?id=' + id })
   },
 
   onTask(e) {

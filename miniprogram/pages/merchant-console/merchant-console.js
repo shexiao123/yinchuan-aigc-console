@@ -1,5 +1,15 @@
 const merchant = require('../../utils/merchant')
 const api = require('../../utils/api')
+const chain = require('../../utils/taskchain')
+
+const FALLBACK_CATS = [
+  { name: '短视频剪辑', slug: 'short-video' },
+  { name: 'AI 生成 / 修图', slug: 'ai-create' },
+  { name: '婚礼跟拍', slug: 'wedding' },
+  { name: '漫剧 / 动画', slug: 'comic' },
+  { name: '品牌宣传片', slug: 'brand-film' },
+  { name: '其他', slug: 'other' }
+]
 
 Page({
   data: {
@@ -17,6 +27,8 @@ Page({
     orders: [],
     pendingOrder: null,
     paid: false,
+    cloudPaid: false,
+    demoPaid: false,
     payInfo: {},
     videoLimit: 100,
     payTxn: '',
@@ -48,6 +60,9 @@ Page({
   },
 
   async init() {
+    const localShop = chain.getMerchant()
+    const localTasks = chain.listTasks()
+    const demoInfo = chain.paidInfo()
     try {
       const [uid, cats, plans, payCfg, orders] = await Promise.all([
         merchant.currentUid(),
@@ -56,35 +71,51 @@ Page({
         merchant.getPayConfig().catch(() => ({})),
         merchant.listMyOrders().catch(() => [])
       ])
-      const shop = uid ? await merchant.getMyMerchant() : null
-      const info = merchant.paidInfo(shop)
+      const cloudShop = uid ? await merchant.getMyMerchant().catch(() => null) : null
+      const cloudInfo = merchant.paidInfo(cloudShop)
+      const shop = cloudShop || localShop
       const planList = plans || []
       const orderList = orders || []
       const preferred = planList.findIndex((p) => p.code === 'pro')
       const pendingOrder = orderList.filter((o) => o.status === 'pending')[0] || null
-      let tasks = []
-      if (shop && info.paid) tasks = await merchant.listTasks({ merchantId: shop.id })
+      let cloudTasks = []
+      if (cloudShop && cloudInfo.paid) {
+        cloudTasks = await merchant.listTasks({ merchantId: cloudShop.id }).catch(() => [])
+      }
       this.setData({
-        logged: !!uid,
+        logged: !!uid || !!localShop,
         shop,
-        tasks,
-        categories: cats || [],
+        tasks: localTasks.concat(cloudTasks || []),
+        categories: (cats && cats.length ? cats : FALLBACK_CATS),
         plans: planList,
-        planNames: planList.map((p) => p.name + ' · ' + p.totalText),
+        planNames: planList.length ? planList.map((p) => p.name + ' · ' + p.totalText) : ['演示套餐 · 免付费'],
         planIndex: preferred >= 0 ? preferred : 0,
         payCfg: payCfg || {},
         orders: orderList,
         pendingOrder,
-        paid: info.paid,
-        payInfo: info,
-        videoLimit: (shop && shop.video_limit_mb) || 100,
+        paid: cloudInfo.paid || demoInfo.active,
+        cloudPaid: cloudInfo.paid,
+        demoPaid: !cloudInfo.paid && demoInfo.active,
+        payInfo: cloudInfo.paid ? cloudInfo : demoInfo,
+        videoLimit: (cloudShop && cloudShop.video_limit_mb) || 100,
         payTxn: pendingOrder ? (pendingOrder.transaction_id || '') : '',
         payRemark: pendingOrder ? (pendingOrder.remark || '') : '',
         loading: false
       })
     } catch (e) {
-      this.setData({ loading: false })
-      wx.showToast({ title: e.message || '加载失败', icon: 'none' })
+      // 云端整体不可用时，仍要保证本地工作台可用
+      this.setData({
+        logged: !!localShop,
+        shop: localShop,
+        tasks: localTasks,
+        categories: FALLBACK_CATS,
+        planNames: ['演示套餐 · 免付费'],
+        paid: demoInfo.active,
+        cloudPaid: false,
+        demoPaid: demoInfo.active,
+        payInfo: demoInfo,
+        loading: false
+      })
     }
   },
 
@@ -135,7 +166,7 @@ Page({
         this.setData({
           videoTempPath: f.tempFilePath,
           videoSize: size,
-          videoName: (f.name || f.tempFilePath.split('/').pop() || '参考视频.mp4')
+          videoName: f.name || f.tempFilePath.split('/').pop() || '参考视频.mp4'
         })
       },
       fail: () => {}
@@ -160,32 +191,43 @@ Page({
     })
   },
 
+  /** 入驻：本地资料必写成功，云端只做尽力同步，不再卡住流程 */
   async onOpenShop() {
     const f = this.data.form
     if (String(f.shopName || '').trim().length < 2) {
       wx.showToast({ title: '请填写店铺名称', icon: 'none' })
       return
     }
-    const planId = this.currentPlanId()
-    if (!planId) {
-      wx.showToast({ title: '请先选择入驻套餐', icon: 'none' })
-      return
+    const cat = this.data.categories[this.data.catIndex] || {}
+    const plan = this.data.plans[this.data.planIndex] || {}
+    const payload = {
+      name: f.shopName,
+      city: f.city,
+      intro: f.intro,
+      contact_name: f.contact,
+      contact_phone: f.phone,
+      category_slug: cat.slug || '',
+      planCode: plan.code || 'demo'
     }
     this.setData({ submitting: true })
     wx.showLoading({ title: '提交中' })
+    let cloudOk = false
     try {
-      const shop = await merchant.saveMerchant({
-        name: f.shopName,
-        city: f.city,
-        intro: f.intro,
-        contact_name: f.contact,
-        contact_phone: f.phone,
-        category_slug: (this.data.categories[this.data.catIndex] || {}).slug || ''
-      })
-      await merchant.createOrder(planId, shop.id)
+      chain.saveMerchant(payload)
+      try {
+        const shop = await merchant.saveMerchant(payload)
+        const planId = this.currentPlanId()
+        if (planId && shop && shop.id) await merchant.createOrder(planId, shop.id)
+        cloudOk = true
+      } catch (e) {
+        console.warn('[merchant-console] cloud join skipped', e && e.message)
+      }
       wx.hideLoading()
-      wx.showToast({ title: '资料已提交，订单已生成', icon: 'none' })
-      this.init()
+      wx.showToast({
+        title: cloudOk ? '资料已提交，订单已生成' : '资料已保存（本地演示）',
+        icon: 'none'
+      })
+      await this.init()
     } catch (e) {
       wx.hideLoading()
       wx.showToast({ title: e.message || '提交失败', icon: 'none' })
@@ -194,16 +236,67 @@ Page({
     }
   },
 
+  /** 开店表单里一步到位：保存资料 + 启用演示店铺 */
+  onDemoJoin() {
+    const f = this.data.form
+    if (String(f.shopName || '').trim().length < 2) {
+      wx.showToast({ title: '请填写店铺名称', icon: 'none' })
+      return
+    }
+    const cat = this.data.categories[this.data.catIndex] || {}
+    const plan = this.data.plans[this.data.planIndex] || {}
+    wx.showModal({
+      title: '启用演示店铺',
+      content: '仅在本机启用：不产生真实付款、不改变云端审核状态、任务不会同步给其他用户。启用后可立即发布任务与上传参考视频。',
+      confirmText: '立即启用',
+      success: (r) => {
+        if (!r.confirm) return
+        chain.saveMerchant({
+          name: f.shopName, city: f.city, intro: f.intro,
+          contact_name: f.contact, contact_phone: f.phone,
+          category_slug: cat.slug || '', planCode: plan.code || 'demo'
+        })
+        chain.activateDemo(plan.code || 'demo')
+        wx.showToast({ title: '演示店铺已启用', icon: 'success' })
+        this.init()
+      }
+    })
+  },
+
+  /**
+   * 演示开通：平台缴费审核在后台完成，小程序端无法自行激活。
+   * 这里给出一个明确标注的本地演示通道，让「发布任务 / 上传视频」可以立即试用。
+   */
+  onDemoActivate() {
+    wx.showModal({
+      title: '启用演示店铺',
+      content: '仅在本机启用演示态：不产生真实付款、不改变云端审核状态、任务不会同步给其他用户。确定启用后立即可以发布任务和上传视频。',
+      confirmText: '启用演示',
+      success: (r) => {
+        if (!r.confirm) return
+        const plan = this.data.plans[this.data.planIndex] || {}
+        chain.activateDemo(plan.code || 'demo')
+        wx.showToast({ title: '演示店铺已启用', icon: 'success' })
+        this.init()
+      }
+    })
+  },
+
   async onCreateOrder() {
     const planId = this.currentPlanId()
-    if (!planId || !this.data.shop) {
-      wx.showToast({ title: '请先选择入驻套餐', icon: 'none' })
+    const shop = this.data.shop
+    if (!planId || !shop || /^(shop|local)-/.test(String(shop.id || ''))) {
+      wx.showModal({
+        title: '需要云端审核',
+        content: '当前是本机演示店铺，正式缴费订单需云端店铺。可先「启用演示店铺」试用发布任务与上传视频。',
+        showCancel: false
+      })
       return
     }
     this.setData({ submitting: true })
     wx.showLoading({ title: '生成订单' })
     try {
-      await merchant.createOrder(planId, this.data.shop.id)
+      await merchant.createOrder(planId, shop.id)
       wx.hideLoading()
       wx.showToast({ title: '缴费订单已生成', icon: 'success' })
       this.init()
@@ -253,8 +346,8 @@ Page({
       return
     }
     const planId = this.currentPlanId()
-    if (!planId || !this.data.shop) {
-      wx.showToast({ title: '请先选择入驻套餐', icon: 'none' })
+    if (!planId || !this.data.shop || /^(shop|local)-/.test(String(this.data.shop.id || ''))) {
+      wx.showToast({ title: '演示店铺无需续费', icon: 'none' })
       return
     }
     wx.showLoading({ title: '生成订单' })
@@ -269,39 +362,65 @@ Page({
     }
   },
 
+  /** 发布任务：本地必成（含参考视频），云端仅在真实缴费店铺下尽力同步 */
   async onPublish() {
     const f = this.data.form
     if (String(f.title || '').trim().length < 4) {
       wx.showToast({ title: '任务标题至少 4 个字', icon: 'none' })
       return
     }
+    const cat = this.data.categories[this.data.catIndex] || {}
+    const payload = {
+      title: f.title,
+      description: f.desc,
+      category_slug: cat.slug || '',
+      budget: Math.round(Number(f.budget || 0) * 100),
+      deadline: f.deadline || '',
+      videoTempPath: this.data.videoTempPath,
+      videoSize: this.data.videoSize,
+      videoName: this.data.videoName,
+      videoUrl: String(f.videoUrl || '').trim()
+    }
     this.setData({ submitting: true })
-    wx.showLoading({ title: this.data.videoTempPath ? '上传视频中' : '发布中' })
+    wx.showLoading({ title: this.data.videoTempPath ? '保存视频中' : '发布中' })
+    let published
     try {
-      await merchant.saveTask({
-        title: f.title,
-        description: f.desc,
-        category_slug: (this.data.categories[this.data.catIndex] || {}).slug || '',
-        budget: Math.round(Number(f.budget || 0) * 100),
-        deadline: f.deadline || null,
-        videoTempPath: this.data.videoTempPath,
-        videoSize: this.data.videoSize,
-        videoName: this.data.videoName,
-        reference_video_path: String(f.videoUrl || '').trim()
-      })
-      wx.hideLoading()
-      wx.showToast({ title: '任务已发布', icon: 'success' })
-      this.setData({
-        'form.title': '', 'form.budget': '', 'form.deadline': '', 'form.desc': '', 'form.videoUrl': '',
-        videoTempPath: '', videoSize: 0, videoName: ''
-      })
-      this.init()
+      published = chain.publishTask(payload)
     } catch (e) {
       wx.hideLoading()
       wx.showToast({ title: e.message || '发布失败', icon: 'none' })
-    } finally {
       this.setData({ submitting: false })
+      return
     }
+
+    let cloudMsg = ''
+    if (this.data.cloudPaid) {
+      try {
+        await merchant.saveTask({
+          title: payload.title,
+          description: payload.description,
+          category_slug: payload.category_slug,
+          budget: payload.budget,
+          deadline: payload.deadline || null,
+          videoTempPath: this.data.videoTempPath,
+          videoSize: this.data.videoSize,
+          videoName: this.data.videoName,
+          reference_video_path: payload.videoUrl
+        })
+        cloudMsg = '，已同步云端'
+      } catch (e) {
+        console.warn('[merchant-console] cloud publish skipped', e && e.message)
+        cloudMsg = '，云端同步失败（本地已保存）'
+      }
+    }
+    wx.hideLoading()
+    wx.showToast({ title: '任务已发布' + cloudMsg, icon: 'none' })
+    this.setData({
+      'form.title': '', 'form.budget': '', 'form.deadline': '', 'form.desc': '', 'form.videoUrl': '',
+      videoTempPath: '', videoSize: 0, videoName: ''
+    })
+    await this.init()
+    this.setData({ submitting: false })
   },
 
   onLogin() {

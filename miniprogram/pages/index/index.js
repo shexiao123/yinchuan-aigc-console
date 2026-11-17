@@ -3,6 +3,7 @@ const presence = require('../../utils/presence')
 const notice = require('../../utils/notice')
 const media = require('../../utils/local-media')
 const demand = require('../../utils/demand')
+const chain = require('../../utils/taskchain')
 const { coverTheme, yuanShort, fromNow } = require('../../utils/util')
 
 Page({
@@ -43,15 +44,19 @@ Page({
   async loadData() {
     this.setData({ loading: true })
     const safe = (p, fallback) => Promise.resolve(p).catch(() => fallback)
-    const [banners, categories, hotServices, providers, notices, settings] = await Promise.all([
+    const app = getApp()
+    const session = app.globalData.session
+    const uid = session && session.user ? session.user.id : ''
+    const providerIds = app.globalData.provider ? [app.globalData.provider.id] : []
+    const [banners, categories, hotServices, providers, notices, settings, cloudOrders] = await Promise.all([
       safe(api.listBanners(), media.demoBanners()),
       safe(api.listCategories(), media.demoCategories()),
       safe(api.listServices({ limit: 6 }), media.demoServices()),
       safe(api.listProviders(), []),
       safe(notice.listAnnouncements(), []),
-      safe(api.getSettings(), null)
+      safe(api.getSettings(), null),
+      uid ? safe(api.listOrders({ role: 'all', providerIds, uid, status: '' }), []) : Promise.resolve([])
     ])
-    const app = getApp()
     // 8 个分类归成三大类，首页按组展示，避免一屏铺 8 张大卡
     const CAT_GROUPS = [
       { key: 'shoot', name: '拍摄制作', desc: '跟拍 · 微电影 · 宣传片 · 棚拍', slugs: ['wedding-shoot', 'wedding-film', 'brand-film', 'commercial-photo'] },
@@ -98,18 +103,9 @@ Page({
       settings,
       notices,
       noticeCurrent: 0,
-      work: (() => {
-        const mine = demand.myTaken()
-        const cnt = (s) => mine.filter((x) => x.status === s).length
-        return {
-          pending: cnt('taken'),
-          doing: cnt('producing'),
-          check: cnt('delivered'),
-          refund: 0,
-          done: cnt('completed'),
-          closed: cnt('cancelled')
-        }
-      })(),
+      // 统一口径：云端订单 + 本地演示需求 + 商家任务，一次算 6 宫格
+      // （此前首页只读本地池、订单页只读云端，同一用户两处数字不一致）
+      work: chain.mergeStats(cloudOrders || [], demand.myTaken(), chain.listTasks()),
       loggedIn: !!(app.globalData.session && app.globalData.session.user),
       loading: false
     })

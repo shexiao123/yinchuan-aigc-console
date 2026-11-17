@@ -60,8 +60,27 @@ Page({
         // 标记失败不阻断跳转
       }
     }
-    if (linkType === 'order' && linkId) {
-      wx.navigateTo({ url: `/pages/order-detail/order-detail?id=${linkId}` })
+    const ROUTES = {
+      order: '/pages/order-detail/order-detail?id=',
+      service: '/pages/service-detail/service-detail?id=',
+      task: '/pages/task/task?id=',
+      merchant: '/pages/merchant/merchant?id='
+    }
+    if (ROUTES[linkType] && linkId) {
+      wx.navigateTo({ url: ROUTES[linkType] + linkId })
+      return
+    }
+    if (linkType === 'wallet' || linkType === 'income') {
+      wx.navigateTo({ url: '/pages/wallet/wallet' })
+      return
+    }
+    // 没有明确落地页的通知，至少把完整内容展示出来，不再点了没反应
+    if (item) {
+      wx.showModal({
+        title: item.title || '消息详情',
+        content: item.body || item.content || '暂无详细内容',
+        showCancel: false
+      })
     }
   },
 

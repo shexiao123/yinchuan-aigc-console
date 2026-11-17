@@ -7,6 +7,7 @@ const ORDER_STATUS = {
   producing: { text: '制作中', tone: 'busy' },
   delivered: { text: '待确认', tone: 'delivered' },
   completed: { text: '已完成', tone: 'done' },
+  refund: { text: '退款中', tone: 'refund' },
   cancelled: { text: '已取消', tone: 'cancelled' }
 }
 
@@ -17,7 +18,23 @@ const ORDER_FLOW = {
   producing: '开始制作',
   delivered: '成片已交付',
   completed: '订单完成',
+  refund: '发起退款',
   cancelled: '订单取消'
+}
+
+/** 允许的状态迁移。前端按钮已做 wx:if 控制，这里兜底防止越级跳转 */
+const ORDER_ALLOWED = {
+  open: ['taken', 'cancelled'],
+  taken: ['producing', 'refund', 'cancelled'],
+  producing: ['delivered', 'refund', 'cancelled'],
+  delivered: ['completed', 'refund', 'cancelled'],
+  completed: ['refund'],
+  refund: ['cancelled'],
+  cancelled: []
+}
+
+function canAdvance(from, to) {
+  return !!(ORDER_ALLOWED[from] && ORDER_ALLOWED[from].indexOf(to) >= 0)
 }
 
 function orderStatus(status) {
@@ -119,6 +136,8 @@ module.exports = {
   cloud,
   ORDER_STATUS,
   ORDER_FLOW,
+  ORDER_ALLOWED,
+  canAdvance,
   orderStatus,
   statusLabel,
   yuan,

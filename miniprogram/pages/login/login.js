@@ -9,6 +9,11 @@ Page({
 
   async onWechatLogin() {
     if (this.data.loading) return
+    // 隐私合规：未勾选用户协议不得调用登录能力（以微信官方最新审核规范为准）
+    if (!this.data.agreed) {
+      this.setData({ errorMsg: '请先阅读并同意用户协议与隐私政策' })
+      return
+    }
     this.setData({ loading: true, errorMsg: '' })
     try {
       const session = await api.loginWithWechat()

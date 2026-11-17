@@ -23,9 +23,29 @@ Page({
 
   onShow() {
     if (this.data.conversation) this.loadData()
+    // 会话页每 8 秒拉一次新消息，离开页面立即停，避免后台空转
+    this.stopPolling()
+    this._pollTimer = setInterval(() => {
+      if (!this.data.sending) this.loadData(true)
+    }, 8000)
   },
 
-  async loadData() {
+  onHide() {
+    this.stopPolling()
+  },
+
+  onUnload() {
+    this.stopPolling()
+  },
+
+  stopPolling() {
+    if (this._pollTimer) {
+      clearInterval(this._pollTimer)
+      this._pollTimer = null
+    }
+  },
+
+  async loadData(silent) {
     const app = getApp()
     const session = app.globalData.session
     if (!session || !session.user) {
@@ -92,7 +112,8 @@ Page({
       })
     } catch (e) {
       this.setData({ loading: false })
-      wx.showToast({ title: e.message || '加载失败', icon: 'none' })
+      // 轮询属于静默刷新，失败不弹提示，避免每 8 秒打扰用户
+      if (!silent) wx.showToast({ title: e.message || '加载失败', icon: 'none' })
     }
   },
 

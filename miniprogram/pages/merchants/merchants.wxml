@@ -4,7 +4,7 @@
     <text class="mc-hero-title">每个商家，都有自己的店铺</text>
     <text class="mc-hero-sub">企业店铺为付费增值服务：按年缴纳入驻服务费并审核通过后，即可发布任务与参考视频</text>
     <view class="mc-hero-btn" bindtap="onJoin">查看入驻套餐与费用 ›</view>
-    <view style="margin-top:18rpx;text-align:center;font-size:23rpx;color:#4F7DF3" bindtap="onConsole">开通 / 管理我的店铺</view>
+    <view style="margin-top:18rpx;text-align:center;font-size:23rpx;color:#4F7DF3" bindtap="onConsole">开通 / 管理我的店铺 · 发布任务与参考视频 ›</view>
   </view>
 
   <view class="tabs">
@@ -28,7 +28,8 @@
   <view class="list" wx:else>
     <view class="task-card" wx:for="{{tasks}}" wx:key="id" bindtap="onTask" data-id="{{item.id}}">
       <view class="task-top">
-        <text class="task-badge">招募中</text>
+        <text class="task-badge">{{item.statusText || '招募中'}}</text>
+        <text class="task-video" wx:if="{{item.isLocal}}">本机</text>
         <text class="task-video" wx:if="{{item.hasVideo}}">▶ 参考视频</text>
         <text class="task-budget">{{item.budgetText}}</text>
       </view>

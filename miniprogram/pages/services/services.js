@@ -104,6 +104,11 @@ Page({
     wx.navigateTo({ url: '/pages/groups/groups' })
   },
 
+  /** 整案对接：发任务时可直接上传参考视频 */
+  onPublishTask() {
+    wx.navigateTo({ url: '/pages/merchant-console/merchant-console' })
+  },
+
   onPullDownRefresh() {
     this.loadServices().finally(() => wx.stopPullDownRefresh())
   },

@@ -1,4 +1,6 @@
 const api = require('../../utils/api')
+const demand = require('../../utils/demand')
+const chain = require('../../utils/taskchain')
 const { orderStatus, yuan, fromNow } = require('../../utils/util')
 
 const FILTERS = [
@@ -6,7 +8,8 @@ const FILTERS = [
   { key: 'open', label: '待接单' },
   { key: 'producing', label: '进行中' },
   { key: 'delivered', label: '待确认' },
-  { key: 'completed', label: '已完成' }
+  { key: 'completed', label: '已完成' },
+  { key: 'refund', label: '退款中' }
 ]
 
 Page({
@@ -59,21 +62,15 @@ Page({
         uid: session.user.id,
         status: ''
       })
-      const count = (fn) => all.filter(fn).length
-      const stats = {
-        pending: count((o) => o.status === 'open'),
-        doing: count((o) => o.status === 'taken' || o.status === 'producing'),
-        check: count((o) => o.status === 'delivered'),
-        refund: count((o) => o.status === 'refund'),
-        done: count((o) => o.status === 'completed'),
-        closed: count((o) => o.status === 'cancelled')
-      }
+      // 6 宫格与首页共用一套统计口径：云端订单 + 本地演示需求 + 商家任务
+      const stats = chain.mergeStats(all, demand.myTaken(), chain.listTasks())
       const pick = {
         all: () => all,
         open: () => all.filter((o) => o.status === 'open'),
         producing: () => all.filter((o) => o.status === 'taken' || o.status === 'producing'),
         delivered: () => all.filter((o) => o.status === 'delivered'),
-        completed: () => all.filter((o) => o.status === 'completed')
+        completed: () => all.filter((o) => o.status === 'completed'),
+        refund: () => all.filter((o) => o.status === 'refund')
       }
       const orders = (pick[key] || pick.all)()
       const mapped = orders.map((o) => {
