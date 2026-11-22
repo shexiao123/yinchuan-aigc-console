@@ -1,11 +1,13 @@
 /**
- * 热销服务：撤销折叠 / 图片不裁剪 / 整卡 50% 透明 / 不留白
- * 回归验证（2026-11-23 舍先生截图要求「这边不做折叠了」）
+ * 热销服务：撤销折叠 / 图片不裁剪 / 照片 50% 透明 / 不留白 / 文字零重影
+ * 回归验证（2026-11-23 舍先生截图要求「这边不做折叠了」「文字不要有重影」）
  *
  * 旧版：原生 <details> 默认收起、白底实色卡 + cover 裁成 148px 窄条、
  *       flex:1 / margin-top:auto 把文字区撑出白底空白。
+ * 中版：整卡 opacity:.5 + 文字描边 + 偏移 text-shadow → 截图里出现双层重影。
  * 新版：统一区块头 + 8 张卡直接平铺；封面 3:2 完整显示（object-fit:fill），
- *       整卡 opacity:.5、背景透明，文字区自然高度；hover / focus-within 恢复 1。
+ *       整卡 opacity:1、仅 .home-svc-media 照片层 .5；文字全部取消描边与阴影，
+ *       用实色 + 字重拉层次；hover 时照片恢复 1。
  *
  * 用法：node tools/test-hot-cards.js local|pages|live
  * 前置：本机 8899 静态服务、9222 无头 Chrome 调试端口
@@ -61,8 +63,17 @@ const PROBE = `JSON.stringify((()=>{
     cols: grid ? cs(grid, 'gridTemplateColumns').split(' ').filter(Boolean).length : 0,
     hrefs: cards.map(a => a.getAttribute('href')),
     opacities: cards.map(e => cs(e, 'opacity')),
+    mediaOpacities: cards.map(e => cs(e.querySelector('.home-svc-media'), 'opacity')),
     bgColors: cards.map(e => cs(e, 'backgroundColor')),
     shadows: cards.map(e => cs(e, 'boxShadow')),
+    textShadows: cards.map(e => {
+      const sel = '.home-svc-title,.home-svc-sub,.home-svc-meta,.home-svc-unit,.home-svc-price,.price-value,.price-old,.home-svc-tags .tag'
+      return Array.from(e.querySelectorAll(sel)).map(t => cs(t, 'textShadow'))
+    }),
+    textStrokes: cards.map(e => {
+      const sel = '.home-svc-title,.home-svc-sub,.home-svc-meta,.home-svc-unit,.home-svc-price,.price-value,.price-old,.home-svc-tags .tag'
+      return Array.from(e.querySelectorAll(sel)).map(t => getComputedStyle(t).getPropertyValue('-webkit-text-stroke-width'))
+    }),
     objectFits: cards.map(e => cs(e.querySelector('img'), 'objectFit')),
     imgUrls: cards.map(e => { const im = e.querySelector('img'); return im ? (im.getAttribute('data-src') || im.getAttribute('src') || '') : '' }),
     broken: cards.filter(e => { const im = e.querySelector('img'); return im && im.complete && !im.naturalWidth }).length,
@@ -131,8 +142,19 @@ const PROBE = `JSON.stringify((()=>{
   ok('宽屏 4 列、右上/底部仍有服务列表入口', s.cols === 4 && s.moreHref === '#/services' && s.moreBtn === '#/services',
     s.cols + ' 列 / ' + s.moreHref + ' / ' + s.moreBtn)
 
-  // ② 整卡 50% 透明、无白底
-  ok('8 张卡严格 50% 透明', s.opacities.length === 8 && s.opacities.every(v => v === '0.5'), s.opacities.join(' / '))
+  // ② 半透明只给照片层、整卡与文字层完全清晰、无白底、文字零重影
+  ok('整卡与文字层 opacity 1（文字不再被整体压淡）',
+    s.opacities.length === 8 && s.opacities.every(v => v === '1'), s.opacities.join(' / '))
+  ok('照片层仍 50% 透明（淡雅观感不变）',
+    s.mediaOpacities.length === 8 && s.mediaOpacities.every(v => v === '0.5'), s.mediaOpacities.join(' / '))
+  const allShadows = (s.textShadows || []).reduce((a, b) => a.concat(b), [])
+  const allStrokes = (s.textStrokes || []).reduce((a, b) => a.concat(b), [])
+  ok('全部卡内文字无 text-shadow（重影根因 1 已清）',
+    allShadows.length >= 8 && allShadows.every(v => v === 'none' || v === ''),
+    allShadows.length + ' 个文字元素 / ' + [...new Set(allShadows)].join(','))
+  ok('全部卡内文字无 -webkit-text-stroke（重影根因 2 已清）',
+    allStrokes.length >= 8 && allStrokes.every(v => /^(0px|0|)$/.test(v)),
+    allStrokes.length + ' 个文字元素 / ' + [...new Set(allStrokes)].join(','))
   ok('卡片无白色实底（背景透明）', s.bgColors.length === 8 && s.bgColors.every(v => /rgba\(0, 0, 0, 0\)|transparent/.test(v)), s.bgColors[0])
   ok('卡片不再有白卡阴影', s.shadows.every(v => v === 'none'), s.shadows[0])
 
@@ -167,8 +189,10 @@ const PROBE = `JSON.stringify((()=>{
   if (pt.y > 0 && pt.y < 900) {
     await send('Input.dispatchMouseEvent', { type: 'mouseMoved', x: pt.x, y: pt.y })
     await sleep(350)
-    const ho = await ev(`getComputedStyle(document.querySelector('.v2-svc .home-svc')).opacity`)
-    ok('鼠标移入恢复清晰（opacity 1）', ho === '1', 'opacity=' + ho)
+    const ho = await ev(`JSON.stringify((()=>{const c=document.querySelector('.v2-svc .home-svc');return {card:getComputedStyle(c).opacity,media:getComputedStyle(c.querySelector('.home-svc-media')).opacity}})())`)
+    let hv = {}; try { hv = JSON.parse(ho) } catch (e) {}
+    ok('鼠标移入照片恢复清晰、整卡始终 1', hv.card === '1' && hv.media === '1',
+      '卡 ' + hv.card + ' / 照片 ' + hv.media)
     await send('Input.dispatchMouseEvent', { type: 'mouseMoved', x: 5, y: 5 })
     await sleep(250)
   }
@@ -179,9 +203,10 @@ const PROBE = `JSON.stringify((()=>{
     await send('Emulation.setDeviceMetricsOverride', { width: w, height: w === 390 ? 844 : 900, deviceScaleFactor: 1, mobile: false })
     await sleep(1100)
     const m = await probe()
-    ok(w + 'px：' + expectCols + ' 列、仍 50% 透明、无横向溢出',
-      m.cols === expectCols && m.opacities.every(v => v === '0.5') && m.docW <= m.winW + 2 && m.details === 0,
-      m.cols + ' 列 / ' + m.docW + ':' + m.winW + ' / ' + m.opacities[0])
+    ok(w + 'px：' + expectCols + ' 列、整卡清晰 / 照片 50%、无横向溢出',
+      m.cols === expectCols && m.opacities.every(v => v === '1') &&
+      m.mediaOpacities.every(v => v === '0.5') && m.docW <= m.winW + 2 && m.details === 0,
+      m.cols + ' 列 / ' + m.docW + ':' + m.winW + ' / 卡 ' + m.opacities[0] + ' 照片 ' + m.mediaOpacities[0])
     if (w === 390) await shot('hot-cards-' + MODE + '-390')
   }
 

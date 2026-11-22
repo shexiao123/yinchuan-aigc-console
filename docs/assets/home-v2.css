@@ -566,13 +566,17 @@
 }
 
 /* ================================================================
-   17. 热销服务：撤销折叠 + 图片不裁剪 / 整卡 50% 透明 / 不留白
-   （2026-11-23 舍先生截图要求「这边不做折叠了」）
+   17. 热销服务：撤销折叠 + 图片不裁剪 / 照片 50% 透明 / 不留白 / 文字零重影
+   （2026-11-23 舍先生截图要求「这边不做折叠了」「文字不要有重影」）
    · 旧版：原生 <details> 默认收起、卡片白底实色 + cover 裁成 148px 窄条、
      flex:1 / margin-top:auto 把文字区撑出白底空白。
    · 新版：统一区块头 + 8 张卡直接平铺；封面按 3:2 完整显示
-     （object-fit:fill，不裁切、不变形留白边），整卡严格 opacity:.5、
-     背景透明无白底，文字区自然高度不拉伸；hover / focus-within 恢复 1。
+     （object-fit:fill，不裁切、不变形留白边），背景透明无白底，
+     文字区自然高度不拉伸。
+   · 半透明只给照片层：整卡 opacity:1、.home-svc-media opacity:.5，
+     hover / focus-within 时照片恢复 1。文字层因此完全清晰，
+     所有文字取消描边与阴影，杜绝「整卡 alpha + 描边 + 偏移阴影」三重叠加
+     形成的双层错影（截图里的重影）。
    ⚠️ 追加在文件最末，用 .home.home-v2 前缀 + !important 压过 tech.css
       第 10 段（height:148px / aspect-ratio:auto / padding 兜底）。
    ================================================================ */
@@ -581,21 +585,30 @@
 .home.home-v2 .home-hot-body { background: transparent !important; padding: 0 !important; }
 .home.home-v2 .v2-svc-more { margin-top: 18px !important; }
 
-/* 17.2 整卡 50% 透明、无白底、无阴影 */
+/* 17.2 半透明只给照片层、整卡与文字层完全不透明、无白底、无阴影
+   （旧做法是把 opacity:.5 加在整卡上，文字跟着变淡，
+     再靠描边 / 柔光补偿，结果就是截图里的双层重影——已弃用） */
 .home.home-v2 .home-svc {
   background: transparent !important;
   border: 1px solid rgba(180, 140, 95, .28) !important;
   box-shadow: none !important;
   border-radius: 12px !important;
   overflow: hidden !important;
-  opacity: .5 !important;
-  transition: opacity .2s ease, border-color .2s ease !important;
+  opacity: 1 !important;
+  transition: border-color .2s ease !important;
 }
 .home.home-v2 .home-svc:hover,
 .home.home-v2 .home-svc:focus-within {
-  opacity: 1 !important;
   border-color: rgba(138, 82, 34, .55) !important;
   transform: none !important;
+}
+.home.home-v2 .home-svc-media {
+  opacity: .5 !important;
+  transition: opacity .2s ease !important;
+}
+.home.home-v2 .home-svc:hover .home-svc-media,
+.home.home-v2 .home-svc:focus-within .home-svc-media {
+  opacity: 1 !important;
 }
 
 /* 17.3 封面完整显示：3:2 不裁剪、不变形留白边，禁用 hover 放大裁切 */
@@ -624,31 +637,40 @@
 }
 .home.home-v2 .home-svc-foot { margin-top: 0 !important; padding-top: 5px !important; }
 
-/* 17.5 文字补偿：整卡 opacity:.5 会把深色字压到几乎看不见，
-   这里把文字压到近黑并加重笔画（不铺任何白底，仍不留白），
-   价格单独用深铜红拉开层次；hover 时恢复 1 后观感更实。 */
-.home.home-v2 .home-svc-title,
+/* 17.5 文字零重影（2026-11-23 舍先生「文字不要有重影」）
+   病根：整卡 opacity:.5 把字压到半透明，-webkit-text-stroke 描一层边、
+   text-shadow 再偏 1px 铺一层浅色柔光，三层叠加就成了截图里的双影。
+   解法：文字层随整卡恢复 opacity:1；所有文字（含后代）统一取消描边与阴影，
+   只用实色 + 字重拉层次；不铺任何白底，卡片依旧不留白。 */
+.home.home-v2 .v2-svc .home-svc,
+.home.home-v2 .v2-svc .home-svc * {
+  text-shadow: none !important;
+  -webkit-text-stroke: 0 !important;
+}
+.home.home-v2 .home-svc-title {
+  color: #17100B !important;
+  font-weight: 760 !important;
+  font-size: 14px !important;
+}
 .home.home-v2 .home-svc-sub,
 .home.home-v2 .home-svc-meta,
 .home.home-v2 .home-svc-unit {
-  color: #17100B !important;
-  font-weight: 760 !important;
-  -webkit-text-stroke: .45px rgba(23, 16, 11, .9);
-  text-shadow: 0 1px 2px rgba(255, 250, 240, .7) !important;
+  color: #3B2B1E !important;
+  font-weight: 650 !important;
 }
-.home.home-v2 .home-svc-title { font-size: 14px !important; }
 .home.home-v2 .home-svc-price,
 .home.home-v2 .home-svc-price .price-value {
   color: #7A2E12 !important;
   font-weight: 820 !important;
-  -webkit-text-stroke: .4px rgba(90, 34, 14, .85);
-  text-shadow: 0 1px 2px rgba(255, 250, 240, .8) !important;
+}
+.home.home-v2 .home-svc-price .price-old {
+  color: #8A7663 !important;
+  font-weight: 500 !important;
 }
 .home.home-v2 .home-svc-tags .tag {
-  background: rgba(250, 245, 236, .62) !important;
+  background: rgba(250, 245, 236, .72) !important;
   color: #5A2210 !important;
   font-weight: 700 !important;
-  text-shadow: 0 1px 2px rgba(255, 250, 240, .9) !important;
 }
 @media (max-width: 560px) {
   .home.home-v2 .home-svc-body { padding: 7px 8px 9px !important; }
