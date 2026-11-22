@@ -2381,8 +2381,12 @@ body:not(.admin-page) {
    14. Hero 换成东方实景不透明背景图（2026-11-23 舍先生要求「实景」）
    ----------------------------------------------------------------
    图：assets/covers/light/oriental-hero.jpg —— AI 生成的苏州园林实景摄影
-   （粉墙竹影 / 黛瓦花窗 / 月洞门 / 暖黄纸灯笼），裁成 3:1 横幅 2400×800，
-   左侧在图片内部烘焙极淡浅米渐变保证深色标题可读，右下角水印已裁除。
+   （粉墙竹影 / 黛瓦花窗 / 月洞门 / 暖黄纸灯笼），裁成 3:1 横幅 2400×800。
+   2026-11-23 舍先生要求「把有建筑的一面放到左侧」：整图水平镜像，
+   黛瓦廊榭 / 花窗 / 纸灯笼移到左侧 45%，右侧改为浅米粉墙竹影留白；
+   镜像前先逆掉旧图左侧烘焙的 .34 渐变，避免它被翻到右侧洗白画面，
+   再只在新左侧（标题区）重新烘焙 .46→0 的极淡米白保护（峰值在 x=0），
+   建筑轮廓仍可见、深棕标题压得住。右下角水印已裁除。
    与上一版的差别：背景图 opacity .5 → 1（真正不透明），覆盖在图上方的
    半透明护罩全部撤掉；Hero 自身也改回不透明实底。
    ⚠️ 追加在文件最末且带 !important，压过第 11/12 段的 opacity / 护罩规则。
@@ -2391,12 +2395,15 @@ body:not(.admin-page) {
   background: #F7EFE1 !important;
 }
 .home-hero::before {
-  background: url("covers/light/oriental-hero.jpg?v=20261123j") center/cover no-repeat !important;
+  /* left center：容器更宽而触发 cover 横向裁切时，保住左侧的建筑面 */
+  background: url("covers/light/oriental-hero.jpg?v=20261123l") left center/cover no-repeat !important;
   opacity: 1 !important;
 }
 .home-hero-copy::before { display: none !important; }
 .home-hero-title, .home-hero-sub {
-  text-shadow: 0 1px 2px rgba(250, 245, 236, .72) !important;
+  /* 建筑面翻到左侧后，深棕字压在黛瓦上，靠米白柔光保证可读；
+     这是文字阴影，不是覆盖在背景图上的遮罩层。 */
+  text-shadow: 0 0 14px rgba(250, 245, 236, .92), 0 0 5px rgba(250, 245, 236, .88), 0 1px 2px rgba(250, 245, 236, .8) !important;
 }
 .home-trust { background: rgba(255, 253, 249, .92) !important; }
 

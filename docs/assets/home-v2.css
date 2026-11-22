@@ -79,7 +79,8 @@
   max-width: 15em;
 }
 .home.home-v2 .home-hero-sub {
-  font-size: 15.5px !important; line-height: 1.85 !important; color: #5C4734 !important;
+  /* 建筑面翻到左侧后，小字压在竹影/瓦片上，稍加深一档保证可读 */
+  font-size: 15.5px !important; line-height: 1.85 !important; color: #4A3524 !important; font-weight: 500 !important;
   max-width: 32em !important; margin: 0 0 26px !important;
 }
 .home.home-v2 .home-hero-cta { gap: 12px !important; }
