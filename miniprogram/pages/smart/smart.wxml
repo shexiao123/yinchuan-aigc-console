@@ -1,0 +1,149 @@
+<view class="page smart-page">
+
+  <!-- 合规：演示态必须一眼可辨，不得让用户误认为真实交易 -->
+  <view class="demo-strip">
+    <text class="demo-strip-tag">演示版</text>
+    <text>撮合与报价均为本机测算，不产生真实资金往来</text>
+  </view>
+
+  <view class="smart-hero">
+    <text class="smart-hero-eyebrow">SMART STUDIO · 智能工作台</text>
+    <text class="smart-hero-title">把找人的时间，留给创作</text>
+    <text class="smart-hero-sub">填预算与交期，秒级匹配最合适的服务者；评分逐项可解释，不黑箱。</text>
+    <view class="smart-tabs">
+      <view class="smart-tab {{tab === 'match' ? 'on' : ''}}" bindtap="onTab" data-tab="match">智能撮合</view>
+      <view class="smart-tab {{tab === 'quote' ? 'on' : ''}}" bindtap="onTab" data-tab="quote">报价测算</view>
+    </view>
+  </view>
+
+  <view class="smart-demo-hint" wx:if="{{isDemo}}">当前为演示样本数据，云端在架服务可用时会自动切换为真实数据。</view>
+
+  <!-- ==================== 智能撮合 ==================== -->
+  <block wx:if="{{tab === 'match'}}">
+    <view class="smart-form">
+      <view class="smart-field">
+        <text class="smart-label">项目品类</text>
+        <picker mode="selector" range="{{catNames}}" value="{{catIndex}}" bindchange="onCatChange">
+          <view class="smart-picker">{{catNames[catIndex]}} <text class="smart-caret">›</text></view>
+        </picker>
+      </view>
+      <view class="smart-field">
+        <text class="smart-label">项目预算（元）</text>
+        <input class="smart-input" type="number" value="{{budget}}" bindinput="onBudgetInput" placeholder="例如 3000" />
+      </view>
+      <view class="smart-field">
+        <text class="smart-label">期望交付（天）</text>
+        <input class="smart-input" type="number" value="{{days}}" bindinput="onDaysInput" placeholder="例如 15" />
+      </view>
+      <view class="smart-field">
+        <text class="smart-label">服务者城市</text>
+        <picker mode="selector" range="{{cityNames}}" value="{{cityIndex}}" bindchange="onCityChange">
+          <view class="smart-picker">{{cityNames[cityIndex]}} <text class="smart-caret">›</text></view>
+        </picker>
+      </view>
+      <view class="smart-switch-row">
+        <text>优先已认证服务者</text>
+        <switch checked="{{onlyVerified}}" bindchange="onVerifiedChange" color="#A85A2D" />
+      </view>
+      <button class="smart-run" bindtap="runMatch">开始智能撮合</button>
+    </view>
+
+    <view class="smart-weights">
+      <text class="smart-weights-label">排序权重</text>
+      <text class="smart-weight" wx:for="{{weights}}" wx:key="label">{{item.label}} {{item.max}}</text>
+      <text class="smart-weights-note">满分 100</text>
+    </view>
+
+    <view class="smart-result-head">
+      <text class="smart-result-title">{{resultTitle}}</text>
+      <text class="smart-result-sub">按品类、预算、交期、口碑与认证加权排序</text>
+    </view>
+
+    <view class="smart-card" wx:for="{{results}}" wx:key="key" wx:for-item="r">
+      <view class="smart-card-top">
+        <view class="smart-score-ring">
+          <text class="smart-score-num">{{r.score}}</text>
+          <text class="smart-score-label">匹配度</text>
+        </view>
+        <view class="smart-card-head">
+          <text class="smart-rank">TOP {{r.rank}}</text>
+          <text class="smart-card-title">{{r.title}}</text>
+          <text class="smart-card-meta">{{r.meta}}</text>
+          <text class="smart-card-price">{{r.price}}</text>
+        </view>
+        <view class="smart-card-cta" bindtap="onOpenService" data-id="{{r.serviceId}}">查看 ›</view>
+      </view>
+
+      <view class="smart-bars">
+        <view class="smart-bar" wx:for="{{r.bars}}" wx:for-item="b" wx:key="key">
+          <text class="smart-bar-label">{{b.label}}</text>
+          <view class="smart-bar-track"><view class="smart-bar-fill" style="width:{{b.pct}}%"></view></view>
+          <text class="smart-bar-val">{{b.val}}/{{b.max}}</text>
+        </view>
+      </view>
+
+      <view class="smart-reasons">
+        <text class="smart-reason" wx:for="{{r.reasons}}" wx:for-item="txt" wx:key="*this">✓ {{txt}}</text>
+      </view>
+      <view class="smart-cautions" wx:if="{{r.cautions.length}}">
+        <text class="smart-caution" wx:for="{{r.cautions}}" wx:for-item="txt" wx:key="*this">! {{txt}}</text>
+      </view>
+    </view>
+
+    <view class="smart-empty" wx:if="{{!results.length}}">暂无可匹配的服务，调整预算或品类再试</view>
+  </block>
+
+  <!-- ==================== 报价测算 ==================== -->
+  <block wx:else>
+    <view class="smart-form">
+      <view class="smart-field">
+        <text class="smart-label">项目品类</text>
+        <picker mode="selector" range="{{catNames}}" value="{{quoteCatIndex}}" bindchange="onQuoteCatChange">
+          <view class="smart-picker">{{catNames[quoteCatIndex]}} <text class="smart-caret">›</text></view>
+        </picker>
+      </view>
+      <view class="smart-field">
+        <text class="smart-label">交付规格</text>
+        <picker mode="selector" range="{{specNames}}" value="{{specIndex}}" bindchange="onSpecChange">
+          <view class="smart-picker">{{specNames[specIndex]}} <text class="smart-caret">›</text></view>
+        </picker>
+      </view>
+      <view class="smart-field">
+        <text class="smart-label">排期要求</text>
+        <picker mode="selector" range="{{rushNames}}" value="{{rushIndex}}" bindchange="onRushChange">
+          <view class="smart-picker">{{rushNames[rushIndex]}} <text class="smart-caret">›</text></view>
+        </picker>
+      </view>
+      <view class="smart-field">
+        <text class="smart-label">修改轮次</text>
+        <input class="smart-input" type="number" value="{{revisions}}" bindinput="onRevisionsInput" placeholder="2" />
+      </view>
+      <button class="smart-run" bindtap="runQuote">重新测算</button>
+    </view>
+
+    <block wx:if="{{quote}}">
+      <view class="smart-result-head">
+        <text class="smart-result-title">{{quote.name}} · 参考报价</text>
+        <text class="smart-result-sub">{{quote.specLabel}} / {{quote.rushLabel}} / {{quote.revisions}} 轮修改 · 预计 {{quote.days}} 天交付</text>
+      </view>
+
+      <view class="smart-quote-main">
+        <text class="smart-quote-caption">合理价格区间</text>
+        <view class="smart-quote-num">{{quote.low}} <text class="smart-quote-dash">—</text> {{quote.high}}</view>
+        <text class="smart-quote-sub">建议预算 {{quote.amount}} · 按品类在架服务价格中位数测算</text>
+        <button class="smart-quote-cta" bindtap="onGoPublish">带着预算去发布需求 ›</button>
+      </view>
+
+      <view class="smart-quote-breakdown">
+        <view class="smart-quote-breakdown-title">资金拆解（演示记账）</view>
+        <view class="smart-quote-row" wx:for="{{quote.lines}}" wx:key="label" wx:for-item="ln">
+          <view class="smart-quote-label">{{ln.label}}<text class="smart-quote-note">{{ln.note}}</text></view>
+          <text class="smart-quote-val">{{ln.val}}</text>
+        </view>
+      </view>
+
+      <view class="smart-disclaimer">⚠️ {{quote.disclaimer}}</view>
+    </block>
+  </block>
+
+</view>

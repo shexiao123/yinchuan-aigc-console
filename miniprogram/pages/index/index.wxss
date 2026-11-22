@@ -481,6 +481,23 @@
   color: var(--ink-2);
 }
 
+/* 智能工作台入口横条：独立一行，保留上面 4 个快捷格不挤位 */
+.smart-entry-bar {
+  display: flex; align-items: center;
+  margin: 16rpx 20rpx 0; padding: 20rpx 18rpx;
+  background: var(--card); border: 1rpx solid var(--line); border-radius: 14rpx;
+}
+.smart-entry-icon {
+  flex: 0 0 64rpx; width: 64rpx; height: 64rpx; line-height: 64rpx;
+  text-align: center; border-radius: 50%;
+  background: #F5EADB; color: #A85A2D; font-size: 34rpx; margin-right: 18rpx;
+}
+.smart-entry-body { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.smart-entry-tag { color: #A85A2D; font-size: 19rpx; font-weight: 600; letter-spacing: 1rpx; }
+.smart-entry-title { color: var(--ink); font-size: 26rpx; font-weight: 650; margin-top: 4rpx; }
+.smart-entry-desc { color: var(--ink-3); font-size: 19rpx; margin-top: 4rpx; line-height: 1.45; }
+.smart-entry-arrow { color: #B5793D; font-size: 44rpx; line-height: 1; margin-left: 10rpx; }
+
 /* 业务分类分组：组标题 + 横向小卡，替代 8 张大卡 */
 .cat-group {
   margin-top: 22rpx;

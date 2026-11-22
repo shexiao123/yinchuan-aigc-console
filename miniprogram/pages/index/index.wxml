@@ -80,6 +80,17 @@
       </view>
     </view>
 
+    <!-- 智能工作台入口：独立横条，不挤占上面 4 个快捷格 -->
+    <view class="smart-entry-bar" bindtap="onGoSmart">
+      <view class="smart-entry-icon">✦</view>
+      <view class="smart-entry-body">
+        <text class="smart-entry-tag">NEW · 智能工作台</text>
+        <text class="smart-entry-title">不知道该找谁做？让算法替你选</text>
+        <text class="smart-entry-desc">填预算与交期，秒级匹配服务者，并算出报价与保证金拆解</text>
+      </view>
+      <text class="smart-entry-arrow">›</text>
+    </view>
+
     <!-- 公告：只留一条滚动条，在线人数已并入轮播 HUD -->
     <view class="notice-bar" wx:if="{{notices.length}}">
       <view class="notice-label" bindtap="onNoticeAll">

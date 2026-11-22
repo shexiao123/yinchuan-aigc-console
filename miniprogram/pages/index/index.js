@@ -177,6 +177,11 @@ Page({
     wx.switchTab({ url: '/pages/wallet/wallet' })
   },
 
+  /** 智能工作台：AI 撮合 + 报价测算 */
+  onGoSmart() {
+    wx.navigateTo({ url: '/pages/smart/smart' })
+  },
+
   onNoticeAll() {
     const list = this.data.notices.slice(0, 6)
     if (!list.length) return

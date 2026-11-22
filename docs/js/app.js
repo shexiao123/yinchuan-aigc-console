@@ -498,7 +498,7 @@
   }
 
   function setActiveNav(route) {
-    const map = { home: 'home', services: 'services', hall: 'hall', groups: 'groups', group: 'groups', orders: 'orders', studio: 'studio', admin: 'studio', merchants: 'merchants', merchant: 'merchants', tasks: 'merchants', task: 'merchants', 'merchant-console': 'merchants', 'merchant-join': 'merchants' }
+    const map = { home: 'home', services: 'services', smart: 'smart', hall: 'hall', groups: 'groups', group: 'groups', orders: 'orders', studio: 'studio', admin: 'studio', merchants: 'merchants', merchant: 'merchants', tasks: 'merchants', task: 'merchants', 'merchant-console': 'merchants', 'merchant-join': 'merchants' }
     const key = map[route] || 'home'
     document.querySelectorAll('.nav-link').forEach((n) => {
       n.classList.toggle('active', n.dataset.route === key)
@@ -554,12 +554,21 @@
       layers: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3-9 5 9 5 9-5-9-5Z"/><path d="m3 12.5 9 5 9-5M3 17l9 5 9-5"/></svg>',
       star: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9L12 3Z"/></svg>'
     }
+    // 云端任一请求失败时逐项降级到只读快照，首页绝不整体白屏。
+    // Pages 域名不在云 CORS 白名单，本地端点偶发解析失败时都靠这一层兜住。
+    const seed = window.SEED_DATA || {}
     const [banners, categories, services, providers, homeShops, homeTasks] = await Promise.all([
       // 取全量：首页 KPI「在架服务」要用真实总数，热销卡再 slice 前 6 条
-      API.listBanners(), API.listCategories(), API.listServices({ limit: 200 }), API.listProviders(),
-      API.listMerchants().catch(() => []), API.listMerchantTasks({ publicOnly: true, limit: 6 }).catch(() => [])
+      API.listBanners().catch(() => seed.banners || []),
+      API.listCategories().catch(() => seed.categories || []),
+      API.listServices({ limit: 200 }).catch(() => seed.services || []),
+      API.listProviders().catch(() => seed.providers || []),
+      API.listMerchants().catch(() => []),
+      API.listMerchantTasks({ publicOnly: true, limit: 6 }).catch(() => [])
     ])
-    const settings = S.settings || (S.settings = await API.getSettings())
+    const settings = S.settings || (S.settings = await API.getSettings().catch(() => ({
+      commission_rate: 0.10, min_order_amount: 100, support_phone: '', notice: ''
+    })))
     const hot = (services || []).slice(0, 6)
 
     const heroBanner = banners[0] || { title: '银川AIGC数字文化产业基地', subtitle: '', theme: 'amber' }
@@ -573,9 +582,9 @@
     const fallbackPhoto = (id) => {
       const n = Number(id)
       const i = Number.isFinite(n) ? ((n - 1) % HOME_PHOTOS.length + HOME_PHOTOS.length) % HOME_PHOTOS.length : 0
-      return 'assets/covers/' + HOME_PHOTOS[i] + '?v=20261122a'
+      return 'assets/covers/' + HOME_PHOTOS[i] + '?v=20261122b'
     }
-    const heroImage = heroBanner.imageUrl || 'assets/covers/cover-03.jpg?v=20261122a'
+    const heroImage = heroBanner.imageUrl || 'assets/covers/cover-03.jpg?v=20261122b'
     const bannerHref = (b) => (b.link_type === 'all' || !b.link_value ? '#/services' : '#/services?category=' + b.link_value)
 
     const providerCount = (providers || []).length
@@ -631,6 +640,16 @@
             <span class="home-hero-photo-tag">银川 · 让每一次心动都有画面</span>
           </div>
         </section>
+
+        <a class="smart-entry" href="#/smart">
+          <span class="smart-entry-media" style="background-image:url('assets/covers/cover-03.jpg?v=20261122b')"></span>
+          <span class="smart-entry-body">
+            <span class="smart-entry-tag">NEW · 智能工作台</span>
+            <span class="smart-entry-title">不知道该找谁做？让算法替你选</span>
+            <span class="smart-entry-desc">填预算与交期，秒级匹配最合适的服务者；也能一键算出报价、保证金与违约金的完整拆解</span>
+          </span>
+          <span class="smart-entry-arrow">›</span>
+        </a>
 
         <section class="home-section home-stats">
           <div class="home-stats-head">
@@ -4139,6 +4158,272 @@
         render()
       })
     })
+  }
+
+  /* ---------------- 智能工作台：AI 撮合 + 报价测算 ----------------
+   * 算法内核在 js/smart-engine.js（双端共用），这里只负责表单与可视化。
+   * 云端不可达时用 SEED_DATA 只读快照，Pages / 托管域都能正常演示。
+   * 所有金额均为演示测算，不产生真实资金往来。
+   * ---------------------------------------------------------------- */
+
+  const SMART_CITIES = ['不限', '银川', '北京', '上海', '广州', '深圳', '杭州', '成都', '西安', '武汉', '远程']
+  S.smartTab = 'match'
+  S.smartMatch = { category: 'wedding-shoot', budget: 3000, days: 15, city: '不限', onlyVerified: false }
+  S.smartQuote = { category: 'wedding-shoot', spec: 'standard', rush: 0, revisions: 2 }
+  S.smartData = null
+
+  function smartEngine() { return window.SmartEngine || null }
+
+  function smartMoney(cents) {
+    const n = Number(cents || 0) / 100
+    return '¥' + n.toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+  }
+
+  function smartSelect(id, label, options, value) {
+    return `<label class="smart-field">
+      <span class="smart-field-label">${API.esc(label)}</span>
+      <select class="smart-select" id="${id}">${options.map((o) =>
+        `<option value="${API.esc(o.value)}"${String(o.value) === String(value) ? ' selected' : ''}>${API.esc(o.label)}</option>`
+      ).join('')}</select>
+    </label>`
+  }
+
+  function smartNumber(id, label, value, min, max, suffix) {
+    return `<label class="smart-field">
+      <span class="smart-field-label">${API.esc(label)}</span>
+      <span class="smart-input-wrap">
+        <input class="smart-input" id="${id}" type="number" inputmode="numeric" min="${min}" max="${max}" value="${API.esc(value)}" />
+        ${suffix ? `<span class="smart-input-suffix">${API.esc(suffix)}</span>` : ''}
+      </span>
+    </label>`
+  }
+
+  async function loadSmartData() {
+    if (S.smartData) return S.smartData
+    const seed = window.SEED_DATA || {}
+    const [services, providers, categories] = await Promise.all([
+      API.listServices({ limit: 200 }).catch(() => []),
+      API.listProviders().catch(() => []),
+      API.listCategories().catch(() => [])
+    ])
+    S.smartData = {
+      services: Array.isArray(services) && services.length ? services : (seed.services || []),
+      providers: Array.isArray(providers) && providers.length ? providers : (seed.providers || []),
+      categories: Array.isArray(categories) && categories.length ? categories : (seed.categories || [])
+    }
+    return S.smartData
+  }
+
+  function smartCategoryOptions(categories) {
+    const E = smartEngine()
+    const list = categories && categories.length
+      ? categories.map((c) => ({ value: c.slug, label: c.name }))
+      : (E ? E.listCategories().map((c) => ({ value: c.slug, label: c.name })) : [])
+    return list.length ? list : [{ value: '', label: '全部品类' }]
+  }
+
+  /* ---- 撮合面板 ---- */
+
+  function smartMatchForm(p, categories) {
+    return `<div class="smart-form">
+      ${smartSelect('smCategory', '项目品类', smartCategoryOptions(categories), p.category)}
+      ${smartNumber('smBudget', '项目预算', p.budget, 0, 10000000, '元')}
+      ${smartNumber('smDays', '期望交付', p.days, 0, 365, '天')}
+      ${smartSelect('smCity', '服务者城市', SMART_CITIES.map((c) => ({ value: c, label: c })), p.city)}
+      <label class="smart-check">
+        <input type="checkbox" id="smVerified"${p.onlyVerified ? ' checked' : ''} />
+        <span>优先已认证服务者</span>
+      </label>
+      <button class="btn btn-primary smart-run" id="smRun" type="button">开始智能撮合</button>
+    </div>`
+  }
+
+  function smartWeightsHtml() {
+    const E = smartEngine()
+    const w = E ? E.WEIGHTS : []
+    return `<div class="smart-weights">
+      <span class="smart-weights-label">排序权重</span>
+      ${w.map((x) => `<span class="smart-weight">${API.esc(x.label)} <b>${x.max}</b></span>`).join('')}
+      <span class="smart-weights-note">满分 100 · 逐项可解释</span>
+    </div>`
+  }
+
+  function smartMatchResultHtml(p) {
+    const E = smartEngine()
+    if (!E || !S.smartData) return ''
+    const rows = E.match(p, S.smartData.services, S.smartData.providers, S.smartData.categories).slice(0, 6)
+    if (!rows.length) return '<div class="smart-empty">暂无在架服务，稍后再试</div>'
+    const head = `<div class="smart-result-head">
+      <h2 class="smart-section-title">为你匹配到 <b>${rows.length}</b> 个合适方案</h2>
+      <span class="smart-result-sub">按品类、预算、交期、口碑与认证加权排序 · 演示测算</span>
+    </div>`
+    return head + '<div class="smart-results">' + rows.map((r, i) => {
+      const s = r.service
+      const prov = r.provider || {}
+      const bars = E.WEIGHTS.map((w) => {
+        const val = r.parts[w.key] || 0
+        const pct = Math.max(0, Math.min(100, val / w.max * 100))
+        return `<div class="smart-bar-row">
+          <span class="smart-bar-label">${API.esc(w.label)}</span>
+          <span class="smart-bar-track"><span class="smart-bar-fill" style="width:${pct}%"></span></span>
+          <span class="smart-bar-val">${val}/${w.max}</span>
+        </div>`
+      }).join('')
+      return `<article class="smart-match-card">
+        <div class="smart-match-top">
+          <div class="smart-score-ring" style="background:conic-gradient(#A85A2D ${r.score}%, #EFE0C8 0)">
+            <span class="smart-score-inner"><b class="smart-score-num">${r.score}</b><span class="smart-score-label">匹配度</span></span>
+          </div>
+          <div class="smart-match-head">
+            <span class="smart-match-rank">TOP ${i + 1}</span>
+            <h3 class="smart-match-title">${API.esc(s.title || '未命名服务')}</h3>
+            <div class="smart-match-meta">${API.esc(prov.nickname || '平台服务者')} · ${API.esc(prov.city || '远程')} · ${API.esc(s.delivery_days || '–')} 天交付 · 评分 ${API.esc(s.rating || '–')}</div>
+            <div class="smart-match-price">${smartMoney(s.price)}</div>
+          </div>
+          <a class="btn btn-primary btn-sm smart-match-cta" href="#/service/${API.esc(s.id)}">查看服务 ›</a>
+        </div>
+        <div class="smart-bars">${bars}</div>
+        <div class="smart-reasons">${r.reasons.map((x) => `<span class="smart-reason">✓ ${API.esc(x)}</span>`).join('')}</div>
+        ${r.cautions.length ? `<div class="smart-cautions">${r.cautions.map((x) => `<span class="smart-caution">! ${API.esc(x)}</span>`).join('')}</div>` : ''}
+      </article>`
+    }).join('') + '</div>'
+  }
+
+  function smartMatchPanel(p) {
+    return smartMatchForm(p, S.smartData && S.smartData.categories) + smartWeightsHtml() +
+      `<div class="smart-result" id="smartResult">${smartMatchResultHtml(p)}</div>`
+  }
+
+  /* ---- 报价面板 ---- */
+
+  function smartQuoteForm(q, categories) {
+    const E = smartEngine()
+    const specOpts = E ? Object.keys(E.SPEC_FACTOR).map((k) => ({ value: k, label: E.SPEC_LABEL[k] }))
+      : [{ value: 'standard', label: '标准档' }]
+    const rushOpts = E ? Object.keys(E.RUSH_FACTOR).map((k) => ({ value: k, label: E.RUSH_LABEL[k] }))
+      : [{ value: '0', label: '常规排期' }]
+    return `<div class="smart-form">
+      ${smartSelect('sqCategory', '项目品类', smartCategoryOptions(categories), q.category)}
+      ${smartSelect('sqSpec', '交付规格', specOpts, q.spec)}
+      ${smartSelect('sqRush', '排期要求', rushOpts, q.rush)}
+      ${smartNumber('sqRevisions', '修改轮次', q.revisions, 0, 8, '轮')}
+      <button class="btn btn-primary smart-run" id="sqRun" type="button">重新测算</button>
+    </div>`
+  }
+
+  function smartQuoteResultHtml(q) {
+    const E = smartEngine()
+    if (!E) return ''
+    const r = E.quote(Object.assign({}, q, { categories: S.smartData && S.smartData.categories }))
+    const b = r.breakdown
+    const line = (label, val, note) => `<div class="smart-quote-row">
+      <span class="smart-quote-label">${API.esc(label)}${note ? `<i>${API.esc(note)}</i>` : ''}</span>
+      <span class="smart-quote-val">${smartMoney(val)}</span>
+    </div>`
+    return `<div class="smart-result-head">
+        <h2 class="smart-section-title">${API.esc(r.name)} · 参考报价</h2>
+        <span class="smart-result-sub">${API.esc(r.factors.specLabel)} / ${API.esc(r.factors.rushLabel)} / ${r.factors.revisions} 轮修改 · 预计 ${r.days} 天交付</span>
+      </div>
+      <div class="smart-quote-grid">
+        <div class="smart-quote-main">
+          <span class="smart-quote-caption">合理价格区间</span>
+          <div class="smart-quote-num">${smartMoney(r.low)} <i>—</i> ${smartMoney(r.high)}</div>
+          <div class="smart-quote-sub">建议预算 ${smartMoney(r.amount)} · 平台按品类在架服务价格中位数测算</div>
+          <a class="btn btn-primary smart-quote-cta" href="#/hall">带着预算去发布需求 ›</a>
+        </div>
+        <div class="smart-quote-breakdown">
+          <div class="smart-quote-breakdown-title">资金拆解（演示记账）</div>
+          ${line('项目金额', b.amount, '测算基准')}
+          ${line('平台服务费', b.platformFee, '10%')}
+          ${line('服务者到手', b.providerNet, '扣除服务费')}
+          ${line('接单方保证金', b.providerDeposit, '15% · 验收后原路退回')}
+          ${line('发布方保证金', b.publisherDeposit, '10% · 须为注册商家')}
+          ${line('逾期违约金', b.penalty, '没收接单方全部保证金')}
+          ${line('　└ 平台分成', b.penaltyPlatform, '30%')}
+          ${line('　└ 发布者分成', b.penaltyPublisher, '70%')}
+        </div>
+      </div>
+      <div class="smart-disclaimer">⚠️ ${API.esc(r.disclaimer)}</div>`
+  }
+
+  function smartQuotePanel(q) {
+    return smartQuoteForm(q, S.smartData && S.smartData.categories) +
+      `<div class="smart-result" id="smartResult">${smartQuoteResultHtml(q)}</div>`
+  }
+
+  /* ---- 页面与绑定 ---- */
+
+  function smartPanelHtml() {
+    return S.smartTab === 'quote' ? smartQuotePanel(S.smartQuote) : smartMatchPanel(S.smartMatch)
+  }
+
+  function mountSmartPanel() {
+    const el = document.getElementById('smartPanel')
+    if (!el) return
+    el.innerHTML = smartPanelHtml()
+    bindSmartForm()
+  }
+
+  function bindSmartForm() {
+    const matchRun = document.getElementById('smRun')
+    if (matchRun) {
+      matchRun.addEventListener('click', () => {
+        S.smartMatch = {
+          category: (document.getElementById('smCategory') || {}).value || '',
+          budget: Number((document.getElementById('smBudget') || {}).value) || 0,
+          days: Number((document.getElementById('smDays') || {}).value) || 0,
+          city: (document.getElementById('smCity') || {}).value || '不限',
+          onlyVerified: !!(document.getElementById('smVerified') || {}).checked
+        }
+        mountSmartPanel()
+        toast('已按新条件重新撮合')
+      })
+    }
+    const quoteRun = document.getElementById('sqRun')
+    if (quoteRun) {
+      quoteRun.addEventListener('click', () => {
+        S.smartQuote = {
+          category: (document.getElementById('sqCategory') || {}).value || '',
+          spec: (document.getElementById('sqSpec') || {}).value || 'standard',
+          rush: Number((document.getElementById('sqRush') || {}).value) || 0,
+          revisions: Number((document.getElementById('sqRevisions') || {}).value) || 0
+        }
+        mountSmartPanel()
+        toast('报价已重新测算')
+      })
+    }
+  }
+
+  VIEWS.smart = async function (id, query) {
+    // 支持 #/smart?tab=quote 直达报价页，方便把测算结果分享给客户
+    if (query && (query.tab === 'quote' || query.tab === 'match')) S.smartTab = query.tab
+    await loadSmartData()
+    return `<div class="smart-page">
+      <section class="smart-hero">
+        <span class="smart-hero-media" style="background-image:url('assets/covers/cover-01.jpg?v=20261122b')"></span>
+        <div class="smart-hero-inner">
+          <span class="smart-eyebrow">SMART STUDIO · 智能工作台</span>
+          <h1 class="smart-hero-title">把找人的时间，留给创作</h1>
+          <p class="smart-hero-sub">输入品类、预算与交期，秒级算出参考报价与最合适的服务者。评分逐项可解释，不黑箱。</p>
+          <div class="smart-tabs">
+            <button class="smart-tab${S.smartTab === 'match' ? ' is-active' : ''}" data-smart-tab="match" type="button">智能撮合</button>
+            <button class="smart-tab${S.smartTab === 'quote' ? ' is-active' : ''}" data-smart-tab="quote" type="button">报价测算</button>
+          </div>
+        </div>
+      </section>
+      <div class="smart-panel" id="smartPanel">${smartPanelHtml()}</div>
+    </div>`
+  }
+
+  BINDINGS.smart = function () {
+    document.querySelectorAll('[data-smart-tab]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        S.smartTab = btn.dataset.smartTab
+        document.querySelectorAll('[data-smart-tab]').forEach((b) => b.classList.toggle('is-active', b.dataset.smartTab === S.smartTab))
+        mountSmartPanel()
+      })
+    })
+    bindSmartForm()
   }
 
   /* ---------------- 启动 ---------------- */

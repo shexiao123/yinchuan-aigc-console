@@ -149,7 +149,9 @@ if (expIdx < 0) {
   appJson.pages.forEach((p) => {
     const jsPath = path.join(ROOT, p + '.js')
     if (!fs.existsSync(jsPath)) return
-    const js = fs.readFileSync(jsPath, 'utf8')
+    // require('../../utils/api.js') 这类模块路径里的 "api.js" 会被
+    // \bapi\.(\w+) 误当成一次 api.js 调用，先剥掉所有 require(...) 再扫真实调用
+    const js = fs.readFileSync(jsPath, 'utf8').replace(/require\([^)]*\)/g, '')
     ;[...new Set([...js.matchAll(/\bapi\.([a-zA-Z_$][\w$]*)/g)].map((m) => m[1]))].forEach((fn) => {
       if (!exported.has(fn)) fail(`${p}.js 调用了 api.${fn}，但 api.js 未导出`)
     })

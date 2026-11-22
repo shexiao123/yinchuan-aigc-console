@@ -101,8 +101,29 @@ node tools/test-taskchain.js        # 商家任务链
 node tools/test-demand.js           # 需求池
 node tools/test-payout.js           # 提现
 node tools/test-req-templates.js    # 8 品类结构化需求模板
+node tools/test-smart.js            # 智能撮合 + 报价测算算法（72 项）
+node tools/e2e-smart-page.js        # 小程序智能工作台页面逻辑（28 项）
+node tools/sync-smart-engine.js --check      # 双端算法内核字节一致性
 python tools/branding/warm-theme.py --check   # 主题色板幂等校验
+
+# 全局命令面板真浏览器 E2E（19 项）：先起 Chrome 调试端口再跑
+# chrome.exe --headless=new --remote-debugging-port=9222 "--remote-allow-origins=*" about:blank
+node tools/e2e-command-palette.js
 ```
+
+## 智能工作台（2026-11-22 新增）
+
+平台从「流程齐全」补上「决策智能」，三个功能全部纯前端、零云端 schema 变更：
+
+| 功能 | 入口 | 做什么 |
+|---|---|---|
+| AI 智能撮合 | 网页 `#/smart` · 小程序 `pages/smart` | 输入品类 / 预算 / 交期 / 城市，按 **品类契合 35 + 预算吻合 25 + 交付周期 20 + 口碑履约 15 + 认证档期 5** 对在架服务打分排序；每张卡显示分数环、五维得分条、可读推荐理由与超预算/超期/未认证风险提示 |
+| 报价测算 | 同页第二个 Tab · `#/smart?tab=quote` 可直达 | 8 品类基准价 × 规格档位 × 加急系数 × 修改轮次 → 合理价格区间、预计工期，以及项目金额 / 平台服务费 / 双方保证金 / 逾期违约金 3:7 分账共 8 行资金拆解 |
+| 全局命令面板 | 网页端 `Ctrl / ⌘ + K` 或顶栏搜索按钮 | 聚合服务、品类、商家任务、店铺与功能页，实时过滤、匹配高亮、↑↓ 选择、Enter 跳转、Esc 关闭；云端不可达时自动回退只读快照 |
+
+**算法内核双端同源**：唯一真源是 `webapp/js/smart-engine.js`（UMD，无 DOM/wx 依赖），小程序端副本由 `node tools/sync-smart-engine.js` 生成，`--check` 校验 md5 一致。**不要单独改副本**。
+
+**边界（重要）**：报价基准价取各种子数据各品类在架服务价格中位数，仅供测算，**不构成报价承诺**；保证金、违约金、提现均为本机演示记账，不产生真实资金往来。小程序端首屏用内置「演示样本」同步渲染（全字段 `isDemo`，UI 显式标注），云端真实数据带 4 秒超时静默覆盖，云端挂起不会白屏。费率集中在 `smart-engine.js` 的 `RULES`，与 `miniprogram/utils/guarantee.js` 对齐，**改一处必须同步另一处**。
 
 ## 核心业务规则
 

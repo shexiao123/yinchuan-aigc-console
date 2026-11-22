@@ -18,8 +18,8 @@
 <meta name="twitter:image" content="https://shexiao123.github.io/yinchuan-aigc-console/assets/branding/share-card.png">
 <link rel="image_src" href="assets/branding/share-card.png">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="assets/style.css?v=20261122a">
-<link rel="stylesheet" href="assets/tech.css?v=20261122a">
+<link rel="stylesheet" href="assets/style.css?v=20261122b">
+<link rel="stylesheet" href="assets/tech.css?v=20261122b">
 </head>
 <body>
 
@@ -34,6 +34,7 @@
     <nav class="nav" id="nav">
       <a class="nav-link" data-route="home" href="#/">首页</a>
       <a class="nav-link" data-route="services" href="#/services">全部服务</a>
+      <a class="nav-link" data-route="smart" href="#/smart">智能工作台</a>
       <a class="nav-link" data-route="hall" href="#/hall">需求大厅</a>
       <a class="nav-link" data-route="merchants" href="#/merchants">企业商家</a>
       <a class="nav-link" data-route="groups" href="#/groups">群聊广场</a>
@@ -47,6 +48,11 @@
     </nav>
 
     <div class="topbar-right">
+      <button class="cmd-trigger" id="cmdBtn" type="button" title="全局搜索（Ctrl / ⌘ + K）" aria-label="全局搜索">
+        <svg class="cmd-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <span class="cmd-trigger-text">搜索服务 / 任务</span>
+        <kbd class="cmd-trigger-kbd">Ctrl K</kbd>
+      </button>
       <span class="online-chip" id="onlineChip" title="近 2 分钟内访问平台的会话数">
         <i class="online-dot"></i><span class="online-label">在线</span><b data-online-count>–</b><span class="online-label">人</span>
       </span>
@@ -251,20 +257,24 @@
 </div>
 
 <!-- 云存储上传的 CORS 兜底：必须在云 SDK 之前 -->
-<script src="js/fetch-patch.js?v=20261122a"></script>
+<script src="js/fetch-patch.js?v=20261122b"></script>
 <!-- 云服务 SDK：本地优先（CDN 被网关拦截时页面照样能开），失败再回退 CDN -->
-<script src="js/vendor/workbuddy-cloud-sdk.js?v=20261122a" onerror="var s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/@tencent-ai/workbuddy-cloud-sdk@dev/lib/index.global.js';document.head.appendChild(s)"></script>
-<script src="js/seed-data.js?v=20261122a"></script>
-<script src="js/offline.js?v=20261122a"></script>
-<script src="js/config.js?v=20261122a"></script>
-<script src="js/api.js?v=20261122a"></script>
-<script src="js/samples.js?v=20261122a"></script>
-<script src="js/adaptive-grid.js?v=20261122a"></script>
-<script src="js/mobile-mode.js?v=20261122a"></script>
-<script src="js/app.js?v=20261122a"></script>
-<script src="js/home-viz.js?v=20261122a"></script>
-<script src="js/tech-motion.js?v=20261122a"></script>
-<script src="js/online.js?v=20261122a"></script>
-<script src="js/notice.js?v=20261122a"></script>
+<script src="js/vendor/workbuddy-cloud-sdk.js?v=20261122b" onerror="var s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/@tencent-ai/workbuddy-cloud-sdk@dev/lib/index.global.js';document.head.appendChild(s)"></script>
+<script src="js/seed-data.js?v=20261122b"></script>
+<script src="js/offline.js?v=20261122b"></script>
+<script src="js/config.js?v=20261122b"></script>
+<script src="js/api.js?v=20261122b"></script>
+<script src="js/samples.js?v=20261122b"></script>
+<script src="js/adaptive-grid.js?v=20261122b"></script>
+<script src="js/mobile-mode.js?v=20261122b"></script>
+<!-- 智能工作台算法内核：双端共用，小程序端副本由 tools/sync-smart-engine.js 生成 -->
+<script src="js/smart-engine.js?v=20261122b"></script>
+<script src="js/app.js?v=20261122b"></script>
+<script src="js/home-viz.js?v=20261122b"></script>
+<script src="js/tech-motion.js?v=20261122b"></script>
+<script src="js/online.js?v=20261122b"></script>
+<script src="js/notice.js?v=20261122b"></script>
+<!-- 全局命令面板：Ctrl / ⌘ + K，聚合服务、品类、任务、店铺与功能页 -->
+<script src="js/command-palette.js?v=20261122b"></script>
 </body>
 </html>

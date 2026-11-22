@@ -53,6 +53,15 @@ validateReleaseConfig()
 // docs/ 里不需要的目录（测试脚本不进站点）
 const SKIP_DIRS = new Set(['tests'])
 
+/**
+ * 隐藏文件/目录一律不进公开发布源。
+ * 发布为应用会在 webapp/ 写入 .wbapp_*.genie 与 .workbuddy/applications.yaml，
+ * 里面含本地绝对路径与内部 appId —— 属于本机内部标记，不能镜像到 docs/。
+ */
+function isHidden(rel) {
+  return String(rel).split('/').some((seg) => seg.startsWith('.'))
+}
+
 // ---- 清单读写 ----
 function readManifest() {
   if (!fs.existsSync(MANIFEST)) return []
@@ -73,6 +82,7 @@ function copyDir(src, dst, skip) {
   const copied = []
   for (const name of fs.readdirSync(src)) {
     if (skip && skip.has(name)) continue
+    if (name.startsWith('.')) continue
     const s = path.join(src, name)
     const d = path.join(dst, name)
     if (fs.statSync(s).isDirectory()) {
@@ -89,6 +99,7 @@ function listFiles(dir, base = '') {
   const out = []
   if (!fs.existsSync(dir)) return out
   for (const name of fs.readdirSync(dir)) {
+    if (name.startsWith('.')) continue
     const p = path.join(dir, name)
     const rel = base ? base + '/' + name : name
     if (fs.statSync(p).isDirectory()) out.push(...listFiles(p, rel))
@@ -157,7 +168,8 @@ if (checkOnly) {
 // 2. 同步
 const copied = copyDir(SRC, DST, SKIP_DIRS)
 const prevManifest = readManifest()
-const current = [...new Set([...prevManifest, ...copied])]
+// 历史 manifest 里若残留过内部标记条目，一并过滤；removeStale 随后会删掉对应文件
+const current = [...new Set([...prevManifest, ...copied])].filter((f) => !isHidden(f))
 const removed = removeStale(prevManifest, current)
 writeManifest(current)
 
