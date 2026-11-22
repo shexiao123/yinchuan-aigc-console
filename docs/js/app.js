@@ -741,37 +741,65 @@
       .map((m) => `<span class="home-trust" data-go="${bannerHref(m)}"><b>${API.esc(m.title || '')}</b>${m.subtitle ? `<i>${API.esc(m.subtitle)}</i>` : ''}</span>`)
       .join('')
 
-    return `
-      <div class="home">
-        <section class="home-hero">
-          <div class="home-hero-copy">
-            <span class="home-hero-eyebrow">银川 · AIGC 数字文化产业基地</span>
-            <h1 class="home-hero-title">${API.esc(heroBanner.title)}</h1>
-            ${heroBanner.subtitle ? `<p class="home-hero-sub">${API.esc(heroBanner.subtitle)}</p>` : ''}
-            <div class="home-hero-cta">
-              <a class="btn btn-primary btn-lg" href="#/services">浏览全部服务</a>
-              <a class="btn btn-ghost btn-lg" href="#/hall">发布你的需求</a>
-            </div>
-            ${trustPills ? `<div class="home-hero-trust">${trustPills}</div>` : ''}
+    /* ------------------------------------------------------------
+       首页 v2 整体排版（2026-11-23 舍先生要求「重新设计首页的所有排版」）
+       统一区块头：序号 / 英文眉标 / 中文标题 / 右侧操作，形成编辑式节奏；
+       区块按「主视觉 → 数据 → 分类 → 商品 → 智能 → 流程 → 实力 → 人 → 商家 → 行动」重排。
+       所有原有类名、数据流、去重分配器保持不变，仅重排结构与新增装饰层。
+       ------------------------------------------------------------ */
+    const secHead = (idx, kicker, title, sub, moreHref, moreText) => `
+      <div class="home-sec-head v2-head">
+        <div class="v2-head-l">
+          <span class="v2-head-idx">${idx}</span>
+          <div class="v2-head-txt">
+            <span class="v2-head-kicker">${kicker}</span>
+            <h2 class="home-sec-title">${title}${sub ? `<span class="home-sec-sub">${sub}</span>` : ''}</h2>
           </div>
-          <div class="home-hero-media has-img" style="background-image:url('${API.esc(heroImage)}')">
-            <span class="home-hero-photo-tag">银川 · 让每一次心动都有画面</span>
+        </div>
+        ${moreHref ? `<a class="home-sec-more" href="${moreHref}">${moreText}<i aria-hidden="true">↗</i></a>` : '<span class="v2-head-rule"></span>'}
+      </div>`
+
+    return `
+      <div class="home home-v2">
+
+        <!-- ① 主视觉：东方实景底图 + 左文案 / 右画框式作品照 + 底部承诺带 -->
+        <section class="home-hero">
+          <div class="home-hero-inner">
+            <div class="home-hero-copy">
+              <span class="home-hero-eyebrow"><i class="home-hero-eyebrow-rule"></i>银川 · AIGC 数字文化产业基地</span>
+              <h1 class="home-hero-title">${API.esc(heroBanner.title)}</h1>
+              ${heroBanner.subtitle ? `<p class="home-hero-sub">${API.esc(heroBanner.subtitle)}</p>` : '<p class="home-hero-sub">把每一次心动，交给懂画面的人。从拍摄制作到 AI 创作，一站对接银川本地优质服务者。</p>'}
+              <div class="home-hero-cta">
+                <a class="btn btn-primary btn-lg" href="#/services">浏览全部服务</a>
+                <a class="btn btn-ghost btn-lg" href="#/hall">发布你的需求</a>
+              </div>
+              <div class="home-hero-keys">
+                <span class="home-hero-keys-label">热门需求</span>
+                <a href="#/services?category=wedding-shoot">婚礼跟拍</a>
+                <a href="#/services?category=brand-film">宣传片</a>
+                <a href="#/services?category=ai-generate">AI 生成视频</a>
+                <a href="#/services?category=short-video">短视频剪辑</a>
+              </div>
+              ${trustPills ? `<div class="home-hero-trust">${trustPills}</div>` : ''}
+            </div>
+            <div class="home-hero-media has-img" style="background-image:url('${API.esc(heroImage)}')">
+              <span class="home-hero-photo-tag">银川 · 让每一次心动都有画面</span>
+              <span class="home-hero-seal" aria-hidden="true">光<br>影<br>有<br>信</span>
+            </div>
+          </div>
+          <div class="home-hero-promise">
+            <span><i></i>实名认证服务者</span>
+            <span><i></i>平台资金托管</span>
+            <span><i></i>明码标价无隐形消费</span>
+            <span><i></i>交付售后有保障</span>
           </div>
         </section>
 
-        <a class="smart-entry" href="#/smart">
-          <span class="smart-entry-media" style="background-image:url('assets/covers/light/warm-hero-bg.jpg?v=20261123f')"></span>
-          <span class="smart-entry-body">
-            <span class="smart-entry-tag">NEW · 智能工作台</span>
-            <span class="smart-entry-title">不知道该找谁做？让算法替你选</span>
-            <span class="smart-entry-desc">填预算与交期，秒级匹配最合适的服务者；也能一键算出报价、保证金与违约金的完整拆解</span>
-          </span>
-          <span class="smart-entry-arrow">›</span>
-        </a>
-
-        <section class="home-section home-stats">
+        <!-- ② 平台实时数据：贴着主视觉下沿的一条数字带 -->
+        <section class="home-section home-stats v2-stats">
           <div class="home-stats-head">
-            <h2 class="home-sec-title">平台实时数据<span class="home-sec-sub">动态可视化</span></h2>
+            <span class="v2-stats-cap">PLATFORM IN NUMBERS</span>
+            <h2 class="home-sec-title">平台实时数据</h2>
             <span class="home-live"><i></i>LIVE</span>
           </div>
           <div class="home-stats-grid">
@@ -808,76 +836,58 @@
           </div>
         </section>
 
-        <section class="home-section home-viz">
-          <div class="home-viz-card">
-            <div class="home-viz-card-title">服务分类分布</div>
-            <div class="home-donut">${donutSvg}</div>
-            <div class="home-donut-legend">${donutLegend}</div>
-          </div>
-          <div class="home-viz-side">
-            <div class="home-viz-side-title">为什么选我们</div>
-            <ul class="home-viz-points">
-              <li><b>认证服务者</b>：实名与作品双重审核，交付质量更有保障</li>
-              <li><b>全程托管</b>：从下单到交付平台担保，资金更安全</li>
-              <li><b>明码标价</b>：服务价格透明，绝不隐形消费</li>
-              <li><b>极速接单</b>：需求大厅一键发布，最快当天接单</li>
-            </ul>
-          </div>
-        </section>
-
-        <section class="home-section home-cats-section">
-          <div class="home-sec-head">
-            <h2 class="home-sec-title">服务分类<span class="home-sec-sub">按类型展开</span></h2>
-            <a class="home-sec-more" href="#/services">全部服务 ›</a>
-          </div>
-          <div class="home-cat-fold">
-            ${(() => {
-              // 与小程序首页同源的三组归类：AI 生成视频与漫剧都归「AI 创作」
-              // 舍先生 2026-11-23 要求：三组按各自分类折叠进去，首页重新排版。
-              // 用原生 <details> 折叠：默认只显示三个分类名称，点名称才展开该类的
-              // 项目名称；卡片本身仍点进 #/services?category= 查看服务内容。
-              const GROUPS = [
-                { key: 'shoot', name: '拍摄制作', slugs: ['wedding-shoot', 'wedding-film', 'brand-film', 'commercial-photo'] },
-                { key: 'post', name: '后期剪辑', slugs: ['short-video', 'ae-motion'] },
-                { key: 'ai', name: 'AI 创作', slugs: ['ai-generate', 'comic-drama'] }
-              ]
-              const bySlug = {}
-              categories.forEach((c) => { bySlug[c.slug] = c })
-              const card = (c) => {
-                const photo = catPhotos.get(c.id) || fallbackPhoto(c.id)
-                return `
-              <a class="home-cat" href="#/services?category=${c.slug}" title="查看「${API.esc(c.name)}」的服务内容">
-                <span class="home-cat-media has-img" style="background-image:url('${API.esc(photo)}')"></span>
-                <span class="home-cat-name"><span class="home-cat-label">${API.esc(c.name)}</span><i class="home-cat-go" aria-hidden="true">›</i></span>
-              </a>`
-              }
-              return GROUPS.map((g, gi) => {
-                const items = g.slugs.map((s) => bySlug[s]).filter(Boolean)
-                if (!items.length) return ''
-                return `
-            <details class="home-cat-fold-item" data-group="${g.key}">
-              <summary class="home-cat-fold-head">
-                <span class="home-cat-fold-idx">${String(gi + 1).padStart(2, '0')}</span>
-                <span class="home-cat-fold-name">${g.name}</span>
-                <span class="home-cat-fold-count">${items.length} 类</span>
-                <i class="home-cat-fold-arrow" aria-hidden="true">⌄</i>
-              </summary>
-              <div class="home-cat-fold-body">
-                <div class="home-cat-row">
-                  ${items.map(card).join('')}
-                </div>
+        <!-- ③ 服务分类：左侧引导 + 右侧三条折叠导航 -->
+        <section class="home-section home-cats-section v2-cats">
+          ${secHead('01', 'SERVICE CATEGORIES', '服务分类', '按类型展开', '#/services', '全部服务')}
+          <div class="home-cats-layout">
+            <div class="home-cats-intro">
+              <span class="v2-intro-mark">分<br>类</span>
+              <p>从一条想法<br>到成片交付，<br>按你要的事<br>找到对的人。</p>
+              <a href="#/services">查看全部 ${catCount} 类服务 <i aria-hidden="true">↗</i></a>
+            </div>
+            <div class="home-cat-panel">
+              ${(() => {
+                // 三组按各自分类直接平铺（舍先生 2026-11-23 明确「不保留已有的分类折叠」）：
+                // 每组一张组封面 + 组名 + 该组项目名称列表；只显示名称、不铺内容描述，
+                // 点名称才进入 #/services?category= 查看服务内容。
+                const GROUPS = [
+                  { key: 'shoot', name: '拍摄制作', slugs: ['wedding-shoot', 'wedding-film', 'brand-film', 'commercial-photo'] },
+                  { key: 'post', name: '后期剪辑', slugs: ['short-video', 'ae-motion'] },
+                  { key: 'ai', name: 'AI 创作', slugs: ['ai-generate', 'comic-drama'] }
+                ]
+                const bySlug = {}
+                categories.forEach((c) => { bySlug[c.slug] = c })
+                // 组封面与热销卡共用去重池：整页 8 张商品图 + 3 张组封面零重复
+                const coverPool = Array.from(new Set(Array.from(catPhotos.values())))
+                return GROUPS.map((g, gi) => {
+                  const items = g.slugs.map((s) => bySlug[s]).filter(Boolean)
+                  if (!items.length) return ''
+                  // 组封面优先用该组首个分类的照片（贴题），仍落在整页去重池里
+                  const cover = catPhotos.get(items[0].id) || coverPool[gi % coverPool.length] || fallbackPhoto(gi + 1)
+                  return `
+            <div class="home-cat-group" data-group="${g.key}">
+              <a class="home-cat-group-cover home-cat-media has-img" href="#/services" style="background-image:url('${API.esc(cover)}')" aria-label="${API.esc(g.name)}"></a>
+              <div class="home-cat-group-head">
+                <span class="home-cat-group-idx">${String(gi + 1).padStart(2, '0')}</span>
+                <span class="home-cat-group-name">${g.name}</span>
+                <span class="home-cat-group-count">${items.length} 类</span>
               </div>
-            </details>`
-              }).join('')
-            })()}
+              <div class="home-cat-links">
+                ${items.map((c) => `
+                <a class="home-cat-link" href="#/services?category=${c.slug}" title="查看「${API.esc(c.name)}」的服务内容">
+                  <span class="home-cat-label">${API.esc(c.name)}</span><i class="home-cat-go" aria-hidden="true">›</i>
+                </a>`).join('')}
+              </div>
+            </div>`
+                }).join('')
+              })()}
+            </div>
           </div>
         </section>
 
-        <section class="home-section">
-          <div class="home-sec-head">
-            <h2 class="home-sec-title">热销服务<span class="home-sec-sub">按销量排序</span></h2>
-            <a class="home-sec-more" href="#/services">更多 ›</a>
-          </div>
+        <!-- ④ 精选服务：4 列紧凑卡，整页封面去重 -->
+        <section class="home-section v2-svc">
+          ${secHead('02', 'POPULAR SERVICES', '热销服务', '按销量排序', '#/services', '更多服务')}
           <div class="home-svc-grid">
             ${hot
               .map((s) => {
@@ -904,30 +914,93 @@
           </div>
         </section>
 
-        <section class="home-section">
-          <div class="home-sec-head">
-            <h2 class="home-sec-title">推荐服务者<span class="home-sec-sub">按完成单量</span></h2>
+        <!-- ⑤ 智能工作台：深色宽幅，作为整页唯一的明暗断点 -->
+        <a class="smart-entry" href="#/smart">
+          <span class="smart-entry-media" style="background-image:url('assets/covers/light/warm-hero-bg.jpg?v=20261123f')"></span>
+          <span class="smart-entry-body">
+            <span class="smart-entry-tag">NEW · 智能工作台</span>
+            <span class="smart-entry-title">不知道该找谁做？让算法替你选</span>
+            <span class="smart-entry-desc">填预算与交期，秒级匹配最合适的服务者；也能一键算出报价、保证金与违约金的完整拆解</span>
+          </span>
+          <span class="smart-entry-orbit" aria-hidden="true"><i></i><i></i><i></i><b>AI</b></span>
+          <span class="smart-entry-arrow">›</span>
+        </a>
+
+        <!-- ⑥ 合作流程：四步横向时间轴 -->
+        <section class="home-section v2-flow">
+          ${secHead('03', 'HOW IT WORKS', '四步完成合作', '简单透明', '#/hall', '发布需求')}
+          <div class="home-flow">
+            <div class="home-flow-step">
+              <span class="home-flow-num">01</span>
+              <span class="home-flow-ico">需</span>
+              <b>发布需求</b>
+              <small>说清预算、交期与想要的效果</small>
+            </div>
+            <div class="home-flow-step">
+              <span class="home-flow-num">02</span>
+              <span class="home-flow-ico">配</span>
+              <b>智能匹配</b>
+              <small>按作品与档期，推荐合适的服务者</small>
+            </div>
+            <div class="home-flow-step">
+              <span class="home-flow-num">03</span>
+              <span class="home-flow-ico">作</span>
+              <b>托管制作</b>
+              <small>平台担保资金，过程可随时沟通</small>
+            </div>
+            <div class="home-flow-step">
+              <span class="home-flow-num">04</span>
+              <span class="home-flow-ico">付</span>
+              <b>验收交付</b>
+              <small>确认成片满意后，款项才到服务者</small>
+            </div>
           </div>
+        </section>
+
+        <!-- ⑦ 平台实力：分类分布 + 四条保障 -->
+        <section class="home-section home-viz v2-viz">
+          ${secHead('04', 'WHY CHOOSE US', '平台实力', '看得见的保障')}
+          <div class="home-viz-card">
+            <span class="v2-viz-cap">CATEGORY MIX</span>
+            <div class="home-viz-card-title">服务分类分布</div>
+            <div class="home-donut">${donutSvg}</div>
+            <div class="home-donut-legend">${donutLegend}</div>
+          </div>
+          <div class="home-viz-side">
+            <div class="home-viz-side-title">为什么选我们</div>
+            <ul class="home-viz-points">
+              <li><b>认证服务者</b>：实名与作品双重审核，交付质量更有保障</li>
+              <li><b>全程托管</b>：从下单到交付平台担保，资金更安全</li>
+              <li><b>明码标价</b>：服务价格透明，绝不隐形消费</li>
+              <li><b>极速接单</b>：需求大厅一键发布，最快当天接单</li>
+            </ul>
+          </div>
+        </section>
+
+        <!-- ⑧ 推荐服务者 -->
+        <section class="home-section v2-prov">
+          ${secHead('05', 'TOP PROVIDERS', '推荐服务者', '按完成单量', '#/services', '浏览服务')}
           <div class="home-prov-grid">
             ${(providers || []).slice(0, 6)
               .map(
                 (p) => `
               <a class="home-prov" href="#/provider/${p.id}">
                 <span class="avatar avatar-lg">${API.esc((p.nickname || '影').charAt(0))}</span>
-                <span class="home-prov-name">${API.esc(p.nickname)}${p.is_verified ? ' <i class="home-verified">✓</i>' : ''}</span>
-                ${p.bio ? `<span class="home-prov-bio ellipsis-2">${API.esc(p.bio)}</span>` : ''}
-                <span class="home-prov-meta">★ ${Number(p.rating || 5).toFixed(1)} · 完成 ${p.orders_done} 单 · ${API.esc(p.city || '')}</span>
+                <span class="home-prov-info">
+                  <span class="home-prov-name">${API.esc(p.nickname)}${p.is_verified ? ' <i class="home-verified">✓</i>' : ''}</span>
+                  ${p.bio ? `<span class="home-prov-bio ellipsis-2">${API.esc(p.bio)}</span>` : ''}
+                  <span class="home-prov-meta">★ ${Number(p.rating || 5).toFixed(1)} · 完成 ${p.orders_done} 单 · ${API.esc(p.city || '')}</span>
+                </span>
+                <i class="home-prov-go" aria-hidden="true">›</i>
               </a>`
               )
               .join('')}
           </div>
         </section>
 
-        <section class="home-section home-merchant">
-          <div class="home-sec-head">
-            <h2 class="home-sec-title">企业商家 · 在招任务<span class="home-sec-sub">带参考视频</span></h2>
-            <a class="home-sec-more" href="#/tasks">任务广场 ›</a>
-          </div>
+        <!-- ⑨ 企业商家 · 在招任务 -->
+        <section class="home-section home-merchant v2-merchant">
+          ${secHead('06', 'FOR BUSINESS', '企业商家 · 在招任务', '带参考视频', '#/tasks', '任务广场')}
           <div class="hm-layout">
             <div class="hm-shops">
               <div class="hm-col-title">入驻店铺 <a href="#/merchants">全部 ›</a></div>
@@ -947,10 +1020,25 @@
                 </a>`).join('') || '<div class="hm-empty">暂时没有在招任务</div>'}
             </div>
           </div>
-          <a class="hm-cta" href="#/merchant-join">🏬 我是企业商家 · 查看入驻套餐与费用，开通专属店铺、发布任务 ›</a>
+          <a class="hm-cta" href="#/merchant-join">我是企业商家 · 查看入驻套餐与费用，开通专属店铺、发布任务 <i aria-hidden="true">↗</i></a>
         </section>
 
-        <section class="home-section">
+        <!-- ⑩ 收尾行动横幅 -->
+        <section class="home-cta-band">
+          <div class="home-cta-copy">
+            <span class="home-cta-kicker">START A PROJECT</span>
+            <h2>好创意，值得被认真做成作品</h2>
+            <p>发布需求，或直接从精选服务里挑一个开始。</p>
+            <div class="home-cta-btns">
+              <a class="btn btn-primary btn-lg" href="#/hall">免费发布需求</a>
+              <a class="btn btn-ghost btn-lg home-cta-ghost" href="#/services">先看看服务</a>
+            </div>
+          </div>
+          <span class="home-cta-deco" aria-hidden="true">银<br>川</span>
+        </section>
+
+        <!-- ⑪ 平台规则：收成一条细说明 -->
+        <section class="home-section home-rules-section">
           <div class="home-rules">
             <div class="home-rules-title">平台规则</div>
             <div class="home-rules-text">${API.esc(settings.notice)}</div>

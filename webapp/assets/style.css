@@ -909,6 +909,13 @@ img { max-width: 100%; display: block; }
   .mobile-menu-btn { padding: 6px; }
   .mobile-menu-btn span { width: 18px; }
   .btn { padding: 8px 13px; font-size: 13px; }
+  /* 2026-11-23：390px 实测顶栏横向溢出 23px（brand 201 + right 188 + padding）。
+     让品牌区可压缩、按钮收紧，整条顶栏 Strictly 不超出视口。 */
+  body .topbar .topbar-inner { gap: 6px !important; }
+  body .topbar .brand { flex: 1 1 0 !important; min-width: 0 !important; max-width: 152px !important; }
+  body .topbar .brand-logo, body .topbar .brand-slogan { max-width: 100% !important; }
+  body .topbar .topbar-right { gap: 5px !important; }
+  body .topbar .topbar-right .btn-sm { padding: 7px 10px !important; font-size: 12px !important; }
 }
 
 /* 评价标签与晒图（列表展示） */
