@@ -833,20 +833,21 @@
           <div class="home-cat-groups">
             ${(() => {
               // 与小程序首页同源的三组归类：AI 生成视频与漫剧都归「AI 创作」
+              // 分类区只展示项目名称（舍先生 2026-11-23 要求）：
+              // 分组说明与卡片内容描述一律不铺在首页，点名称进入服务列表后才看得到内容。
               const GROUPS = [
-                { key: 'shoot', name: '拍摄制作', desc: '跟拍 · 微电影 · 宣传片 · 棚拍', slugs: ['wedding-shoot', 'wedding-film', 'brand-film', 'commercial-photo'] },
-                { key: 'post', name: '后期剪辑', desc: '短视频快剪 · AE 动效', slugs: ['short-video', 'ae-motion'] },
-                { key: 'ai', name: 'AI 创作', desc: 'AIGC 视觉 · 漫剧整案', slugs: ['ai-generate', 'comic-drama'] }
+                { key: 'shoot', name: '拍摄制作', slugs: ['wedding-shoot', 'wedding-film', 'brand-film', 'commercial-photo'] },
+                { key: 'post', name: '后期剪辑', slugs: ['short-video', 'ae-motion'] },
+                { key: 'ai', name: 'AI 创作', slugs: ['ai-generate', 'comic-drama'] }
               ]
               const bySlug = {}
               categories.forEach((c) => { bySlug[c.slug] = c })
               const card = (c) => {
                 const photo = catPhotos.get(c.id) || fallbackPhoto(c.id)
                 return `
-              <a class="home-cat" href="#/services?category=${c.slug}">
+              <a class="home-cat" href="#/services?category=${c.slug}" title="查看「${API.esc(c.name)}」的服务内容">
                 <span class="home-cat-media has-img" style="background-image:url('${API.esc(photo)}')"></span>
-                <span class="home-cat-name">${API.esc(c.name)}</span>
-                ${c.description ? `<span class="home-cat-desc">${API.esc(c.description)}</span>` : ''}
+                <span class="home-cat-name"><span class="home-cat-label">${API.esc(c.name)}</span><i class="home-cat-go" aria-hidden="true">›</i></span>
               </a>`
               }
               return GROUPS.map((g) => {
@@ -855,8 +856,7 @@
                 return `
             <div class="home-cat-group">
               <div class="home-cat-group-head">
-                <span class="home-cat-group-name">${g.name}</span>
-                <span class="home-cat-group-desc">${g.desc}</span>
+                <a class="home-cat-group-name" href="#/services" title="进入全部服务">${g.name}<i class="home-cat-group-go" aria-hidden="true">›</i></a>
               </div>
               <div class="home-cat-row" style="grid-template-columns:repeat(${items.length},minmax(0,1fr))">
                 ${items.map(card).join('')}

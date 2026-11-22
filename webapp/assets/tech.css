@@ -2332,4 +2332,49 @@ body:not(.admin-page) {
   border-radius: 18px;
 }
 
+/* ================================================================
+   13. 服务分类只留项目名称（2026-11-23 舍先生要求）
+   ----------------------------------------------------------------
+   首页分类区不再铺开任何「内容」：分组说明、卡片描述全部移除，
+   只保留项目名称 + 真实摄影横幅；名称带 › 作为明确入口，
+   点名称（或整张卡）进入 #/services 后才展示该类的服务内容。
+   ⚠️ 追加在文件最末且带 !important，压过第 5/10 段的旧 padding / desc 规则。
+   ================================================================ */
+.home-cat-desc, .home-cat-group-desc { display: none !important; }
+.home-cat { text-decoration: none !important; }
+.home-cat-group-head { align-items: center !important; }
+.home-cat-group-name {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px;
+  text-decoration: none !important;
+  color: #241A12 !important;
+  font-size: 16.5px !important;
+  font-weight: 720 !important;
+  cursor: pointer;
+  transition: color .18s ease;
+}
+.home-cat-group-name:hover { color: #A85A2D !important; }
+.home-cat-group-go { font-style: normal; font-size: 16px; font-weight: 400; color: #B07A4C; }
+.home-cat-name {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 8px;
+  padding: 12px 14px 13px !important;
+  font-size: 14px !important;
+  line-height: 1.35 !important;
+}
+.home-cat-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.home-cat-go {
+  flex: none; font-style: normal; font-size: 17px; line-height: 1;
+  color: #B07A4C; transition: transform .18s ease, color .18s ease;
+}
+.home-cat:hover .home-cat-name, .home-cat:hover .home-cat-go { color: #A85A2D !important; }
+.home-cat:hover .home-cat-go { transform: translateX(3px); }
+@media (max-width: 560px) {
+  .home-cat-name { padding: 10px 11px 11px !important; font-size: 13px !important; }
+  .home-cat-group-name { font-size: 15px !important; }
+}
+
 
