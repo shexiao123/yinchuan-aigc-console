@@ -52,6 +52,10 @@
         ])
       } catch (e) { /* SDK 加载失败，交给下面的心跳重试 */ }
     }
+    // 管理端/用户端在云端不可达时会切离线只读模式（约 1-3 秒完成判定），
+    // 先让位一小段时间，避免首发心跳在 CORS 白名单外的域名上刷报错
+    await new Promise(function (resolve) { setTimeout(resolve, 1200) })
+    if (window.cloud && window.cloud.__offline) { set(null); return }
     await beat(true)
   })()
 
