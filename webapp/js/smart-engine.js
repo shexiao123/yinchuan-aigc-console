@@ -37,11 +37,11 @@
     'wedding-shoot': { name: '婚礼跟拍', base: 299900, days: 15, group: 'shoot' },
     'wedding-film': { name: '婚礼微电影', base: 199900, days: 7, group: 'shoot' },
     'brand-film': { name: '品牌宣传片', base: 680000, days: 20, group: 'film' },
-    'short-video': { name: '短视频剪辑', base: 39900, days: 2, group: 'film' },
+    'short-video': { name: '短视频剪辑', base: 39900, days: 2, group: 'post' },
     'commercial-photo': { name: '商业摄影', base: 260000, days: 3, group: 'shoot' },
-    'ae-motion': { name: 'AE 动画', base: 129900, days: 5, group: 'digital' },
-    'ai-generate': { name: 'AI 生成', base: 69900, days: 2, group: 'digital' },
-    'comic-drama': { name: '漫剧制作', base: 1500000, days: 30, group: 'film' }
+    'ae-motion': { name: 'AE 动画', base: 129900, days: 5, group: 'post' },
+    'ai-generate': { name: 'AI 生成', base: 69900, days: 2, group: 'ai' },
+    'comic-drama': { name: '漫剧制作', base: 1500000, days: 30, group: 'ai' }
   }
 
   var SPEC_FACTOR = { basic: 0.85, standard: 1.0, flagship: 1.45 }
@@ -248,7 +248,7 @@
         trust: round(trustScore)
       }
       var score = clamp(round(catScore + budgetScore + deliveryScore + reputationScore + trustScore), 0, 100)
-      var groupName = sMeta ? ({ shoot: '拍摄', film: '影像后期', digital: '数字创作' })[sMeta.group] : ''
+      var groupName = sMeta ? ({ shoot: '拍摄制作', post: '后期剪辑', ai: 'AI 创作' })[sMeta.group] : ''
       var ctx = {
         categoryName: meta ? meta.name : '',
         groupName: groupName,

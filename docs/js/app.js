@@ -712,9 +712,17 @@
             <h2 class="home-sec-title">服务分类</h2>
             <a class="home-sec-more" href="#/services">全部服务 ›</a>
           </div>
-          <div class="home-cat-grid">
-            ${categories
-              .map((c) => {
+          <div class="home-cat-groups">
+            ${(() => {
+              // 与小程序首页同源的三组归类：AI 生成视频与漫剧都归「AI 创作」
+              const GROUPS = [
+                { key: 'shoot', name: '拍摄制作', desc: '跟拍 · 微电影 · 宣传片 · 棚拍', slugs: ['wedding-shoot', 'wedding-film', 'brand-film', 'commercial-photo'] },
+                { key: 'post', name: '后期剪辑', desc: '短视频快剪 · AE 动效', slugs: ['short-video', 'ae-motion'] },
+                { key: 'ai', name: 'AI 创作', desc: 'AIGC 视觉 · 漫剧整案', slugs: ['ai-generate', 'comic-drama'] }
+              ]
+              const bySlug = {}
+              categories.forEach((c) => { bySlug[c.slug] = c })
+              const card = (c) => {
                 const photo = c.imageUrl || fallbackPhoto(c.id)
                 return `
               <a class="home-cat" href="#/services?category=${c.slug}">
@@ -722,8 +730,22 @@
                 <span class="home-cat-name">${API.esc(c.name)}</span>
                 ${c.description ? `<span class="home-cat-desc">${API.esc(c.description)}</span>` : ''}
               </a>`
-              })
-              .join('')}
+              }
+              return GROUPS.map((g) => {
+                const items = g.slugs.map((s) => bySlug[s]).filter(Boolean)
+                if (!items.length) return ''
+                return `
+            <div class="home-cat-group">
+              <div class="home-cat-group-head">
+                <span class="home-cat-group-name">${g.name}</span>
+                <span class="home-cat-group-desc">${g.desc}</span>
+              </div>
+              <div class="home-cat-row" style="grid-template-columns:repeat(${items.length},minmax(0,1fr))">
+                ${items.map(card).join('')}
+              </div>
+            </div>`
+              }).join('')
+            })()}
           </div>
         </section>
 
