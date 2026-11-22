@@ -12,6 +12,9 @@ window.APP_CONFIG = {
     // mp-api 是通用端点，作为备用；平台域名批量故障时用它兜底。
     endpoint: 'https://guangying-web.app.workbuddy.host',
     oauthRelayBaseUrl: 'https://www.workbuddy.cn/v2/as/genie-baas/oauth',
+    // 完整版站点入口：离线演示模式下「生成登录二维码」会把这个地址画成二维码，
+    // 手机扫码即可在微信中打开可登录的完整站点
+    fullSiteUrl: 'https://guangying-web.app.workbuddy.host/?sharecode=L4AF6QVF4Q',
     publishableKey: 'wbpk_ljDFUAeoNoNPMqrfAZpbEV_dw2NNFdJXAPww2ncGRAv3RvXicynHHtb'
   },
 

@@ -206,16 +206,27 @@
 
   // 微信扫码登录
   $('#wechatLoginBtn').addEventListener('click', async () => {
+    const qr = $('#qrPlaceholder')
+    const box = $('#qrBox')
+    const urlLine = $('#qrUrl')
     try {
-      const url = await API.wechatLoginUrl()
-      // 用内置 QR 渲染器把授权地址画成真二维码（纯前端离线生成）
-      const qr = $('#qrPlaceholder')
-      const box = $('#qrBox')
-      const urlLine = $('#qrUrl')
+      // 离线演示模式（Pages 等无云端环境）：云端授权拿不到链接，
+      // 把「完整版站点入口」画成二维码，扫码后在微信里打开完整站点登录
+      const offline = !!(window.cloud && window.cloud.__offline)
+      let url = ''
+      let hint = ''
+      if (offline) {
+        url = (window.APP_CONFIG && window.APP_CONFIG.fullSiteUrl) || window.location.origin
+        hint = '离线演示版没有云端授权<br>扫码打开完整版站点后登录'
+      } else {
+        url = await API.wechatLoginUrl()
+        hint = '微信扫一扫<br>完成授权登录'
+      }
+      // 用内置 QR 渲染器把地址画成真二维码（纯前端离线生成）
       const svg = typeof window.buildQrSvg === 'function' ? window.buildQrSvg(url) : ''
       if (svg) {
         qr.innerHTML =
-          '<div style="font-size:12px;margin:0 0 8px;line-height:1.4">微信扫一扫<br>完成授权登录</div>' +
+          '<div style="font-size:12px;margin:0 0 8px;line-height:1.4">' + hint + '</div>' +
           '<div style="display:inline-block;background:#fff;padding:8px;border-radius:8px;line-height:0">' + svg + '</div>'
         // 让二维码在 180px 盒子里自适应缩放
         const svgEl = qr.querySelector('svg')
@@ -228,9 +239,9 @@
         box.classList.add('has-qr')
         urlLine.hidden = true
       } else {
-        // 兜底：渲染器异常时退回展示授权地址
+        // 兜底：渲染器异常时退回展示地址
         qr.innerHTML =
-          '<div style="font-size:12px;margin-bottom:8px">在微信中打开以下地址完成授权：</div>'
+          '<div style="font-size:12px;margin-bottom:8px">在微信中打开以下地址完成操作：</div>'
         box.classList.add('has-qr')
         urlLine.hidden = false
         urlLine.textContent = url
