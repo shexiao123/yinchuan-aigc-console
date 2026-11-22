@@ -96,6 +96,9 @@ const PROBE = `JSON.stringify((()=>{
     const sep = BASE.includes('?') ? '&' : '?'
     await send('Page.navigate', { url: BASE + sep + 'r=' + Date.now() + '_' + c.w })
     await sleep(MODE === 'local' ? 4500 : 7000)
+    // 热销服务已折叠：先展开 details，否则卡片 display:none、lazy 图不加载会被误判成裂图
+    await ev(`(()=>{const d=document.querySelector('.home-hot-fold');if(d)d.open=true;return 'ok'})()`)
+    await sleep(250)
     // 卡片图是 loading="lazy"：先滚动到位再探测，否则 naturalWidth=0 会被误判成裂图
     await ev(`(()=>{const g=document.querySelector('.home-svc-grid');if(g)g.scrollIntoView({block:'center'});return 'ok'})()`)
     await sleep(900)

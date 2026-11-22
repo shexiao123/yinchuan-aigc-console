@@ -4,7 +4,8 @@
    舍先生要求「重新设计首页的所有排版」。本文件是首页版式的唯一新真源：
    · 统一区块头 = 序号 / 英文眉标 / 中文大标题 / 右侧胶囊操作
    · 主视觉拆成「左文案 + 右画框作品照 + 底部四条承诺带」
-   · 数据带贴主视觉下沿；分类区改「左深色引导 + 右三折叠」
+   · 数据带贴主视觉下沿；分类区改「左深色引导 + 右三组平铺」
+   · 热销服务默认折叠（点区块头展开），分类区不折叠
    · 智能工作台做整页唯一的深色宽幅断点；新增四步流程时间轴
    · 收尾加深色行动横幅；平台规则收成一条细说明
    节奏：大/小、深/浅、密/疏交替，不再是清一色白卡平铺。
@@ -15,7 +16,7 @@
    ⚠️ 保留不动的既有功能（有回归测试断言）：
       Hero ::before 东方实景图 opacity:1 / 实底 rgb(247,239,225) /
       标题色 rgb(36,26,18) / 右侧作品照 .jpg；
-      .home-cat-fold 三列折叠；.home-svc-grid 4·3·2 分档与图高 148px。
+      分类三组平铺不折叠；.home-svc-grid 4·3·2 分档与图高 148px（展开后不变）。
    ================================================================ */
 
 /* ---------- 0. 全局节奏 ---------- */
@@ -224,6 +225,54 @@
 }
 .home.home-v2 .home-cat-link:hover { background: #F3E7D4 !important; color: #8A5222 !important; }
 .home.home-v2 .home-cat-go { font-style: normal; font-size: 15px; color: #B5793D; }
+
+/* ---------- 5.1 热销服务折叠（2026-11-23 舍先生要求） ----------
+   原生 <details>：默认收起只保留统一区块头这一条，点标题展开 4 列卡片。
+   展开状态由 app.js 模块级 hotFoldOpen 跨 SPA 重渲染恢复。
+   ⚠️ 全部用 .home.home-v2 前缀 + !important，压过 tech.css 第 10 段兜底。 */
+.home.home-v2 .home-hot-fold {
+  background: rgba(255, 253, 249, .86) !important;
+  border: 1px solid rgba(180, 140, 95, .30) !important; border-radius: 16px !important;
+  box-shadow: 0 14px 34px -30px rgba(80, 48, 22, .55) !important;
+  padding: 6px 18px 4px !important;
+}
+.home.home-v2 .home-hot-fold-head {
+  display: block !important; list-style: none !important; cursor: pointer !important;
+  user-select: none !important;
+}
+.home.home-v2 .home-hot-fold-head::-webkit-details-marker { display: none !important; }
+.home.home-v2 .home-hot-fold-head::marker { content: '' !important; }
+.home.home-v2 .home-hot-fold-head .v2-head {
+  margin-bottom: 0 !important; padding-bottom: 12px !important;
+  border-bottom: 1px solid rgba(180, 140, 95, .20) !important;
+}
+.home.home-v2 .home-hot-fold[open] .v2-head { border-bottom-color: rgba(180, 140, 95, .34) !important; }
+.home.home-v2 .v2-fold-toggle { pointer-events: none !important; }
+.home.home-v2 .v2-fold-count { opacity: .72 !important; margin-right: 3px !important; }
+.home.home-v2 .v2-fold-label-open { display: none !important; }
+.home.home-v2 .home-hot-fold[open] .v2-fold-label-closed { display: none !important; }
+.home.home-v2 .home-hot-fold[open] .v2-fold-label-open { display: inline !important; }
+.home.home-v2 .v2-fold-arrow {
+  display: inline-block !important; font-size: 15px !important; line-height: 1 !important;
+  transition: transform .22s ease !important;
+}
+.home.home-v2 .home-hot-fold[open] .v2-fold-arrow { transform: rotate(180deg) !important; }
+.home.home-v2 .home-hot-fold-body {
+  padding: 18px 0 12px !important;
+  animation: v2FoldIn .24s ease both !important;
+}
+@keyframes v2FoldIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: none; }
+}
+.home.home-v2 .v2-svc-more {
+  display: inline-flex !important; align-items: center !important; gap: 7px;
+  margin-top: 16px !important; font-size: 12.5px !important; font-weight: 650 !important;
+  color: #8A5222 !important; text-decoration: none !important;
+  border: 1px solid rgba(138, 82, 34, .26) !important; border-radius: 999px !important;
+  padding: 7px 14px !important; background: rgba(255, 253, 249, .8) !important;
+}
+.home.home-v2 .v2-svc-more:hover { background: #8A5222 !important; color: #FFF7EA !important; }
 
 /* ---------- 5. 精选服务卡 ---------- */
 .home.home-v2 .home-svc {
@@ -434,6 +483,9 @@
   .home.home-v2 .home-sec-title { font-size: 21px !important; }
   .home.home-v2 .home-sec-sub { display: none !important; }
   .home.home-v2 .v2-head { padding-bottom: 12px !important; }
+  .home.home-v2 .home-hot-fold { padding: 4px 12px 2px !important; }
+  .home.home-v2 .v2-fold-count { display: none !important; }
+  .home.home-v2 .home-hot-fold-body { padding-top: 14px !important; }
   .home.home-v2 .smart-entry { padding: 20px !important; }
   .home.home-v2 .smart-entry-media { display: none !important; }
   .home.home-v2 .smart-entry-title { font-size: 18px !important; }

@@ -624,6 +624,17 @@
   }
   let renderedHomeCols = 0
 
+  /* 热销服务折叠状态（2026-11-23 舍先生要求「将热销服务也做折叠」）
+     用原生 <details>，无需在 SPA 重渲染后重新绑定事件；
+     但 DOM 会被重建，所以把展开状态记在模块级变量里恢复。
+     toggle 事件不冒泡，必须在 document 的 capture 阶段监听。 */
+  let hotFoldOpen = false
+  document.addEventListener('toggle', (e) => {
+    if (e.target && e.target.classList && e.target.classList.contains('home-hot-fold')) {
+      hotFoldOpen = !!e.target.open
+    }
+  }, true)
+
   const VIEWS = {}
 
   function render() {
@@ -885,14 +896,32 @@
           </div>
         </section>
 
-        <!-- ④ 精选服务：4 列紧凑卡，整页封面去重 -->
+        <!-- ④ 热销服务：默认折叠，点区块头展开 4 列紧凑卡（整页封面去重） -->
         <section class="home-section v2-svc">
-          ${secHead('02', 'POPULAR SERVICES', '热销服务', '按销量排序', '#/services', '更多服务')}
-          <div class="home-svc-grid">
-            ${hot
-              .map((s) => {
-                const photo = svcPhotos.get(s.id) || fallbackPhoto(s.id)
-                return `
+          <details class="home-hot-fold" ${hotFoldOpen ? 'open' : ''}>
+            <summary class="home-hot-fold-head">
+              <div class="home-sec-head v2-head">
+                <div class="v2-head-l">
+                  <span class="v2-head-idx">02</span>
+                  <div class="v2-head-txt">
+                    <span class="v2-head-kicker">POPULAR SERVICES</span>
+                    <h2 class="home-sec-title">热销服务<span class="home-sec-sub">按销量排序</span></h2>
+                  </div>
+                </div>
+                <span class="home-sec-more v2-fold-toggle">
+                  <span class="v2-fold-count">${hot.length} 项精选</span>
+                  <span class="v2-fold-label v2-fold-label-closed">展开查看</span>
+                  <span class="v2-fold-label v2-fold-label-open">收起</span>
+                  <i class="v2-fold-arrow" aria-hidden="true">⌄</i>
+                </span>
+              </div>
+            </summary>
+            <div class="home-hot-fold-body">
+              <div class="home-svc-grid">
+                ${hot
+                  .map((s) => {
+                    const photo = svcPhotos.get(s.id) || fallbackPhoto(s.id)
+                    return `
               <a class="home-svc" href="#/service/${s.id}">
                 <span class="home-svc-media">
                   <img ${API.imgAttrs(photo, 'home-svc-img')} alt="${API.esc(s.title || '')}" loading="lazy" />
@@ -909,9 +938,12 @@
                   </span>
                 </span>
               </a>`
-              })
-              .join('')}
-          </div>
+                  })
+                  .join('')}
+              </div>
+              <a class="v2-svc-more" href="#/services">浏览更多服务 <i aria-hidden="true">↗</i></a>
+            </div>
+          </details>
         </section>
 
         <!-- ⑤ 智能工作台：深色宽幅，作为整页唯一的明暗断点 -->

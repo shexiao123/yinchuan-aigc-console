@@ -72,6 +72,19 @@ const ok = (name, cond, extra) => {
   await send('Page.navigate', { url: url + sep + 'r=' + Date.now() })
   await sleep(MODE === 'local' ? 5500 : 7500)
 
+  // 热销服务已折叠：先记录默认收起状态，再展开后做密度/去重断言
+  let foldDefault = {}
+  try {
+    foldDefault = JSON.parse(await ev(`JSON.stringify((()=>{
+      const d = document.querySelector('.home-hot-fold')
+      return { exists: !!d, open: d ? d.open : null,
+        headInSummary: !!(d && d.querySelector('summary .v2-head')),
+        cards: d ? d.querySelectorAll('.home-svc').length : 0 }
+    })())`))
+  } catch (e) { foldDefault = { exists: false } }
+  await ev(`(()=>{const d=document.querySelector('.home-hot-fold');if(d)d.open=true;return 'ok'})()`)
+  await sleep(350)
+
   const read = `JSON.stringify((()=>{
     const q = s => document.querySelector(s)
     const qa = s => Array.from(document.querySelectorAll(s))
@@ -159,6 +172,9 @@ const ok = (name, cond, extra) => {
   ok('分类只显示 8 个项目名称、无描述、点名称才进内容',
     s.catLinks === 8 && s.catDescs === 0 && s.catHrefs.length === 8 && s.catHrefs.every(h => /^#\/services\?category=/.test(h || '')),
     s.catLinks + ' 个名称 / 描述 ' + s.catDescs)
+  ok('热销服务已折叠（默认收起、区块头在 summary 内）',
+    foldDefault.exists === true && foldDefault.open === false && foldDefault.headInSummary === true && foldDefault.cards === 8,
+    'open=' + foldDefault.open + ' / 卡 ' + foldDefault.cards)
   ok('精选服务 4 列 8 张（不回归）', s.svcCols === 4 && s.svcCount === 8, s.svcCols + ' 列 / ' + s.svcCount + ' 张')
   ok('服务卡图高仍收小（<170px）', s.imgH > 0 && s.imgH < 170, s.imgH + 'px')
   ok('整页封面零重复且无裂图', s.photos > 0 && s.uniq === s.photos && s.broken === 0, s.uniq + '/' + s.photos + ' 唯一 / 裂图 ' + s.broken)
