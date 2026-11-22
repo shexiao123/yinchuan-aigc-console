@@ -3134,12 +3134,18 @@
   async function findReachableEndpoint() {
     const cfg = window.APP_CONFIG
     if (!cfg || !cfg.publicConfig) return undefined
-    const list = [cfg.publicConfig.endpoint].concat(cfg.fallbackEndpoints || [])
+    const primary = cfg.publicConfig.endpoint
+    const list = [primary].concat(cfg.fallbackEndpoints || [])
     const uniq = list.filter((v, i) => v && list.indexOf(v) === i)
     if (!uniq.length) return undefined
-    const flags = await Promise.all(uniq.map((ep) => probeEndpoint(ep, 2600)))
+    // 先探主端点：通就直接返回。否则每次启动都会对备用端点发一轮请求，
+    // 在白名单内的正式域名上会刷一堆无意义的 CORS 报错。
+    if (await probeEndpoint(primary, 2600)) return primary
+    const rest = uniq.filter((ep) => ep !== primary)
+    if (!rest.length) return null
+    const flags = await Promise.all(rest.map((ep) => probeEndpoint(ep, 2600)))
     const i = flags.indexOf(true)
-    return i < 0 ? null : uniq[i]
+    return i < 0 ? null : rest[i]
   }
 
   /**
