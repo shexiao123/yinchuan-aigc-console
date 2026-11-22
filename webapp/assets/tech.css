@@ -72,12 +72,13 @@ body {
   letter-spacing: -.005em;
 }
 body:not(.admin-page) {
-  /* 2026-11-23 补回全页背景：暖铜纸感 + 柔焦金色光斑底图，
-     底图上叠同色系半透明暖米层，正文与卡片可读性不受影响；
+  /* 2026-11-23 补回全页背景：暖铜纸感 + 柔焦金色光斑底图。
+     遮罩从 .58~.86 调淡到 .30~.55 —— 原值把底图几乎盖没，
+     用户看到的仍是「一片纯米色，没有背景图」。
      管理端 body.admin-page 不走这条，保持纯色数据看板底。 */
   background-color: #FAF5EC;
   background-image:
-    linear-gradient(180deg, rgba(250,245,236,.58) 0%, rgba(250,245,236,.72) 55%, rgba(250,245,236,.86) 100%),
+    linear-gradient(180deg, rgba(250,245,236,.30) 0%, rgba(250,245,236,.42) 55%, rgba(250,245,236,.55) 100%),
     url("covers/light/warm-stage-page.jpg?v=20261123a");
   background-repeat: no-repeat;
   background-position: center top;
@@ -677,8 +678,18 @@ body .cat-img-wrap { aspect-ratio: 16 / 10; }
 /* Hero：左文案 + 右大图，去掉易空洞的小图卡 */
 .home-hero {
   display: grid; grid-template-columns: 1.05fr 1fr; gap: 40px; align-items: center;
-  /* 整块实色浅底；城市底图只放进右侧独立图片卡，不再从 Hero 背景透出来 */
-  background: linear-gradient(112deg, #FBF6EC 0%, #FBF6EC 40%, #EFE0C8 100%);
+  /* Hero 本身铺背景：暖金夜景虚化底图 + 从左到右渐淡的暖米遮罩。
+     左侧文字区仍够亮够清晰，右侧透出串灯/星空画面，
+     与右侧那张清晰的同场景图片卡形成虚实呼应。
+     （旧版是整块不透明实色渐变，全页底图在这块完全透不出来，
+       用户反复反馈「背景图没了」的病根就在这里。） */
+  background:
+    linear-gradient(100deg,
+      rgba(250,245,236,.70) 0%,
+      rgba(250,245,236,.52) 42%,
+      rgba(250,245,236,.26) 100%),
+    url("covers/light/warm-hero-bg.jpg?v=20261123e") center/cover no-repeat,
+    #F7EFE1;
   border: 1px solid rgba(188,112,59,.10);
   border-radius: 24px; padding: 48px 52px; position: relative; overflow: hidden;
   box-shadow: 0 24px 60px -30px rgba(106,66,34,.28);
@@ -1738,15 +1749,18 @@ body.offline-mode::after {
   --card-solid: #FFFDF9;
   --bg-2: #FFFDF9;
 }
-body { background: #FAF5EC !important; }
+body { background-color: #FAF5EC !important; }
 .topbar {
   background: rgba(255, 253, 249, .94) !important;
   border-bottom: 1px solid #EADDC8 !important;
 }
 
-/* 首页主视觉 */
+/* 首页主视觉：Hero 自身铺虚化暖金夜景底图（不再是不透明实色块） */
 .home-hero {
-  background: linear-gradient(112deg, #FBF6EC 0%, #FBF6EC 40%, #EFE0C8 100%) !important;
+  background:
+    linear-gradient(100deg, rgba(250,245,236,.70) 0%, rgba(250,245,236,.52) 42%, rgba(250,245,236,.26) 100%),
+    url("covers/light/warm-hero-bg.jpg?v=20261123e") center/cover no-repeat,
+    #F7EFE1 !important;
   border: 1px solid #EADDC8 !important;
   border-radius: 22px !important;
   box-shadow: 0 24px 60px -34px rgba(90, 58, 32, .45) !important;
@@ -1879,11 +1893,13 @@ body { background: #FAF5EC !important; }
 .home.home-anim .home-viz-card,
 .home.home-anim .home-viz-side { opacity: 1 !important; transform: none !important; }
 
-/* 2. 全站底色：暖米纸 + 柔焦金色光斑底图（2026-11-23 补回，替代冷蓝科技底图） */
+/* 2. 全站底色：暖米纸 + 柔焦金色光斑底图（2026-11-23 补回，替代冷蓝科技底图）
+   ⚠️ 这段在文件最末、带 !important，是实际生效的规则；改底图浓淡必须改这里，
+      只改文件开头那条主规则会被本段压掉（已踩过两次）。 */
 body:not(.admin-page) {
   background-color: #FAF5EC !important;
   background-image:
-    linear-gradient(180deg, rgba(250,245,236,.58) 0%, rgba(250,245,236,.72) 55%, rgba(250,245,236,.86) 100%),
+    linear-gradient(180deg, rgba(250,245,236,.30) 0%, rgba(250,245,236,.42) 55%, rgba(250,245,236,.55) 100%),
     url("covers/light/warm-stage-page.jpg?v=20261123a") !important;
   background-repeat: no-repeat !important;
   background-position: center top !important;
@@ -1891,10 +1907,13 @@ body:not(.admin-page) {
   background-attachment: fixed !important;
 }
 
-/* 3. 首屏：米纸底 + 真实照片 */
+/* 3. 首屏：Hero 铺虚化夜景底图 + 右侧真实照片卡（虚实呼应） */
 .home-hero {
   overflow: hidden !important;
-  background: linear-gradient(112deg, #FBF6EC 0%, #FBF6EC 42%, #EFE0C8 100%) !important;
+  background:
+    linear-gradient(100deg, rgba(250,245,236,.70) 0%, rgba(250,245,236,.52) 42%, rgba(250,245,236,.26) 100%),
+    url("covers/light/warm-hero-bg.jpg?v=20261123e") center/cover no-repeat,
+    #F7EFE1 !important;
 }
 .home-hero .tech-motion-canvas { display: none !important; }
 .home-hero-title { font-weight: 760 !important; text-shadow: none !important; }
