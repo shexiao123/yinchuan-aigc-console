@@ -825,16 +825,17 @@
           </div>
         </section>
 
-        <section class="home-section">
+        <section class="home-section home-cats-section">
           <div class="home-sec-head">
-            <h2 class="home-sec-title">服务分类</h2>
+            <h2 class="home-sec-title">服务分类<span class="home-sec-sub">按类型展开</span></h2>
             <a class="home-sec-more" href="#/services">全部服务 ›</a>
           </div>
-          <div class="home-cat-groups">
+          <div class="home-cat-fold">
             ${(() => {
               // 与小程序首页同源的三组归类：AI 生成视频与漫剧都归「AI 创作」
-              // 分类区只展示项目名称（舍先生 2026-11-23 要求）：
-              // 分组说明与卡片内容描述一律不铺在首页，点名称进入服务列表后才看得到内容。
+              // 舍先生 2026-11-23 要求：三组按各自分类折叠进去，首页重新排版。
+              // 用原生 <details> 折叠：默认只显示三个分类名称，点名称才展开该类的
+              // 项目名称；卡片本身仍点进 #/services?category= 查看服务内容。
               const GROUPS = [
                 { key: 'shoot', name: '拍摄制作', slugs: ['wedding-shoot', 'wedding-film', 'brand-film', 'commercial-photo'] },
                 { key: 'post', name: '后期剪辑', slugs: ['short-video', 'ae-motion'] },
@@ -850,18 +851,23 @@
                 <span class="home-cat-name"><span class="home-cat-label">${API.esc(c.name)}</span><i class="home-cat-go" aria-hidden="true">›</i></span>
               </a>`
               }
-              return GROUPS.map((g) => {
+              return GROUPS.map((g, gi) => {
                 const items = g.slugs.map((s) => bySlug[s]).filter(Boolean)
                 if (!items.length) return ''
                 return `
-            <div class="home-cat-group">
-              <div class="home-cat-group-head">
-                <a class="home-cat-group-name" href="#/services" title="进入全部服务">${g.name}<i class="home-cat-group-go" aria-hidden="true">›</i></a>
+            <details class="home-cat-fold-item" data-group="${g.key}">
+              <summary class="home-cat-fold-head">
+                <span class="home-cat-fold-idx">${String(gi + 1).padStart(2, '0')}</span>
+                <span class="home-cat-fold-name">${g.name}</span>
+                <span class="home-cat-fold-count">${items.length} 类</span>
+                <i class="home-cat-fold-arrow" aria-hidden="true">⌄</i>
+              </summary>
+              <div class="home-cat-fold-body">
+                <div class="home-cat-row">
+                  ${items.map(card).join('')}
+                </div>
               </div>
-              <div class="home-cat-row" style="grid-template-columns:repeat(${items.length},minmax(0,1fr))">
-                ${items.map(card).join('')}
-              </div>
-            </div>`
+            </details>`
               }).join('')
             })()}
           </div>

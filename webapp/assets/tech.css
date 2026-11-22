@@ -2377,4 +2377,88 @@ body:not(.admin-page) {
   .home-cat-group-name { font-size: 15px !important; }
 }
 
+/* ================================================================
+   14. Hero 换成东方实景不透明背景图（2026-11-23 舍先生要求「实景」）
+   ----------------------------------------------------------------
+   图：assets/covers/light/oriental-hero.jpg —— AI 生成的苏州园林实景摄影
+   （粉墙竹影 / 黛瓦花窗 / 月洞门 / 暖黄纸灯笼），裁成 3:1 横幅 2400×800，
+   左侧在图片内部烘焙极淡浅米渐变保证深色标题可读，右下角水印已裁除。
+   与上一版的差别：背景图 opacity .5 → 1（真正不透明），覆盖在图上方的
+   半透明护罩全部撤掉；Hero 自身也改回不透明实底。
+   ⚠️ 追加在文件最末且带 !important，压过第 11/12 段的 opacity / 护罩规则。
+   ================================================================ */
+.home-hero {
+  background: #F7EFE1 !important;
+}
+.home-hero::before {
+  background: url("covers/light/oriental-hero.jpg?v=20261123j") center/cover no-repeat !important;
+  opacity: 1 !important;
+}
+.home-hero-copy::before { display: none !important; }
+.home-hero-title, .home-hero-sub {
+  text-shadow: 0 1px 2px rgba(250, 245, 236, .72) !important;
+}
+.home-trust { background: rgba(255, 253, 249, .92) !important; }
+
+/* ================================================================
+   15. 服务分类按类折叠 + 首页重排（2026-11-23 舍先生截图红框三组）
+   ----------------------------------------------------------------
+   原来三组 × 每组一整行卡铺满首页 → 改为三列紧凑折叠模块：
+   默认只显示 01/02/03 三个分类名称，点名称展开该类的项目名称卡，
+   点项目名称才进入服务列表看内容。分类区高度从约 430px 压到约 150px。
+   用原生 <details>/<summary>，SPA 重渲染后无需重新绑定事件。
+   ⚠️ 追加在文件最末且带 !important，压过第 8/10/13 段的分组/卡片旧规则。
+   ================================================================ */
+.home-cats-section { margin-top: 34px !important; }
+.home-cat-fold {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 14px !important;
+  align-items: start !important;
+}
+.home-cat-fold-item {
+  background: #FFFDF9 !important;
+  border: 1px solid #EADDC8 !important;
+  border-radius: 14px !important;
+  overflow: hidden !important;
+  box-shadow: 0 8px 22px -20px rgba(90, 58, 32, .5) !important;
+}
+.home-cat-fold-head {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px;
+  padding: 15px 16px !important;
+  cursor: pointer;
+  list-style: none !important;
+  user-select: none;
+  transition: background .18s ease;
+}
+.home-cat-fold-head::-webkit-details-marker { display: none !important; }
+.home-cat-fold-head:hover { background: #FBF3E6 !important; }
+.home-cat-fold-idx { font-size: 11px; font-weight: 700; letter-spacing: .08em; color: #B07A4C; }
+.home-cat-fold-name { flex: 1; font-size: 15.5px; font-weight: 720; color: #241A12; }
+.home-cat-fold-count { font-size: 11.5px; color: #9C8A72; }
+.home-cat-fold-arrow { font-style: normal; font-size: 17px; line-height: 1; color: #B07A4C; transition: transform .22s ease; }
+.home-cat-fold-item[open] .home-cat-fold-arrow { transform: rotate(180deg); }
+.home-cat-fold-item[open] .home-cat-fold-head { background: #FBF3E6 !important; border-bottom: 1px solid #EADDC8 !important; }
+.home-cat-fold-body { padding: 12px !important; animation: homeFoldIn .22s ease; }
+@keyframes homeFoldIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+.home-cat-fold-body .home-cat-row {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 10px !important;
+}
+.home-cat-fold-body .home-cat { border-radius: 11px !important; }
+.home-cat-fold-body .home-cat-media { height: 84px !important; }
+.home-cat-fold-body .home-cat-name { padding: 9px 10px 10px !important; font-size: 12.5px !important; }
+.home-cat-fold-body .home-cat-go { font-size: 15px; }
+@media (max-width: 999px) {
+  .home-cat-fold { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+}
+@media (max-width: 560px) {
+  .home-cat-fold { grid-template-columns: 1fr !important; gap: 10px !important; }
+  .home-cat-fold-body .home-cat-media { height: 92px !important; }
+  .home-cat-fold-head { padding: 13px 14px !important; }
+}
+
 

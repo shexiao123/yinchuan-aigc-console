@@ -1,7 +1,9 @@
 /**
- * Hero 覆盖层透明度回归验证（2026-11-23）
- * 背景：舍先生反馈「上面一层不透明度太高了」—— Hero 实底 100% + 全页 50% 遮罩
- * 把背景照片洗白。本测试断言覆盖层已减薄，且背景图本身仍严格 50%。
+ * Hero 背景回归验证（2026-11-23，最终版）
+ * 舍先生最终要求「不透明的背景图、实景、东方审美」：Hero 背景换成
+ * assets/covers/light/oriental-hero.jpg（苏州园林实景摄影），opacity 严格 1，
+ * Hero 自身不透明实底，盖在图上方的半透明护罩全部移除。
+ * 本测试断言不透明、图正确、文字可读、右侧照片卡不受影响。
  *
  * 用法：node tools/test-hero-cover.js local|pages|live
  * 前置：本机 8899 静态服务、9222 无头 Chrome 调试端口
@@ -32,7 +34,9 @@ const ok = (name, cond, extra) => {
   else { fail++; console.log('  \u2717 ' + name + (extra ? '  ' + extra : '')) }
 }
 const alpha = s => {
-  const m = /rgba?\([^)]*?,\s*([\d.]+)\s*\)/.exec(s || '')
+  // rgb(...) 本身就是不透明；只有 rgba(...) 才取第四个参数
+  if (!/^rgba\(/.test(s || '')) return 1
+  const m = /rgba\([^)]*,\s*([\d.]+)\s*\)/.exec(s)
   return m ? Number(m[1]) : 1
 }
 
@@ -79,6 +83,7 @@ const alpha = s => {
       beforeBg: b.backgroundImage,
       bodyBg: getComputedStyle(document.body).backgroundImage,
       copyShield: cb ? cb.backgroundImage : '',
+      copyShieldDisplay: cb ? cb.display : '',
       titleColor: t ? getComputedStyle(t).color : '',
       mediaBg: m ? getComputedStyle(m).backgroundImage : '',
       heroHeight: Math.round(h.getBoundingClientRect().height)
@@ -88,13 +93,12 @@ const alpha = s => {
 
   console.log('\n[' + MODE + '] ' + url)
   ok('Hero 已渲染', s.ok === true, s.heroHeight + 'px')
-  ok('Hero 实底已减薄（不再 100% 不透明）', alpha(s.heroBgColor) <= 0.30, s.heroBgColor)
-  ok('全页底图遮罩 ≤ 20%', /rgba\(250, 245, 236, 0\.18\)/.test(s.bodyBg), (s.bodyBg.match(/rgba\([^)]*\)/) || [''])[0])
-  ok('全页柔焦底图存在', /warm-stage-page\.jpg/.test(s.bodyBg))
-  ok('Hero 背景图仍严格 50%', s.beforeOpacity === '0.5', 'opacity=' + s.beforeOpacity)
-  ok('Hero 背景图指向暖金夜景', /warm-hero-bg\.jpg/.test(s.beforeBg))
+  ok('Hero 实底为不透明纯色', alpha(s.heroBgColor) === 1 && /247, 239, 225/.test(s.heroBgColor), s.heroBgColor)
+  ok('全页柔焦底图仍在（不受 Hero 换图影响）', /warm-stage-page\.jpg/.test(s.bodyBg))
+  ok('Hero 背景图严格不透明', s.beforeOpacity === '1', 'opacity=' + s.beforeOpacity)
+  ok('背景图指向东方实景', /oriental-hero\.jpg/.test(s.beforeBg))
   ok('Hero 自身不再叠第二张背景图', s.heroBgImg === 'none', s.heroBgImg)
-  ok('左侧文字护罩已减薄', /0\.42/.test(s.copyShield))
+  ok('图上方的半透明护罩已移除', s.copyShieldDisplay === 'none', 'display=' + s.copyShieldDisplay)
   ok('标题仍为深棕（可读性）', /rgb\(36, 26, 18\)/.test(s.titleColor), s.titleColor)
   ok('右侧清晰照片卡仍有实图', /\.jpg/.test(s.mediaBg))
 
