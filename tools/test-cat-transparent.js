@@ -1,15 +1,16 @@
 /**
- * 服务分类卡片：图片不裁剪 / 整卡 50% 透明 / 不留白
- * 回归验证（2026-11-23 舍先生截图要求）
+ * 服务分类卡片 v3：不要条形框 / 无框题签 / 照片 50% 半透明 / 文字零重影
+ * 回归验证（2026-11-23 舍先生连续三轮截图）
  *
- * 旧版：cover 被 background-size:cover 裁成 88px 窄条，白底实色卡 +
- *       flex:1 把 2 项那两组撑出大片空白。
- * 新版：封面 3:2 完整显示（100% 100%，不裁切不变形不留白边），
- *       组名/名称叠在照片上，卡片无白底、名称列表贴底。
- * 追加（06:31「红框位置文字必须清楚展示」）：整卡 opacity:.5 会连文字一起压淡，
- *       改为**只有封面照片层 opacity:.5**，整卡与文字层 opacity:1；
- *       名称行 .92 米白行内衬 + 近黑加粗字、去掉柔光描边；
- *       hover / focus-within 只把照片恢复 1。
+ * v1：cover 被裁成 88px 窄条、白底实色卡、flex:1 撑出大片空白。
+ * v2：整卡 opacity:.5 把文字压淡；改为「照片层 .5 + 名称行 .92 米白实衬」，
+ *     结果四条横贯整卡的浅色长条像输入框，被判「太丑」。
+ * v3（条形框撤销）：名称彻底无框，纯文字 + 3px 铜点，flex-wrap 流式排布。
+ * v3.1（舍先生追加「不要白边」）：v3 底部那片「透明→暖米」渐变仍在卡片底边
+ *     堆出一条浅色圆角带 → 名称区 / 组名区 / 卡片外框**全部透明无边框**，
+ *     文字直接叠在实景照片上，靠照片 50% 半透明后的浅暖底 + 近黑加粗字保证可读。
+ *   · 3:2 完整不裁剪、贴底不留白
+ *   · 全卡文字零 text-shadow / 零 text-stroke（上一轮「不要有重影」）
  *
  * 用法：node tools/test-cat-transparent.js local|pages|live
  * 前置：本机 8899 静态服务、9222 无头 Chrome 调试端口
@@ -59,6 +60,22 @@ const PROBE = `JSON.stringify((()=>{
     coverOpacities: covers.map(e => getComputedStyle(e).opacity),
     bgColors: groups.map(e => getComputedStyle(e).backgroundColor),
     linkBgs: links.map(e => getComputedStyle(e).backgroundColor),
+    linkBorders: links.map(e => { const c = getComputedStyle(e); return c.borderTopWidth + '/' + c.borderBottomWidth + '/' + c.borderLeftWidth }),
+    linkRadii: links.map(e => getComputedStyle(e).borderTopLeftRadius),
+    linkPaddings: links.map(e => getComputedStyle(e).padding),
+    linkDisplays: links.map(e => getComputedStyle(e).display),
+    linkDots: links.map(e => getComputedStyle(e, '::before').backgroundColor),
+    goDisplays: qa('.home-cat-go').map(e => getComputedStyle(e).display),
+    linksBgs: qa('.home-cat-links').map(e => getComputedStyle(e).backgroundImage),
+    linksWraps: qa('.home-cat-links').map(e => getComputedStyle(e).flexWrap),
+    linksDirs: qa('.home-cat-links').map(e => getComputedStyle(e).flexDirection),
+    linksBorders: qa('.home-cat-links').map(e => getComputedStyle(e).borderTopWidth),
+    headBgImages: qa('.home-cat-group-head').map(e => getComputedStyle(e).backgroundImage),
+    headBorders: qa('.home-cat-group-head').map(e => getComputedStyle(e).borderBottomWidth),
+    groupBorders: groups.map(e => getComputedStyle(e).borderTopWidth + '/' + getComputedStyle(e).borderBottomWidth),
+    groupRadii: groups.map(e => getComputedStyle(e).borderTopLeftRadius),
+    linksBgColors: qa('.home-cat-links').map(e => getComputedStyle(e).backgroundColor),
+    headBgColors: qa('.home-cat-group-head').map(e => getComputedStyle(e).backgroundColor),
     linkColors: links.map(e => getComputedStyle(e).color),
     linkWeights: links.map(e => getComputedStyle(e).fontWeight),
     linkShadows: links.map(e => getComputedStyle(e).textShadow),
@@ -129,15 +146,40 @@ const PROBE = `JSON.stringify((()=>{
     s.opacities.length === 3 && s.opacities.every(v => v === '1') &&
     s.coverOpacities.length === 3 && s.coverOpacities.every(v => v === '0.5'),
     '卡 ' + s.opacities.join('/') + ' / 照片 ' + s.coverOpacities.join('/'))
-  const alphas = s.linkBgs.map(v => { const m = v.match(/rgba?\([^)]*?,\s*([\d.]+)\)/); return m ? Number(m[1]) : 1 })
-  ok('名称行高不透明米白衬（文字底够实）', alphas.length === 8 && alphas.every(v => v >= .88), alphas.join(' / '))
-  ok('名称字近黑加粗、不再被柔光描边糊掉',
+  // ① 不要条形框：名称本身背景透明、零边框、零圆角、零内边距、无右箭头
+  ok('名称不再是条形框：背景完全透明',
+    s.linkBgs.length === 8 && s.linkBgs.every(v => /rgba\(0, 0, 0, 0\)|transparent/.test(v)), s.linkBgs[0])
+  ok('名称无边框 / 无圆角 / 无内边距',
+    s.linkBorders.length === 8 && s.linkBorders.every(v => /^0px\/0px\/0px$/.test(v)) &&
+    s.linkRadii.every(v => v === '0px') && s.linkPaddings.every(v => v === '0px'),
+    s.linkBorders[0] + ' / ' + s.linkRadii[0] + ' / ' + s.linkPaddings[0])
+  // flex 容器会把子项 inline-flex blockify 成 flex，两者都算流式排布
+  ok('名称改流式排布、右侧箭头已移除',
+    s.linkDisplays.every(v => /^(inline-flex|flex)$/.test(v)) && s.goDisplays.length === 8 && s.goDisplays.every(v => v === 'none'),
+    s.linkDisplays[0] + ' / go ' + s.goDisplays[0])
+  ok('每个名称前置铜色小点（无框装饰）',
+    s.linkDots.length === 8 && s.linkDots.every(v => /rgb\(181, 121, 61\)/.test(v)), s.linkDots[0])
+  ok('名称区彻底无底、无白边（不铺渐变也不铺白块）',
+    s.linksBgs.length === 3 && s.linksBgs.every(v => v === 'none') &&
+    s.linksBgColors.every(v => /rgba\(0, 0, 0, 0\)|transparent/.test(v)) &&
+    s.linksWraps.every(v => v === 'wrap') && s.linksDirs.every(v => v === 'row') &&
+    s.linksBorders.every(v => v === '0px'),
+    'bg ' + s.linksBgs[0] + ' / ' + s.linksBgColors[0] + ' / wrap ' + s.linksWraps.join('/'))
+  ok('组名题签无实底无渐变（仅一条细铜线）',
+    s.headBgs.length === 3 && s.headBgs.every(v => /rgba\(0, 0, 0, 0\)|transparent/.test(v)) &&
+    s.headBgColors.every(v => /rgba\(0, 0, 0, 0\)|transparent/.test(v)) &&
+    s.headBgImages.every(v => v === 'none') && s.headBorders.every(v => v === '1px'),
+    s.headBgs[0] + ' / 图 ' + s.headBgImages[0] + ' / 线 ' + s.headBorders[0])
+  ok('卡片外框已移除（圆角保留、无描边白边）',
+    s.groupBorders.length === 3 && s.groupBorders.every(v => /^0px\/0px$/.test(v)) &&
+    s.groupRadii.every(v => parseFloat(v) >= 10),
+    s.groupBorders.join(' / ') + ' 圆角 ' + s.groupRadii[0])
+  ok('名称字近黑加粗、零柔光零描边（无重影）',
     s.linkColors.every(v => /rgb\(23, 16, 11\)/.test(v)) &&
     s.linkWeights.every(v => Number(v) >= 800) &&
     s.linkShadows.every(v => v === 'none') &&
     s.linkStrokes.every(v => /^0px$|^$/.test(v.trim())),
     s.linkColors[0] + ' / ' + s.linkWeights[0] + ' / ' + s.linkShadows[0] + ' / stroke ' + s.linkStrokes[0])
-  ok('组名行同样有实衬、文字清楚', s.headBgs.length === 3 && s.headBgs.every(v => /rgba\(250, 245, 236, 0\.8/.test(v)), s.headBgs[0])
   ok('卡片无白色实底（背景透明）', s.bgColors.every(v => /rgba\(0, 0, 0, 0\)|transparent/.test(v)), s.bgColors[0])
   ok('卡片不再有白卡阴影', s.shadows.every(v => v === 'none'), s.shadows[0])
   ok('封面不裁剪：background-size = 100% 100%', s.coverSizes.every(v => v === '100% 100%'), s.coverSizes.join(' / '))
