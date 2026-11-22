@@ -19,7 +19,7 @@
 ;(function () {
   'use strict'
 
-  var OFFLINE_MSG = '离线演示模式：该操作需要连接云端，请访问完整版站点'
+  var OFFLINE_MSG = '此操作需在手机版站点完成，请扫码前往'
   var errRes = function () {
     return { data: null, error: { message: OFFLINE_MSG, code: 'OFFLINE_READONLY' } }
   }

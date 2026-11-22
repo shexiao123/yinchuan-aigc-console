@@ -180,7 +180,7 @@
       </div>
       <div class="qr-url" id="qrUrl" hidden></div>
       <button class="btn btn-primary btn-block" id="wechatLoginBtn">生成登录二维码</button>
-      <p class="login-tip">用微信扫码后在手机上完成授权；本地 127.0.0.1 地址回调会失败，线上环境（托管链接 / Pages）可用。</p>
+      <p class="login-tip" id="wechatLoginTip">用微信扫码后在手机上完成授权；本地 127.0.0.1 地址回调会失败，请使用托管链接或本地服务。</p>
     </div>
 
     <p class="login-error" id="loginError" hidden></p>
@@ -266,7 +266,7 @@
 <!-- 云服务 SDK：本地优先（CDN 被网关拦截时页面照样能开），失败再回退 CDN -->
 <script src="js/vendor/workbuddy-cloud-sdk.js?v=20261122e" onerror="var s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/@tencent-ai/workbuddy-cloud-sdk@dev/lib/index.global.js';document.head.appendChild(s)"></script>
 <script src="js/seed-data.js?v=20261122e"></script>
-<script src="js/offline.js?v=20261122e"></script>
+<script src="js/offline.js?v=20261123c"></script>
 <script src="js/config.js?v=20261123b"></script>
 <script src="js/api.js?v=20261122e"></script>
 <script src="js/samples.js?v=20261122e"></script>
@@ -275,7 +275,7 @@
 <!-- 智能工作台算法内核：双端共用，小程序端副本由 tools/sync-smart-engine.js 生成 -->
 <script src="js/smart-engine.js?v=20261122e"></script>
 <script src="js/qr.js?v=20261123a"></script>
-<script src="js/app.js?v=20261123b"></script>
+<script src="js/app.js?v=20261123c"></script>
 <script src="js/home-viz.js?v=20261122e"></script>
 <script src="js/tech-motion.js?v=20261122e"></script>
 <script src="js/online.js?v=20261122e"></script>

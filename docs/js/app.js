@@ -209,18 +209,27 @@
     const qr = $('#qrPlaceholder')
     const box = $('#qrBox')
     const urlLine = $('#qrUrl')
+    const tip = $('#wechatLoginTip')
+    const errEl = $('#loginError')
+    // 每次重新出码先清掉上一次的红字，避免旧提示残留
+    if (errEl) { errEl.hidden = true; errEl.textContent = '' }
     try {
-      // 离线演示模式（Pages 等无云端环境）：云端授权拿不到链接，
-      // 把「完整版站点入口」画成二维码，扫码后在微信里打开完整站点登录
-      const offline = !!(window.cloud && window.cloud.__offline)
+      // 站点预览环境（Pages 等无云端连接）：授权链接拿不到，
+      // 把「手机版站点入口」画成二维码，扫码后在微信里打开站点完成登录
+      const preview = !!(window.cloud && window.cloud.__offline)
+      const genBtn = $('#wechatLoginBtn')
       let url = ''
       let hint = ''
-      if (offline) {
+      if (preview) {
         url = (window.APP_CONFIG && window.APP_CONFIG.fullSiteUrl) || window.location.origin
-        hint = '离线演示版没有云端授权<br>扫码打开完整版站点后登录'
+        hint = '微信扫一扫<br>打开手机版站点'
+        if (tip) tip.textContent = '进入站点后点右上角「登录」，选择微信扫码即可完成登录。'
+        if (genBtn) genBtn.textContent = '生成手机版入口码'
       } else {
         url = await API.wechatLoginUrl()
         hint = '微信扫一扫<br>完成授权登录'
+        if (tip) tip.textContent = '用微信扫码后在手机上完成授权；本地 127.0.0.1 地址回调会失败，请使用托管链接或本地服务。'
+        if (genBtn) genBtn.textContent = '生成登录二维码'
       }
       // 用内置 QR 渲染器把地址画成真二维码（纯前端离线生成）
       const svg = typeof window.buildQrSvg === 'function' ? window.buildQrSvg(url) : ''
@@ -4537,7 +4546,12 @@
     if (!endpointOk) {
       if (typeof window.enableOfflineMode === 'function' && window.SEED_DATA) {
         window.enableOfflineMode()
-        toast('已进入离线演示模式：内容为只读快照，下单/登录请访问完整版')
+        // 预览环境按钮直接叫准名字，别让访客以为出的是登录码
+        const genBtn = $('#wechatLoginBtn')
+        if (genBtn) genBtn.textContent = '生成手机版入口码'
+        const wxTip = $('#wechatLoginTip')
+        if (wxTip) wxTip.textContent = '进入站点后点右上角「登录」，选择微信扫码即可完成登录。'
+        toast('当前为站点预览，登录与下单请扫码打开手机版')
       } else {
         const hint = (window.APP_CONFIG && window.APP_CONFIG.endpointFailureHint) || '服务暂时无法连接，请稍后刷新重试'
         app.innerHTML = `<div class="empty" style="padding:80px 24px">
