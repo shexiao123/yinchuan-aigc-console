@@ -10,8 +10,8 @@
 <link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png">
 <link rel="shortcut icon" href="favicon.ico">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
-<link rel="stylesheet" href="assets/admin.css?v=20261122c">
-<link rel="stylesheet" href="assets/tech.css?v=20261122c">
+<link rel="stylesheet" href="assets/admin.css?v=20261122d">
+<link rel="stylesheet" href="assets/tech.css?v=20261122d">
 </head>
 <body class="admin-page">
 
@@ -27,6 +27,7 @@
     <nav class="sidebar-nav" id="sidebarNav">
       <div class="nav-group-label">数据</div>
       <div class="side-item active" data-page="dashboard"><span class="side-icon">▤</span>运营概览</div>
+      <div class="side-item" data-page="risks"><span class="side-icon">⚠</span>风险预警</div>
 
       <div class="nav-group-label">交易</div>
       <div class="side-item" data-page="orders"><span class="side-icon">▦</span>订单管理<span class="side-badge" id="badgeOrders" hidden>0</span></div>
@@ -42,6 +43,7 @@
       <div class="side-item" data-page="merchants"><span class="side-icon">🏬</span>商家管理</div>
       <div class="side-item" data-page="billing"><span class="side-icon">¥</span>商家收费<span class="side-badge" id="badgeBilling" hidden>0</span></div>
       <div class="side-item" data-page="notice"><span class="side-icon">📢</span>公告管理</div>
+      <div class="side-item" data-page="reviews"><span class="side-icon">★</span>评价管理<span class="side-badge" id="badgeReview" hidden>0</span></div>
       <div class="side-item" data-page="settings"><span class="side-icon">⚙</span>平台设置</div>
       <div class="side-item" data-page="members"><span class="side-icon">👑</span>会员管理<span class="side-badge" id="badgeMember" hidden>0</span></div>
       <div class="side-item" data-page="support"><span class="side-icon">💬</span>客服会话</div>
@@ -140,17 +142,17 @@
 <div class="toast" id="toast"></div>
 
 <!-- 云存储上传的 CORS 兜底：必须在云 SDK 之前 -->
-<script src="js/fetch-patch.js?v=20261122c"></script>
+<script src="js/fetch-patch.js?v=20261122d"></script>
 <!-- 云服务 SDK：本地优先（CDN 被网关拦截时页面照样能开），失败再回退 CDN -->
-<script src="js/vendor/workbuddy-cloud-sdk.js?v=20261122c" onerror="var s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/@tencent-ai/workbuddy-cloud-sdk@dev/lib/index.global.js';document.head.appendChild(s)"></script>
-<script src="js/seed-data.js?v=20261122c"></script>
-<script src="js/offline.js?v=20261122c"></script>
-<script src="js/config.js?v=20261122c"></script>
-<script src="js/api.js?v=20261122c"></script>
-<script src="js/platform-rules.js?v=20261122c"></script>
-<script src="js/adaptive-grid.js?v=20261122c"></script>
-<script src="js/dataviz.js?v=20261122c"></script>
-<script src="js/admin.js?v=20261122c"></script>
-<script src="js/online.js?v=20261122c"></script>
+<script src="js/vendor/workbuddy-cloud-sdk.js?v=20261122d" onerror="var s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/@tencent-ai/workbuddy-cloud-sdk@dev/lib/index.global.js';document.head.appendChild(s)"></script>
+<script src="js/seed-data.js?v=20261122d"></script>
+<script src="js/offline.js?v=20261122d"></script>
+<script src="js/config.js?v=20261122d"></script>
+<script src="js/api.js?v=20261122d"></script>
+<script src="js/platform-rules.js?v=20261122d"></script>
+<script src="js/adaptive-grid.js?v=20261122d"></script>
+<script src="js/dataviz.js?v=20261122d"></script>
+<script src="js/admin.js?v=20261122d"></script>
+<script src="js/online.js?v=20261122d"></script>
 </body>
 </html>

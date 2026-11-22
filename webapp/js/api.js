@@ -915,6 +915,31 @@ window.API = (function () {
     return rows && rows[0]
   }
 
+  /** 管理端：全量评价列表（最新在前，200 条内） */
+  async function adminListReviews(limit = 200) {
+    const res = await cloud.database
+      .from('reviews')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(limit)
+    return unwrap(res, '评价加载失败') || []
+  }
+
+  /** 管理端：平台回复某条评价（写 reviews.reply 字段，不删不改原评价） */
+  async function adminReplyReview(reviewId, reply, adminUid, adminName) {
+    const text = String(reply || '').trim()
+    if (!text) throw new Error('回复内容不能为空')
+    const res = await cloud.database
+      .from('reviews')
+      .update({ reply: text })
+      .eq('id', reviewId)
+      .select()
+    const rows = unwrap(res, '回复失败')
+    if (!rows || rows.length === 0) throw new Error('回复失败，该评价不存在')
+    await logAction(adminUid, adminName, 'reply_review', 'review', String(reviewId), `回复 ${text.length} 字`)
+    return rows[0]
+  }
+
   /* ---------------- 宣传样片 ---------------- */
 
   /** 某服务的样片列表 */
@@ -3105,7 +3130,7 @@ window.API = (function () {
     listServices, getService, getProvider, listProviders,
     getMyProvider, becomeProvider, claimProvider, publishService, updateService, listMyServices,
     createOrder, listOrders, listOpenOrders, getOrder, advanceOrder, takeOrder,
-    listReviews, getReviewByOrder, createReview,
+    listReviews, getReviewByOrder, createReview, adminListReviews, adminReplyReview,
     listNotifications, countUnread, markNotificationRead, markAllNotificationsRead, isStaff, claimAdminInvite, checkAdminInvite, adminStats, adminListOrders,
     // 宣传样片
     listSamples, listProviderSamples, createSample, updateSample, deleteSample,

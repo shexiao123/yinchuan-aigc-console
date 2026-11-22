@@ -29,6 +29,7 @@
 
   const PAGE_TITLES = {
     dashboard: '运营概览',
+    risks: '风险预警',
     orders: '订单管理',
     settlements: '结算与提现',
     providers: '服务者管理',
@@ -38,6 +39,7 @@
     merchants: '商家管理',
     billing: '商家收费',
     notice: '公告管理',
+    reviews: '评价管理',
     settings: '平台设置',
     members: '会员管理',
     support: '客服会话',
@@ -307,8 +309,50 @@
     }).catch(() => {})
   }
 
+  let lastReviewBadgeAt = 0
+  function refreshReviewBadge() {
+    const el = $('#badgeReview')
+    if (!el || Date.now() - lastReviewBadgeAt < 30000) return
+    lastReviewBadgeAt = Date.now()
+    API.adminListReviews().then((rows) => {
+      const n = (rows || []).filter((r) => r.rating <= 3 && !r.reply).length
+      el.textContent = n
+      el.hidden = n === 0
+    }).catch(() => {})
+  }
+
+  /**
+   * 前端导出 CSV：带 BOM，Excel/WPS 双击打开中文不乱码。
+   * header: 字符串数组；rows: 与 header 等长的字符串数组数组。
+   */
+  function exportCsv(filename, header, rows) {
+    const cell = (v) => {
+      const s = String(v == null ? '' : v)
+      // 含逗号/引号/换行就用引号包起来，内部引号翻倍
+      return /[",\n\r]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s
+    }
+    const lines = [header, ...rows].map((r) => r.map(cell).join(','))
+    // \uFEFF 是 BOM：没有它 Excel 会把 UTF-8 中文读成乱码
+    const blob = new Blob(['\uFEFF' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8' })
+    const a = document.createElement('a')
+    a.href = URL.createObjectURL(blob)
+    a.download = filename
+    document.body.appendChild(a)
+    a.click()
+    setTimeout(() => {
+      URL.revokeObjectURL(a.href)
+      a.remove()
+    }, 500)
+  }
+
+  /** 距今天数（正数 = 已过 X 天，负数 = 还有 X 天） */
+  function daysSince(ts) {
+    return Math.floor((Date.now() - ts) / 86400000)
+  }
+
   function render() {
     refreshBillingBadge()
+    refreshReviewBadge()
     content.innerHTML = '<div class="loading">加载中…</div>'
     Promise.resolve(VIEWS[S.page]())
       .then((html) => {
@@ -545,10 +589,265 @@
     `
   }
 
+  /* ---------------- 风险预警 ---------------- */
+
+  VIEWS.risks = async function () {
+    const [stats, orders, tasks, settles, apps, reviews, shops] = await Promise.all([
+      API.adminStats(),
+      API.adminListOrders('', 200),
+      API.adminListMerchantTasks(),
+      API.listSettlements('pending'),
+      API.listApplications('pending'),
+      API.adminListReviews().catch(() => []),
+      API.adminListMerchants().catch(() => [])
+    ])
+    S.riskData = { orders, tasks, settles, apps, reviews, shops }
+    const shopMap = {}
+    shops.forEach((m) => { shopMap[m.id] = m })
+
+    // 商家任务：截止逾期 / 7 天内到期
+    const today = new Date(); today.setHours(0, 0, 0, 0)
+    const overdueTasks = tasks.filter((t) => t.status === 'open' && t.deadline && new Date(t.deadline + 'T23:59:59') < today)
+    const soonTasks = tasks.filter((t) => {
+      if (t.status !== 'open' || !t.deadline) return false
+      const d = (new Date(t.deadline + 'T23:59:59') - today) / 86400000
+      return d >= 0 && d <= 7
+    })
+    // 待接单订单滞留超 7 天
+    const staleOrders = orders.filter((o) => o.status === 'open' && daysSince(new Date(o.created_at).getTime()) > 7)
+    // 待打款结算单积压超 3 天
+    const oldSettles = settles.filter((st) => daysSince(new Date(st.created_at).getTime()) > 3)
+    // 入驻申请积压超 3 天
+    const oldApps = apps.filter((a) => a.status === 'pending' && daysSince(new Date(a.created_at).getTime()) > 3)
+    // 低星评价未回复
+    const badReviews = reviews.filter((r) => r.rating <= 3 && !r.reply)
+
+    const cards = [
+      ['已逾期商家任务', overdueTasks.length, overdueTasks.length ? 'badge-rejected' : '', 'tasks'],
+      ['7 天内截止任务', soonTasks.length, soonTasks.length ? 'badge-pending' : '', 'tasks'],
+      ['滞留待接单订单', staleOrders.length, staleOrders.length ? 'badge-pending' : '', 'orders'],
+      ['积压待打款结算', oldSettles.length, oldSettles.length ? 'badge-pending' : '', 'settlements'],
+      ['积压入驻审核', oldApps.length, oldApps.length ? 'badge-pending' : '', 'applications'],
+      ['差评未回复', badReviews.length, badReviews.length ? 'badge-rejected' : '', 'reviews']
+    ].map(([label, n, cls, go]) => `
+      <button class="card card-pad risk-card" data-risk-go="${go}" style="text-align:left;border:none;cursor:pointer">
+        <div style="font-size:12px;color:#61738A;margin-bottom:8px">${label}</div>
+        <div style="font-size:25px;font-weight:800;color:${n ? '#A8463A' : '#0B1F33'};line-height:1">${n}<span style="font-size:12px;font-weight:600;color:#8A9AAE;margin-left:4px">项</span></div>
+      </button>`).join('')
+
+    const tableWrap = (title, sub, head, body, empty) => `
+      <div class="card" style="margin-top:18px">
+        <div class="card-head"><div><div class="card-title">${title}</div><div class="card-sub">${sub}</div></div></div>
+        ${body ? `<div class="table-wrap"><table class="data"><thead>${head}</thead><tbody>${body}</tbody></table></div>` : `<div class="card-pad">${empty}</div>`}
+      </div>`
+
+    return `
+      <div class="toolbar">
+        <span class="muted">以下事项按平台规则自动汇总，点击卡片可跳到对应页面处理；阈值：任务逾期/7 天临期、待接单滞留 7 天、结算与审核积压 3 天、差评未回复</span>
+        <span class="toolbar-spacer"></span>
+        <button class="btn btn-ghost btn-sm" id="riskRefresh">重新扫描</button>
+      </div>
+
+      <div class="risk-grid">${cards}</div>
+
+      ${tableWrap('商家任务截止风险', '发布者承诺的交付截止日期', '<tr><th>任务</th><th>商家</th><th>预算</th><th>截止日期</th><th>剩余</th><th style="text-align:right">去处理</th></tr>',
+        [...overdueTasks.map((t) => `<tr>
+            <td class="td-strong" style="min-width:200px">${esc(t.title)}</td>
+            <td class="muted">${esc((shopMap[t.merchant_id] || {}).name || '—')}</td>
+            <td class="td-num">¥${yuanShort(t.budget)}</td>
+            <td class="muted">${esc(t.deadline)}</td>
+            <td><span class="badge badge-rejected">已逾期</span></td>
+            <td style="text-align:right"><button class="btn btn-soft btn-sm" data-risk-go="merchants">去处理</button></td>
+          </tr>`),
+          ...soonTasks.map((t) => `<tr>
+            <td class="td-strong" style="min-width:200px">${esc(t.title)}</td>
+            <td class="muted">${esc((shopMap[t.merchant_id] || {}).name || '—')}</td>
+            <td class="td-num">¥${yuanShort(t.budget)}</td>
+            <td class="muted">${esc(t.deadline)}</td>
+            <td><span class="badge badge-pending">剩 ${Math.ceil((new Date(t.deadline + 'T23:59:59') - today) / 86400000)} 天</span></td>
+            <td style="text-align:right"><button class="btn btn-ghost btn-sm" data-risk-go="merchants">查看</button></td>
+          </tr>`)].join(''),
+        '<div class="empty"><span class="empty-text">暂无截止风险任务</span></div>')}
+
+      ${tableWrap('滞留订单与积压事项', '待接单超 7 天 / 待打款与待审核超 3 天', '<tr><th>事项</th><th>明细</th><th>已等待</th><th style="text-align:right">去处理</th></tr>',
+        [
+          ...staleOrders.map((o) => `<tr>
+            <td class="td-strong">待接单订单</td>
+            <td style="min-width:220px">${esc(o.title)}<div class="muted" style="font-size:11px;margin-top:3px">${esc(o.order_no)} · ¥${yuanShort(o.amount)}</div></td>
+            <td class="muted">${daysSince(new Date(o.created_at).getTime())} 天</td>
+            <td style="text-align:right"><button class="btn btn-soft btn-sm" data-risk-go="orders">去处理</button></td>
+          </tr>`),
+          ...oldSettles.map((st) => `<tr>
+            <td class="td-strong">待打款结算单</td>
+            <td style="min-width:220px">${esc(st.period)} · 服务者 #${st.provider_id}<div class="muted" style="font-size:11px;margin-top:3px">应结 ¥${yuanShort(st.net_amount)}</div></td>
+            <td class="muted">${daysSince(new Date(st.created_at).getTime())} 天</td>
+            <td style="text-align:right"><button class="btn btn-soft btn-sm" data-risk-go="settlements">去打款</button></td>
+          </tr>`),
+          ...oldApps.map((a) => `<tr>
+            <td class="td-strong">入驻申请</td>
+            <td style="min-width:220px">${esc(a.nickname || '匿名申请')}<div class="muted" style="font-size:11px;margin-top:3px">${esc((a.bio || '').slice(0, 40))}</div></td>
+            <td class="muted">${daysSince(new Date(a.created_at).getTime())} 天</td>
+            <td style="text-align:right"><button class="btn btn-soft btn-sm" data-risk-go="applications">去审核</button></td>
+          </tr>`)
+        ].join(''),
+        '<div class="empty"><span class="empty-text">暂无滞留与积压事项，一切正常 ✅</span></div>')}
+
+      ${tableWrap('低星评价未回复', '≤3 星且平台/商家尚未回复', '<tr><th>评价</th><th>星级</th><th>内容</th><th>时间</th><th style="text-align:right">去处理</th></tr>',
+        badReviews.map((r) => `<tr>
+          <td class="td-strong">${esc(r.customer_name || '匿名客户')}</td>
+          <td style="white-space:nowrap;color:#A8463A">${'★'.repeat(r.rating)}${'☆'.repeat(5 - r.rating)}</td>
+          <td style="min-width:240px" class="ellipsis" title="${esc(r.content)}">${esc(r.content)}</td>
+          <td class="muted" style="white-space:nowrap">${fromNow(r.created_at)}</td>
+          <td style="text-align:right"><button class="btn btn-soft btn-sm" data-risk-go="reviews">去回复</button></td>
+        </tr>`).join(''),
+        '<div class="empty"><span class="empty-text">没有差评待处理 ✅</span></div>')}
+    `
+  }
+
+  BINDS.risks = function () {
+    document.querySelectorAll('[data-risk-go]').forEach((el) => {
+      el.addEventListener('click', () => switchPage(el.dataset.riskGo))
+    })
+    const refresh = $('#riskRefresh')
+    if (refresh) refresh.addEventListener('click', render)
+  }
+
+  /* ---------------- 评价管理 ---------------- */
+
+  VIEWS.reviews = async function () {
+    const reviews = await API.adminListReviews()
+    S.reviewList = reviews
+    const dist = [5, 4, 3, 2, 1].map((n) => reviews.filter((r) => r.rating === n).length)
+    const avg = reviews.length ? (reviews.reduce((s, r) => s + r.rating, 0) / reviews.length).toFixed(1) : '—'
+    const maxDist = Math.max(1, ...dist)
+
+    const rows = reviews.length
+      ? reviews
+          .map((r) => {
+            const stars = `<span style="color:${r.rating <= 3 ? '#A8463A' : '#C4703F'};white-space:nowrap">${'★'.repeat(r.rating)}${'☆'.repeat(5 - r.rating)}</span>`
+            return `
+          <tr>
+            <td class="td-strong">${esc(r.customer_name || '匿名客户')}</td>
+            <td style="min-width:240px">
+              <div>${esc(r.content)}</div>
+              ${r.reply ? `<div class="muted" style="font-size:12px;margin-top:6px">↩ 已回复：${esc(r.reply)}</div>` : '<div style="font-size:12px;margin-top:6px;color:#A8463A">待回复</div>'}
+            </td>
+            <td style="white-space:nowrap">${stars}</td>
+            <td class="muted" style="white-space:nowrap">${fromNow(r.created_at)}</td>
+            <td style="text-align:right">
+              <button class="btn btn-soft btn-sm" data-review-reply="${r.id}">${r.reply ? '修改回复' : '回复'}</button>
+            </td>
+          </tr>`
+          })
+          .join('')
+      : '<tr><td colspan="5"><div class="empty"><div class="empty-icon">💬</div><span class="empty-text">还没有客户评价</span></div></td></tr>'
+
+    return `
+      <div class="kpi-grid">
+        <div class="kpi kpi-1">
+          <span class="kpi-accent"></span>
+          <div class="kpi-label">评价总数</div>
+          <div class="kpi-value">${reviews.length}</div>
+          <div class="kpi-sub">已回复 ${reviews.filter((r) => r.reply).length} 条</div>
+        </div>
+        <div class="kpi kpi-2">
+          <span class="kpi-accent"></span>
+          <div class="kpi-label">平均星级</div>
+          <div class="kpi-value">${avg}</div>
+          <div class="kpi-sub">满分 5.0</div>
+        </div>
+        <div class="kpi kpi-3">
+          <span class="kpi-accent"></span>
+          <div class="kpi-label">待回复差评（≤3 星）</div>
+          <div class="kpi-value" style="${reviews.filter((r) => r.rating <= 3 && !r.reply).length ? 'color:#A8463A' : ''}">${reviews.filter((r) => r.rating <= 3 && !r.reply).length}</div>
+          <div class="kpi-sub">差评回复是挽回口碑的关键动作</div>
+        </div>
+        <div class="kpi kpi-4">
+          <span class="kpi-accent"></span>
+          <div class="kpi-label">好评率</div>
+          <div class="kpi-value">${reviews.length ? Math.round((reviews.filter((r) => r.rating >= 4).length / reviews.length) * 100) + '%' : '—'}</div>
+          <div class="kpi-sub">≥4 星占比</div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:18px">
+        <div class="card-head"><div class="card-title">星级分布</div></div>
+        <div class="card-pad">
+          ${[5, 4, 3, 2, 1]
+            .map((n, i) => `
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:7px;font-size:13px">
+              <span style="width:34px;color:#C4703F">${n} ★</span>
+              <div style="flex:1;height:9px;background:#F3E7D6;border-radius:5px;overflow:hidden">
+                <div style="height:100%;width:${(dist[i] / maxDist) * 100}%;background:${n <= 3 ? '#B5707A' : '#C4703F'}"></div>
+              </div>
+              <span style="width:30px;text-align:right;font-weight:700">${dist[i]}</span>
+            </div>`)
+            .join('')}
+        </div>
+      </div>
+
+      <div class="toolbar" style="margin-top:18px">
+        <span class="muted">共 ${reviews.length} 条 · 平台回复会展示在用户端对应服务下</span>
+        <span class="toolbar-spacer"></span>
+        <button class="btn btn-ghost btn-sm" id="reviewExport">导出 CSV</button>
+      </div>
+
+      <div class="card">
+        <div class="table-wrap">
+          <table class="data">
+            <thead><tr><th>客户</th><th>评价内容</th><th>星级</th><th>时间</th><th style="text-align:right">操作</th></tr></thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>
+      </div>
+    `
+  }
+
+  BINDS.reviews = function () {
+    document.querySelectorAll('[data-review-reply]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const id = Number(btn.dataset.reviewReply)
+        const r = (S.reviewList || []).find((x) => Number(x.id) === id)
+        if (!r) return
+        openAction(
+          r.reply ? '修改回复' : '回复评价',
+          `<div class="muted" style="margin-bottom:12px;line-height:1.7">
+             <b>${esc(r.customer_name || '匿名客户')}</b> ${'★'.repeat(r.rating)}<br>${esc(r.content)}
+           </div>
+           <div class="field">
+             <label class="field-label">回复内容（展示在用户端）</label>
+             <textarea class="input" id="replyText" rows="4" placeholder="真诚回应差评：承认问题 + 给出改进/补偿方案">${esc(r.reply || '')}</textarea>
+           </div>`,
+          async () => {
+            const text = $('#replyText').value.trim()
+            if (text.length < 2) throw new Error('回复内容至少 2 个字')
+            await API.adminReplyReview(id, text, S.session.user.id, S.session.user.name || null)
+            toast('回复已保存')
+            render()
+          },
+          '保存回复'
+        )
+      })
+    })
+    const exp = $('#reviewExport')
+    if (exp) {
+      exp.addEventListener('click', () => {
+        const list = S.reviewList || []
+        exportCsv(
+          `评价导出-${new Date().toISOString().slice(0, 10)}.csv`,
+          ['评价ID', '客户', '星级', '内容', '商家回复', '评价时间'],
+          list.map((r) => [r.id, r.customer_name || '匿名', r.rating, r.content, r.reply || '', r.created_at])
+        )
+        toast(`已导出 ${list.length} 条评价`)
+      })
+    }
+  }
+
   /* ---------------- 订单管理 ---------------- */
 
   VIEWS.orders = async function () {
     const orders = await API.adminListOrders(S.orderFilter === 'all' ? '' : S.orderFilter, 200)
+    S.orderCache = orders
     const filtered = S.orderKeyword
       ? orders.filter(
           (o) =>
@@ -577,6 +876,7 @@
         ${filters.map((f) => `<button class="filter-chip ${S.orderFilter === f.k ? 'active' : ''}" data-of="${f.k}">${f.l}</button>`).join('')}
         <span class="toolbar-spacer"></span>
         <span class="muted">共 ${filtered.length} 条</span>
+        <button class="btn btn-ghost btn-sm" id="orderExport">导出 CSV</button>
       </div>
 
       <div class="card">
@@ -682,6 +982,23 @@
         )
       })
     })
+
+    const exp = $('#orderExport')
+    if (exp) {
+      exp.addEventListener('click', () => {
+        const list = S.orderCache || []
+        exportCsv(
+          `订单导出-${new Date().toISOString().slice(0, 10)}.csv`,
+          ['订单号', '标题', '客户', '金额(元)', '平台服务费(元)', '状态', '下单时间'],
+          list.map((o) => [
+            o.order_no, o.title, o.customer_name || '匿名',
+            (Number(o.amount) / 100).toFixed(2), (Number(o.platform_fee) / 100).toFixed(2),
+            (ORDER_STATUS[o.status] || {}).text || o.status, o.created_at
+          ])
+        )
+        toast(`已导出 ${list.length} 条订单`)
+      })
+    }
   }
 
   /* ---------------- 服务者管理 ---------------- */
@@ -1340,6 +1657,7 @@
 
   VIEWS.settlements = async function () {
     const settlements = await API.listSettlements(S.settleFilter)
+    S.settleCache = settlements
     const filters = [
       { k: 'all', l: '全部' },
       { k: 'pending', l: '待打款' },
@@ -1349,6 +1667,7 @@
       <div class="toolbar">
         ${filters.map((f) => `<button class="filter-chip ${S.settleFilter === f.k ? 'active' : ''}" data-sf="${f.k}">${f.l}</button>`).join('')}
         <span class="toolbar-spacer"></span>
+        <button class="btn btn-ghost btn-sm" id="settleExport">导出 CSV</button>
         <button class="btn btn-primary btn-sm" id="genSettle">按已完成订单生成结算单</button>
       </div>
 
@@ -1442,6 +1761,23 @@
         }
       })
     })
+
+    const exp = $('#settleExport')
+    if (exp) {
+      exp.addEventListener('click', () => {
+        const list = S.settleCache || []
+        exportCsv(
+          `结算单导出-${new Date().toISOString().slice(0, 10)}.csv`,
+          ['结算周期', '服务者ID', '订单数', '订单总额(元)', '平台抽成(元)', '应结金额(元)', '状态', '生成时间'],
+          list.map((st) => [
+            st.period, st.provider_id, st.order_count,
+            (Number(st.gross_amount) / 100).toFixed(2), (Number(st.commission_amount) / 100).toFixed(2),
+            (Number(st.net_amount) / 100).toFixed(2), st.status === 'paid' ? '已打款' : '待打款', st.created_at
+          ])
+        )
+        toast(`已导出 ${list.length} 张结算单`)
+      })
+    }
   }
 
   /* ---------------- 操作日志 ---------------- */
@@ -1529,7 +1865,10 @@
 
       <div class="card">
         <div class="card-head"><div><div class="card-title">商家店铺</div><div class="card-sub">共 ${shops.length} 家 · 可认证、停用；停用后店铺与其任务对用户端不可见</div></div>
-          <button class="btn btn-ghost btn-sm" id="mcAdmRefresh">刷新</button></div>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-ghost btn-sm" id="merchantExport">导出 CSV</button>
+            <button class="btn btn-ghost btn-sm" id="mcAdmRefresh">刷新</button>
+          </div></div>
         <div class="table-wrap"><table class="data">
           <thead><tr><th>店铺</th><th>店主</th><th>分类 / 城市</th><th>认证</th><th>缴费</th><th>状态</th><th>开通时间</th><th>操作</th></tr></thead>
           <tbody>
@@ -1553,23 +1892,40 @@
       </div>
 
       <div class="card" style="margin-top:18px">
-        <div class="card-head"><div><div class="card-title">商家任务</div><div class="card-sub">共 ${tasks.length} 条 · 含参考视频标记；下架后用户端立即不可见</div></div></div>
+        <div class="card-head"><div><div class="card-title">商家任务</div><div class="card-sub">共 ${tasks.length} 条 · 含参考视频标记；下架后用户端立即不可见；截止日期可到「风险预警」页统一查看</div></div></div>
         <div class="table-wrap"><table class="data">
-          <thead><tr><th>任务</th><th>所属商家</th><th>预算</th><th>参考视频</th><th>状态</th><th>发布时间</th><th>操作</th></tr></thead>
+          <thead><tr><th>任务</th><th>所属商家</th><th>预算</th><th>截止日期</th><th>参考视频</th><th>状态</th><th>发布时间</th><th>操作</th></tr></thead>
           <tbody>
-            ${tasks.length ? tasks.map((t) => `
+            ${tasks.length ? tasks.map((t) => {
+              const dl = t.deadline ? new Date(t.deadline + 'T23:59:59') : null
+              const today = new Date(); today.setHours(0, 0, 0, 0)
+              const dlLeft = dl ? Math.ceil((dl - today) / 86400000) : null
+              const dlCell = !dl
+                ? '<span class="muted">—</span>'
+                : `<div>${esc(t.deadline)}</div>${
+                    t.status !== 'open'
+                      ? ''
+                      : dlLeft < 0
+                        ? '<span class="badge badge-rejected">已逾期</span>'
+                        : dlLeft <= 7
+                          ? `<span class="badge badge-pending">剩 ${dlLeft} 天</span>`
+                          : ''
+                  }`
+              return `
               <tr>
                 <td class="td-strong" style="min-width:220px">${esc(t.title)}</td>
                 <td class="muted">${esc((shopMap[t.merchant_id] || {}).name || '—')}</td>
                 <td style="white-space:nowrap">${Number(t.budget) > 0 ? '¥' + yuanShort(t.budget) : '面议'}</td>
+                <td style="white-space:nowrap">${dlCell}</td>
                 <td style="white-space:nowrap">${t.reference_video_path ? '▶ 已上传' : '<span class="muted">—</span>'}</td>
                 <td style="white-space:nowrap"><span class="badge ${t.status === 'open' ? '' : 'badge-pending'}">${t.status === 'open' ? '招募中' : t.status === 'hidden' ? '已下架' : '已结束'}</span></td>
                 <td class="muted" style="white-space:nowrap">${fromNow(t.created_at)}</td>
                 <td style="white-space:nowrap">
                   <button class="btn btn-soft btn-sm" data-mc-task-status="${t.id}" data-next="${t.status === 'hidden' ? 'open' : 'hidden'}">${t.status === 'hidden' ? '恢复' : '下架'}</button>
                 </td>
-              </tr>`).join('')
-              : '<tr><td colspan="7"><div class="empty"><span class="empty-text">还没有商家发布任务</span></div></td></tr>'}
+              </tr>`
+            }).join('')
+              : '<tr><td colspan="8"><div class="empty"><span class="empty-text">还没有商家发布任务</span></div></td></tr>'}
           </tbody>
         </table></div>
       </div>
@@ -1610,6 +1966,31 @@
         } catch (e) { toast(API.friendlyError(e)) } finally { btn.disabled = false }
       })
     })
+
+    const exp = $('#merchantExport')
+    if (exp) {
+      exp.addEventListener('click', () => {
+        const list = S.merchantShops || []
+        const nowTs = Date.now()
+        exportCsv(
+          `商家导出-${new Date().toISOString().slice(0, 10)}.csv`,
+          ['店铺', '店主', '分类', '城市', '认证', '缴费状态', '缴费到期', '状态', '开通时间'],
+          list.map((m) => {
+            const until = m.paid_until ? new Date(m.paid_until).getTime() : 0
+            const ok = m.payment_status === 'paid' && until > nowTs
+            return [
+              m.name, m.owner_id || '', m.category_slug || '', m.city || '',
+              m.is_verified ? '已认证' : '待认证',
+              ok ? '已缴费' : m.payment_status === 'paid' ? '已到期' : '未缴费',
+              m.paid_until ? String(m.paid_until).slice(0, 10) : '',
+              m.status === 'active' ? '启用中' : '已停用',
+              m.created_at
+            ]
+          })
+        )
+        toast(`已导出 ${list.length} 家商家`)
+      })
+    }
   }
 
   /* ---------------- 商家收费管理 ---------------- */
