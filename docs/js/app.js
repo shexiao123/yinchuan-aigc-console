@@ -547,6 +547,13 @@
   /* ---------------- 首页 ---------------- */
 
   VIEWS.home = async function () {
+    // 线性图标替代表情符号：卡片视觉与暖铜品牌色板统一
+    const STAT_ICON = {
+      users: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3"/><path d="M3.5 19c.4-3.2 2.7-5 5.5-5s5.1 1.8 5.5 5"/><path d="M16.2 6.1a3 3 0 0 1 0 5.6M17.6 14.3c2 .6 3.2 2.2 3.5 4.7"/></svg>',
+      film: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="18" height="13" rx="1.5"/><path d="M3 10h18M7.2 6 5.7 10M13.2 6l-1.5 4M18.6 6 17 10"/></svg>',
+      layers: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3-9 5 9 5 9-5-9-5Z"/><path d="m3 12.5 9 5 9-5M3 17l9 5 9-5"/></svg>',
+      star: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9L12 3Z"/></svg>'
+    }
     const [banners, categories, services, providers, homeShops, homeTasks] = await Promise.all([
       // 取全量：首页 KPI「在架服务」要用真实总数，热销卡再 slice 前 6 条
       API.listBanners(), API.listCategories(), API.listServices({ limit: 200 }), API.listProviders(),
@@ -557,6 +564,18 @@
 
     const heroBanner = banners[0] || { title: '银川AIGC数字文化产业基地', subtitle: '', theme: 'amber' }
     const minis = (banners || []).slice(1, 5)
+
+    // 首页卡片一律用真实摄影照片：云端没配图、或图加载不出来时也不露出色块 / MG 占位
+    const HOME_PHOTOS = [
+      'cover-01.jpg', 'cover-02.jpg', 'cover-05.jpg', 'cover-06.jpg',
+      'cover-08.jpg', 'cover-07.jpg', 'cover-09.jpg', 'cover-04.jpg'
+    ]
+    const fallbackPhoto = (id) => {
+      const n = Number(id)
+      const i = Number.isFinite(n) ? ((n - 1) % HOME_PHOTOS.length + HOME_PHOTOS.length) % HOME_PHOTOS.length : 0
+      return 'assets/covers/' + HOME_PHOTOS[i] + '?v=20261122a'
+    }
+    const heroImage = heroBanner.imageUrl || 'assets/covers/cover-03.jpg?v=20261122a'
     const bannerHref = (b) => (b.link_type === 'all' || !b.link_value ? '#/services' : '#/services?category=' + b.link_value)
 
     const providerCount = (providers || []).length
@@ -570,7 +589,8 @@
     const _donut = (function () {
       const n = categories.length || 1
       const r = 54, C = 2 * Math.PI * r, gap = (C * 3.5) / 360
-      const cols = ['#0EA5E9', '#4F7DF3', '#7C5CF0', '#22B8A6', '#F59E0B', '#FF6B9A', '#8B5CF6', '#34D399']
+      // 暖铜纸感色阶，与全站品牌色板一致（tools/branding/warm-theme.py）
+      const cols = ['#B5793D', '#C4874A', '#A85A2D', '#8A9A6C', '#D9B98A', '#B5707A', '#7A4A28', '#E0BE90']
       let acc = 0
       const segs = (categories.length ? categories : Array.from({ length: 1 })).map((c, i) => {
         const frac = 1 / n
@@ -581,7 +601,7 @@
       })
       const svg = '<svg viewBox="0 0 140 140" class="home-donut-svg" role="img" aria-label="服务分类分布">' +
         segs.map((s) => '<circle cx="70" cy="70" r="' + r + '" fill="none" stroke="' + s.col + '" stroke-width="15" stroke-linecap="butt" stroke-dasharray="' + s.len.toFixed(2) + ' ' + (C - s.len).toFixed(2) + '" stroke-dashoffset="' + s.len.toFixed(2) + '" transform="rotate(' + (s.ang - 90).toFixed(2) + ' 70 70)" data-len="' + s.len.toFixed(2) + '"/>').join('') +
-        '<circle cx="70" cy="70" r="38" fill="#FFFFFF"/>' +
+        '<circle cx="70" cy="70" r="38" fill="#FFFDF9"/>' +
         '<text x="70" y="64" text-anchor="middle" class="home-donut-num">' + n + '</text>' +
         '<text x="70" y="82" text-anchor="middle" class="home-donut-lbl">分类</text>' +
         '</svg>'
@@ -607,8 +627,8 @@
             </div>
             ${trustPills ? `<div class="home-hero-trust">${trustPills}</div>` : ''}
           </div>
-          <div class="home-hero-media ${heroBanner.imageUrl ? 'has-img' : ''}" ${heroBanner.imageUrl ? `style="background-image:url('${API.esc(heroBanner.imageUrl)}')"` : ''}>
-            ${heroBanner.imageUrl ? '' : '<span class="home-hero-mark">MG</span>'}
+          <div class="home-hero-media has-img" style="background-image:url('${API.esc(heroImage)}')">
+            <span class="home-hero-photo-tag">银川 · 让每一次心动都有画面</span>
           </div>
         </section>
 
@@ -619,26 +639,31 @@
           </div>
           <div class="home-stats-grid">
             <div class="home-stat">
-              <span class="home-stat-icon">👥</span>
+              <span class="home-stat-idx">01</span>
+              <span class="home-stat-icon">${STAT_ICON.users}</span>
               <span class="home-stat-num"><span class="count-up" data-target="${providerCount}">0</span><span class="home-stat-unit">位</span></span>
               <span class="home-stat-label">入驻服务者</span>
             </div>
             <div class="home-stat">
-              <span class="home-stat-icon">🎬</span>
+              <span class="home-stat-idx">02</span>
+              <span class="home-stat-icon">${STAT_ICON.film}</span>
               <span class="home-stat-num"><span class="count-up" data-target="${serviceCount}">0</span><span class="home-stat-unit">项</span></span>
               <span class="home-stat-label">在架服务</span>
             </div>
             <div class="home-stat">
-              <span class="home-stat-icon">🗂️</span>
+              <span class="home-stat-idx">03</span>
+              <span class="home-stat-icon">${STAT_ICON.layers}</span>
               <span class="home-stat-num"><span class="count-up" data-target="${catCount}">0</span><span class="home-stat-unit">类</span></span>
               <span class="home-stat-label">服务分类</span>
             </div>
             <div class="home-stat">
-              <span class="home-stat-icon">⭐</span>
+              <span class="home-stat-idx">04</span>
+              <span class="home-stat-icon">${STAT_ICON.star}</span>
               <span class="home-stat-num"><span class="count-up" data-target="${avgRatingVal}" data-decimals="1">0</span><span class="home-stat-unit">分</span></span>
               <span class="home-stat-label">平均满意度</span>
             </div>
             <div class="home-stat home-stat-online">
+              <span class="home-stat-idx">05</span>
               <span class="home-stat-icon home-stat-icon-live"><i></i></span>
               <span class="home-stat-num"><span class="home-online-num" data-online-count>–</span><span class="home-stat-unit">人</span></span>
               <span class="home-stat-label">当前在线 · 实时</span>
@@ -670,16 +695,15 @@
           </div>
           <div class="home-cat-grid">
             ${categories
-              .map(
-                (c) => `
+              .map((c) => {
+                const photo = c.imageUrl || fallbackPhoto(c.id)
+                return `
               <a class="home-cat" href="#/services?category=${c.slug}">
-                <span class="home-cat-media ${c.imageUrl ? 'has-img' : ''}" ${c.imageUrl ? `style="background-image:url('${API.esc(c.imageUrl)}')"` : ''}>
-                  ${c.imageUrl ? '' : `<span class="home-cat-icon">${c.icon || '🎬'}</span>`}
-                </span>
+                <span class="home-cat-media has-img" style="background-image:url('${API.esc(photo)}')"></span>
                 <span class="home-cat-name">${API.esc(c.name)}</span>
                 ${c.description ? `<span class="home-cat-desc">${API.esc(c.description)}</span>` : ''}
               </a>`
-              )
+              })
               .join('')}
           </div>
         </section>
@@ -691,11 +715,12 @@
           </div>
           <div class="home-svc-grid">
             ${hot
-              .map(
-                (s) => `
+              .map((s) => {
+                const photo = s.coverUrl || fallbackPhoto(s.category_id)
+                return `
               <a class="home-svc" href="#/service/${s.id}">
-                <span class="home-svc-media" style="background:${API.coverTheme(s.id)}">
-                  ${s.coverUrl ? `<img ${API.imgAttrs(s.coverUrl, 'home-svc-img')} alt="${API.esc(s.title || '')}" loading="lazy" />` : '<span class="home-svc-mark">MG</span>'}
+                <span class="home-svc-media">
+                  <img ${API.imgAttrs(photo, 'home-svc-img')} alt="${API.esc(s.title || '')}" loading="lazy" />
                   ${s.original_price ? '<span class="home-svc-badge">限时优惠</span>' : ''}
                 </span>
                 <span class="home-svc-body">
@@ -709,7 +734,7 @@
                   </span>
                 </span>
               </a>`
-              )
+              })
               .join('')}
           </div>
         </section>

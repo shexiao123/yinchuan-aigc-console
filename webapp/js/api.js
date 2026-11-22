@@ -278,16 +278,75 @@ window.API = (function () {
    *
    * 云存储地址（不是本站域名的）保持原样，走签名流程。
    */
+  /**
+   * 真实摄影照片组（2026-11-22 首页卡片重做）
+   *
+   * 云端 categories.image_url / services.cover_url / banners.image_url 存的仍是
+   * light/ 系列冷色扁平插画的绝对地址。改数据库要动云端并同步小程序端，
+   * 因此在网页端 URL 解析层统一重定向到 covers/cover-0X.jpg 真实照片：
+   * 云端零改动，Pages 与托管域同时生效，图片走相对路径也不会踩鉴权 403。
+   */
+  const PHOTO_VER = '?v=20261122a'
+  const WARM_PHOTO_BY_STEM = {
+    'wedding-shoot': 'cover-01.jpg',
+    'wedding-film': 'cover-02.jpg',
+    'brand-film': 'cover-05.jpg',
+    'short-video': 'cover-06.jpg',
+    'commercial-photo': 'cover-08.jpg',
+    'ae-motion': 'cover-07.jpg',
+    'ai-generate': 'cover-09.jpg',
+    'comic-drama': 'cover-04.jpg',
+    'l-cat-01': 'cover-01.jpg',
+    'l-cat-02': 'cover-02.jpg',
+    'l-cat-03': 'cover-05.jpg',
+    'l-cat-04': 'cover-06.jpg',
+    'l-cat-05': 'cover-08.jpg',
+    'l-cat-06': 'cover-07.jpg',
+    'l-cat-07': 'cover-09.jpg',
+    'l-cat-08': 'cover-04.jpg',
+    'l-hero': 'cover-03.jpg',
+    'hero-stage': 'cover-03.jpg',
+    'l-mini-1': 'cover-09.jpg',
+    'l-mini-2': 'cover-04.jpg'
+  }
+  function warmPhoto(pathname) {
+    const m = String(pathname).match(/([A-Za-z0-9_-]+)\.(?:jpe?g|png|webp|gif)$/i)
+    if (!m) return ''
+    const stem = m[1].toLowerCase()
+    if (/^cover-0[1-9]$/.test(stem) || stem === 'hero-01') {
+      return 'assets/covers/' + stem + '.jpg' + PHOTO_VER
+    }
+    if (WARM_PHOTO_BY_STEM[stem]) {
+      return 'assets/covers/' + WARM_PHOTO_BY_STEM[stem] + PHOTO_VER
+    }
+    const n = stem.match(/(\d+)/)
+    if (n) {
+      const idx = ((Number(n[1]) - 1) % 9 + 9) % 9 + 1
+      return 'assets/covers/cover-0' + idx + '.jpg' + PHOTO_VER
+    }
+    return 'assets/covers/cover-03.jpg' + PHOTO_VER
+  }
+
+  /**
+   * 本站静态资源 URL → 相对路径
+   *
+   * 为什么：数据库里存的是绝对地址（小程序端要用），但网页端用绝对地址会有两个坑：
+   *   1. 站点静态资源要鉴权，绝对地址不带 sharecode 会 403（图片裂掉）
+   *   2. CDN 缓存了旧版 HTML 时，绝对地址跟着旧版走
+   * 转成相对路径后由浏览器按当前页面解析，永远同源、永远带对参数。
+   *
+   * 云存储地址（不是本站域名的）保持原样，走签名流程。
+   */
   function toRelativeAsset(url) {
     if (!url) return ''
     const s = String(url)
-    // 保留 query（sharecode 等）
     const q = s.indexOf('?')
-    let query = q >= 0 ? s.slice(q) : ''
+    const query = q >= 0 ? s.slice(q) : ''
     const pathname = q >= 0 ? s.slice(0, q) : s
-    // 本地封面图换版后统一刷新缓存版本号（只动站内静态图，不动云存储签名地址）
-    if (/(?:covers\/|l-hero|l-cat-|l-mini-)/i.test(pathname) && /^\?v=/i.test(query)) {
-      query = '?v=20261112c'
+    // 首页所有卡片封面统一换成真实摄影照片（旧的科技插画不再露面）
+    if (/covers\//i.test(pathname)) {
+      const warm = warmPhoto(pathname)
+      if (warm) return warm
     }
     if (!/^https?:\/\//i.test(s)) return pathname.replace(/^\//, '') + query
     // 本站域名 → 相对当前目录的路径。
@@ -305,19 +364,19 @@ window.API = (function () {
    * image_url 可能是完整 http 地址（站点静态资源），也可能是云存储路径（需签名）。
    */
   /**
-   * 分类 slug → 本站主题插图（tools/make-category-covers.py 按内容匹配生成）。
+   * 分类 slug → 真实摄影照片。
    * 优先用本站图：数据库 image_url 有历史错配（如「漫剧制作」曾指向 l-cat-07），
    * 且本地图与站点域名解耦，Pages / 托管域都可用。
    */
   const CATEGORY_COVER = {
-    'wedding-shoot': 'assets/covers/light/l-cat-01.jpg?v=20261112c',
-    'wedding-film': 'assets/covers/light/l-cat-02.jpg?v=20261112c',
-    'brand-film': 'assets/covers/light/l-cat-03.jpg?v=20261112c',
-    'short-video': 'assets/covers/light/l-cat-04.jpg?v=20261112c',
-    'commercial-photo': 'assets/covers/light/l-cat-05.jpg?v=20261112c',
-    'ae-motion': 'assets/covers/light/l-cat-06.jpg?v=20261112c',
-    'ai-generate': 'assets/covers/light/l-cat-07.jpg?v=20261112c',
-    'comic-drama': 'assets/covers/light/l-cat-08.jpg?v=20261112c'
+    'wedding-shoot': 'assets/covers/cover-01.jpg?v=20261122a',
+    'wedding-film': 'assets/covers/cover-02.jpg?v=20261122a',
+    'brand-film': 'assets/covers/cover-05.jpg?v=20261122a',
+    'short-video': 'assets/covers/cover-06.jpg?v=20261122a',
+    'commercial-photo': 'assets/covers/cover-08.jpg?v=20261122a',
+    'ae-motion': 'assets/covers/cover-07.jpg?v=20261122a',
+    'ai-generate': 'assets/covers/cover-09.jpg?v=20261122a',
+    'comic-drama': 'assets/covers/cover-04.jpg?v=20261122a'
   }
 
   async function attachCategoryImages(categories) {

@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html,body { width:1280px; height:640px; overflow:hidden; }
+  body {
+    font-family:'Microsoft YaHei','PingFang SC',sans-serif;
+    background:#F7F1E7; color:#2A2018;
+    display:flex; -webkit-font-smoothing:antialiased;
+  }
+  .left {
+    width:59%; height:100%; padding:60px 0 52px 74px;
+    position:relative; display:flex; flex-direction:column;
+    background:
+      radial-gradient(circle at 12% 88%, rgba(198,146,88,.13), transparent 52%),
+      linear-gradient(135deg,#FBF6EC 0%,#F3E9D9 100%);
+  }
+  .left::before {
+    content:''; position:absolute; inset:22px;
+    border:1px solid rgba(122,74,40,.16); pointer-events:none;
+  }
+  .eyebrow {
+    display:flex; align-items:center; gap:14px;
+    font-size:14px; letter-spacing:.22em; color:#9A6A38; font-weight:600;
+  }
+  .eyebrow .line { width:52px; height:1px; background:#B5793D; }
+  .seal {
+    position:absolute; right:56px; top:56px; width:64px; height:64px;
+    border:1.5px solid #B5793D; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    color:#A85A2D; font-size:15px; letter-spacing:.12em; line-height:1.25;
+    text-align:center; font-weight:700; transform:rotate(-8deg);
+  }
+  h1 {
+    margin-top:62px; font-size:62px; line-height:1.28;
+    font-weight:700; letter-spacing:.015em; color:#241A12;
+  }
+  h1 em { font-style:normal; color:#A85A2D; }
+  .rule { width:74px; height:2px; background:#B5793D; margin:34px 0 26px; }
+  .slogan { font-size:23px; letter-spacing:.14em; color:#5C4632; font-weight:400; }
+  .tags { margin-top:auto; display:flex; gap:10px; }
+  .tag {
+    font-size:13px; letter-spacing:.08em; color:#7A5A3E;
+    border:1px solid rgba(122,74,40,.28); border-radius:99px;
+    padding:7px 15px; background:rgba(255,255,255,.42);
+  }
+  .foot {
+    margin-top:26px; display:flex; align-items:baseline; gap:16px;
+    font-size:14px; color:#8A7259; letter-spacing:.06em;
+  }
+  .foot b { color:#3A2A1C; font-weight:600; font-size:15px; letter-spacing:.1em; }
+  .right {
+    width:41%; height:100%; position:relative; overflow:hidden;
+    background:#3A2418;
+  }
+  .right img {
+    width:100%; height:100%; object-fit:cover; object-position:center;
+    filter:saturate(1.08) contrast(1.04);
+  }
+  .right::after {
+    content:''; position:absolute; inset:0;
+    background:linear-gradient(100deg, rgba(247,241,231,.34) 0%, transparent 32%),
+               linear-gradient(0deg, rgba(32,18,10,.72), transparent 55%);
+  }
+  .right-cap {
+    position:absolute; z-index:2; left:38px; right:38px; bottom:46px;
+    color:#FFF8EC;
+  }
+  .right-cap .en { font-size:12px; letter-spacing:.3em; opacity:.82; }
+  .right-cap .cn { font-size:21px; margin-top:10px; letter-spacing:.14em; font-weight:600; }
+  .right-cap .hair { width:100%; height:1px; background:rgba(255,248,236,.4); margin:16px 0 12px; }
+  .right-cap .sub { font-size:12.5px; letter-spacing:.1em; opacity:.85; }
+</style>
+</head>
+<body>
+  <div class="left">
+    <div class="seal">银川<br>光影</div>
+    <div class="eyebrow">NINGXIA YUNNIAN <span class="line"></span> 2026</div>
+    <h1>银川 <em>AIGC</em><br>数字文化产业基地</h1>
+    <div class="rule"></div>
+    <div class="slogan">让每一次心动都有画面</div>
+    <div class="tags">
+      <span class="tag">婚礼微电影</span>
+      <span class="tag">品牌宣传片</span>
+      <span class="tag">短视频剪辑</span>
+    </div>
+    <div class="foot"><b>宁夏云辇文化科技有限公司</b><span>影视制作接单撮合平台</span></div>
+  </div>
+  <div class="right">
+    <img src="file:///D:/WorkBuddy/2026-10-21-10-58-00/webapp/assets/covers/cover-03.jpg" alt="">
+    <div class="right-cap">
+      <div class="en">AIGC DIGITAL CULTURE INDUSTRY BASE</div>
+      <div class="cn">光影 · 影像 · 内容生产</div>
+      <div class="hair"></div>
+      <div class="sub">网页端 / 微信小程序 双端运行</div>
+    </div>
+  </div>
+</body>
+</html>

@@ -23,7 +23,10 @@
   var CANVAS_CLASS = 'tech-motion-canvas'
   var reduced = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches)
   var forcedOff = /[?&]motion=0(?:&|$)/.test(location.search)
-  var enabled = !forcedOff
+  /* 2026-11-22 暖铜纸感改版：整幅冷蓝科技光轨底图与首页真实摄影照片冲突，
+     整站停用该动效层。文件保留是为了兼容 ?motion=1 显式回顾旧版，
+     默认不再往 .home-hero / .mc-hero / .mjoin-hero 注入画布。 */
+  var enabled = false && !forcedOff && !reduced
 
   /* tone 三色：blue / cyan / violet。violet 键名保留，但色值已从粉紫(124,92,240)
      改为冷靛蓝(86,112,226) —— 舍先生反馈画面发紫显脏，全站统一冷蓝青色相 */
