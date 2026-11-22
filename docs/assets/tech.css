@@ -2291,18 +2291,24 @@ body:not(.admin-page) {
 
 /* ================================================================
    11. 背景图不透明度 = 50%（2026-11-23 舍先生明确要求）
-   Hero 背景图从 background 里拆到 ::before 单独设 opacity:.5，Hero 自身只留
-   纯暖米底 —— 左侧文案、右侧清晰照片卡都不受影响，背景图严格半透明。
-   全页柔焦金斑底图的遮罩也统一为 50%，全站背景浓淡一致。
+   Hero 背景图从 background 里拆到 ::before 单独设 opacity:.5，背景图本身严格半透明。
+   12. 覆盖层减薄（2026-11-23 舍先生反馈「上面一层不透明度太高了」）
+   ----------------------------------------------------------------
+   病根：Hero 自身是 100% 不透明实色 #F7EFE1，把全页底图完全盖死；
+        全页底图又压了一层 50% 米白遮罩，两层叠加后整块发白、看不清画面。
+   做法：只减薄「覆盖层」，不动背景图本身的 50%——
+        Hero 实底 → 26% 半透明；全页米白遮罩 50% → 18%；
+        左侧文字护罩 → 42%，既透出画面又压得住深棕标题。
+        右侧清晰照片卡完全不受影响。
    ⚠️ 本段在文件最末且带 !important，覆盖第 2/3 段的渐变旧值（历史踩坑点）。
    ================================================================ */
 body:not(.admin-page) {
   background-image:
-    linear-gradient(180deg, rgba(250,245,236,.50) 0%, rgba(250,245,236,.50) 100%),
-    url("covers/light/warm-stage-page.jpg?v=20261123g") !important;
+    linear-gradient(180deg, rgba(250,245,236,.18) 0%, rgba(250,245,236,.18) 100%),
+    url("covers/light/warm-stage-page.jpg?v=20261123h") !important;
 }
 .home-hero {
-  background: #F7EFE1 !important;
+  background: rgba(247,239,225,.26) !important;
 }
 .home-hero::before {
   content: '' !important;
@@ -2310,9 +2316,20 @@ body:not(.admin-page) {
   position: absolute !important;
   inset: 0 !important;
   z-index: 0 !important;
-  background: url("covers/light/warm-hero-bg.jpg?v=20261123g") center/cover no-repeat !important;
+  background: url("covers/light/warm-hero-bg.jpg?v=20261123h") center/cover no-repeat !important;
   opacity: .5 !important;
   pointer-events: none !important;
+}
+/* 减薄覆盖层后，给左侧文案区补一层极淡的横向渐变，保证深棕字始终压得住底图 */
+.home-hero-copy::before {
+  content: '' !important;
+  display: block !important;
+  position: absolute !important;
+  inset: -24px -30px -24px -40px !important;
+  z-index: -1 !important;
+  background: linear-gradient(90deg, rgba(250,245,236,.42) 0%, rgba(250,245,236,.18) 68%, transparent 100%) !important;
+  pointer-events: none !important;
+  border-radius: 18px;
 }
 
 
