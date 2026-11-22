@@ -62,12 +62,8 @@
   --pad: 24px;
 }
 
-/* ============ 2. 底：冷灰白 + 精密网格 ============ */
+/* ============ 2. 底：暖米金 + 柔焦光斑底图 ============ */
 
-/* 全站底色：整幅不透明的浅蓝科技底图（极光带 / 光轨 / 网格 / 全息球），
-   让首屏往下滚动都有画面，而不是大片空白；内容卡片保持实色白底浮在其上。
-   底图本身是 JPG 实像素，不是 CSS 半透明叠层，杜绝发灰发糊。
-   管理端 body.admin-page 不走这条，保持纯色数据看板底。 */
 body {
   color: var(--ink);
   /* 全站无衬线 —— 商业科技的字面 */
@@ -76,9 +72,17 @@ body {
   letter-spacing: -.005em;
 }
 body:not(.admin-page) {
-  /* 2026-11-22 暖铜纸感改版：去掉整幅冷蓝科技底图，全站纯米纸底 */
+  /* 2026-11-23 补回全页背景：暖铜纸感 + 柔焦金色光斑底图，
+     底图上叠同色系半透明暖米层，正文与卡片可读性不受影响；
+     管理端 body.admin-page 不走这条，保持纯色数据看板底。 */
   background-color: #FAF5EC;
-  background-image: none;
+  background-image:
+    linear-gradient(180deg, rgba(250,245,236,.58) 0%, rgba(250,245,236,.72) 55%, rgba(250,245,236,.86) 100%),
+    url("covers/light/warm-stage-page.jpg?v=20261123a");
+  background-repeat: no-repeat;
+  background-position: center top;
+  background-size: cover;
+  background-attachment: fixed;
 }
 
 /* ============ 3. 顶栏 ============ */
@@ -1875,10 +1879,16 @@ body { background: #FAF5EC !important; }
 .home.home-anim .home-viz-card,
 .home.home-anim .home-viz-side { opacity: 1 !important; transform: none !important; }
 
-/* 2. 全站底色：纯米纸，彻底去掉冷蓝科技底图 */
-body {
+/* 2. 全站底色：暖米纸 + 柔焦金色光斑底图（2026-11-23 补回，替代冷蓝科技底图） */
+body:not(.admin-page) {
   background-color: #FAF5EC !important;
-  background-image: none !important;
+  background-image:
+    linear-gradient(180deg, rgba(250,245,236,.58) 0%, rgba(250,245,236,.72) 55%, rgba(250,245,236,.86) 100%),
+    url("covers/light/warm-stage-page.jpg?v=20261123a") !important;
+  background-repeat: no-repeat !important;
+  background-position: center top !important;
+  background-size: cover !important;
+  background-attachment: fixed !important;
 }
 
 /* 3. 首屏：米纸底 + 真实照片 */
