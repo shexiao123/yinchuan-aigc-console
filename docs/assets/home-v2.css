@@ -495,3 +495,74 @@
   .home.home-v2 .home-rules { flex-direction: column !important; align-items: flex-start !important; gap: 8px !important; }
   .home.home-v2 .home-rules-title { border-right: none !important; padding-right: 0 !important; }
 }
+
+/* ================================================================
+   16. 分类卡片：图片不裁剪 / 整卡 50% 透明 / 不留白
+   （2026-11-23 舍先生截图要求）
+   · 旧版：封面被 background-size:cover 裁成 88px 窄条，白底实色卡 +
+     flex:1 把 2 项那两组撑出一大片空白。
+   · 新版：封面按 3:2 完整显示（不裁切、不变形、不留白边），组名与项目名称
+     直接叠在照片上；卡片无白底、无空白拉伸；整卡严格 opacity:.5，
+     鼠标移入 / 键盘聚焦恢复 1，方便看清与点选。
+   ⚠️ 追加在文件最末且 .home.home-v2 前缀 + !important，压过 tech.css
+      第 10/15 段 .home-cat-media 的 height:84/92/104px !important 兜底。
+   ================================================================ */
+.home.home-v2 .home-cat-group {
+  position: relative !important;
+  display: block !important;
+  align-self: start !important;
+  background: transparent !important;
+  border: 1px solid rgba(180, 140, 95, .28) !important;
+  box-shadow: none !important;
+  border-radius: 12px !important;
+  overflow: hidden !important;
+  opacity: .5 !important;
+  transition: opacity .2s ease !important;
+}
+.home.home-v2 .home-cat-group:hover,
+.home.home-v2 .home-cat-group:focus-within { opacity: 1 !important; }
+
+.home.home-v2 .home-cat-group-cover {
+  position: relative !important;
+  display: block !important;
+  width: 100% !important;
+  height: auto !important;
+  aspect-ratio: 3 / 2 !important;
+  background-size: 100% 100% !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+  border: 0 !important;
+  z-index: 0 !important;
+}
+.home.home-v2 .home-cat-group-head {
+  position: absolute !important; top: 0 !important; left: 0 !important; right: 0 !important;
+  z-index: 1 !important; padding: 11px 14px !important;
+  text-shadow: 0 1px 3px rgba(250, 245, 236, .95), 0 0 9px rgba(250, 245, 236, .85);
+}
+.home.home-v2 .home-cat-group-idx { color: #7A3F16 !important; }
+.home.home-v2 .home-cat-group-name { color: #241A12 !important; font-weight: 780 !important; }
+.home.home-v2 .home-cat-group-count { color: #6B503A !important; }
+.home.home-v2 .home-cat-links {
+  position: absolute !important; left: 0 !important; right: 0 !important; bottom: 0 !important;
+  z-index: 1 !important; flex: none !important;
+  display: flex !important; flex-direction: column !important; gap: 1px !important;
+  padding: 6px 10px 10px !important;
+}
+.home.home-v2 .home-cat-link {
+  padding: 5px 10px !important;
+  color: #241A12 !important; font-weight: 680 !important;
+  text-shadow: 0 1px 3px rgba(250, 245, 236, .98), 0 0 9px rgba(250, 245, 236, .9);
+}
+.home.home-v2 .home-cat-link:hover { background: rgba(250, 245, 236, .55) !important; color: #7A3F16 !important; }
+.home.home-v2 .home-cat-go { color: #7A3F16 !important; text-shadow: 0 1px 3px rgba(250, 245, 236, .95); }
+
+/* 16.1 文字补偿：整卡 opacity:.5 会让文字也变淡，用「行内米白衬 + 描边柔光」
+   把组名与项目名称拉回可读。衬底只铺在文字行内，不是整块白底，仍不留白。 */
+.home.home-v2 .home-cat-link {
+  background: rgba(250, 245, 236, .46) !important;
+  -webkit-text-stroke: .35px rgba(250, 245, 236, .85);
+  text-shadow: 0 1px 2px rgba(250, 245, 236, 1), 0 0 7px rgba(250, 245, 236, .95) !important;
+}
+.home.home-v2 .home-cat-group-head {
+  text-shadow: 0 1px 2px rgba(250, 245, 236, 1), 0 0 8px rgba(250, 245, 236, .95) !important;
+}
