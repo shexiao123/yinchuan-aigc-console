@@ -616,8 +616,10 @@ img { max-width: 100%; display: block; }
 
 .modal-mask {
   position: fixed; inset: 0; z-index: 200;
-  background: #A9B8CC;
-  backdrop-filter: none;
+  /* 暖棕半透明：让首页内容与暖色底图透出来，不再是一整片冷蓝灰 */
+  background: rgba(56, 42, 30, .52);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
   display: none; align-items: center; justify-content: center; padding: 20px;
 }
 
