@@ -41,9 +41,13 @@ assets/covers/final-sheet.jpg
 assets/covers/hero/hero-*.jpg
 assets/covers/hero/hero-sheet.jpg
 
-# 文档截图（体积大）
+# 文档截图（体积大）—— favicon / 触屏图标是站点资源，白名单放行
 docs/*.png
 docs/*.jpg
+!docs/favicon-16.png
+!docs/favicon-32.png
+!docs/favicon-48.png
+!docs/apple-touch-icon.png
 
 # GitHub 操作临时产物
 ghlogs/
