@@ -22,7 +22,7 @@
 <link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png">
 <link rel="shortcut icon" href="favicon.ico">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
-<link rel="stylesheet" href="assets/style.css?v=20261122e">
+<link rel="stylesheet" href="assets/style.css?v=20261123a">
 <link rel="stylesheet" href="assets/tech.css?v=20261123a">
 </head>
 <body>
@@ -174,12 +174,13 @@
     <!-- 微信 -->
     <div class="login-pane" id="paneWechat" hidden>
       <p class="login-desc">使用微信扫码登录，扫码后自动完成授权</p>
-      <div class="qr-box">
+      <div class="qr-box" id="qrBox">
         <div class="qr-placeholder" id="qrPlaceholder">点击下方按钮生成二维码</div>
         <img class="qr-img" id="qrImg" alt="微信登录二维码" hidden>
       </div>
+      <div class="qr-url" id="qrUrl" hidden></div>
       <button class="btn btn-primary btn-block" id="wechatLoginBtn">生成登录二维码</button>
-      <p class="login-tip">二维码需要在微信内打开本页面后生成，localhost 下无法使用该方式。</p>
+      <p class="login-tip">用微信扫码后在手机上完成授权；本地 127.0.0.1 地址回调会失败，线上环境（托管链接 / Pages）可用。</p>
     </div>
 
     <p class="login-error" id="loginError" hidden></p>
@@ -273,7 +274,8 @@
 <script src="js/mobile-mode.js?v=20261122e"></script>
 <!-- 智能工作台算法内核：双端共用，小程序端副本由 tools/sync-smart-engine.js 生成 -->
 <script src="js/smart-engine.js?v=20261122e"></script>
-<script src="js/app.js?v=20261122e"></script>
+<script src="js/qr.js?v=20261123a"></script>
+<script src="js/app.js?v=20261123a"></script>
 <script src="js/home-viz.js?v=20261122e"></script>
 <script src="js/tech-motion.js?v=20261122e"></script>
 <script src="js/online.js?v=20261122e"></script>

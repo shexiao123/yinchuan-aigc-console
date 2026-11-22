@@ -1287,3 +1287,18 @@ img { max-width: 100%; display: block; }
   text-align: center;
   box-shadow: 0 2px 12px rgba(120, 50, 40, .25);
 }
+
+/* ---------------- 微信登录二维码盒 ---------------- */
+/* 出码后盒子放宽为自适应高度，容纳提示文字 + 二维码 */
+.qr-box.has-qr { height: auto; min-height: 180px; padding: 12px 10px; }
+.qr-url {
+  font-size: 10.5px;
+  color: var(--ink-3);
+  word-break: break-all;
+  line-height: 1.5;
+  margin: -6px 0 10px;
+  background: #FAF6F1;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 6px 8px;
+}
