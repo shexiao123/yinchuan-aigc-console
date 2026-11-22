@@ -7,6 +7,11 @@
  *    平台域名出故障时不用重新发布就能切走。
  */
 window.APP_CONFIG = {
+  // 完整版站点入口（顶层镜像）。站点预览环境（Pages 等无云端连接）的
+  // 「手机版入口码」会把它画成二维码；必须与 publicConfig 内保持一致。
+  // ⚠️ 绝不能退化成 location.origin：托管域名裸 origin 返 403、
+  //    GitHub Pages 裸 origin 返 404（仓库路径 /yinchuan-aigc-console 会丢）。
+  fullSiteUrl: 'https://guangying-web.app.workbuddy.host/?sharecode=L4AF6QVF4Q',
   publicConfig: {
     // 主端点用应用自己的域名（最正规，CORS 白名单里肯定有）。
     // mp-api 是通用端点，作为备用；平台域名批量故障时用它兜底。

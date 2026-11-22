@@ -235,9 +235,19 @@ window.API = (function () {
 
   /** 微信扫码登录：返回授权地址 */
   async function wechatLoginUrl() {
+    // 回调地址必须是「完整页面 URL」，不能只用 location.origin：
+    // 托管域名裸 origin 返 403（缺 sharecode），Pages 裸 origin 返 404（缺仓库路径）。
+    // 保留 sharecode 等必要参数，仅剔除调试/缓存用的临时参数。
+    let redirectTo = window.location.origin
+    try {
+      const u = new URL(window.location.href)
+      u.hash = ''
+      ;['r', 'debug', 'ep', 'login'].forEach((k) => u.searchParams.delete(k))
+      redirectTo = u.toString()
+    } catch (e) { /* 老浏览器退回裸 origin，由上层提示 */ }
     const res = await cloud.auth.signInWithOAuth({
       provider: 'wechat',
-      redirectTo: window.location.origin
+      redirectTo: redirectTo
     })
     if (res.error) throw new Error(res.error.message || '微信登录发起失败')
     return res.data.url

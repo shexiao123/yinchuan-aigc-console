@@ -221,9 +221,24 @@
       let url = ''
       let hint = ''
       if (preview) {
-        url = (window.APP_CONFIG && window.APP_CONFIG.fullSiteUrl) || window.location.origin
+        const cfg = window.APP_CONFIG || {}
+        // fullSiteUrl 定义在 publicConfig 内层（顶层另有镜像），两处都要试；
+        // 取不到就明确报错，绝不再退化成 location.origin —— 裸 origin 会 404/403。
+        const site = (cfg.publicConfig && cfg.publicConfig.fullSiteUrl) || cfg.fullSiteUrl || ''
+        if (!site) {
+          showLoginError('站点入口未配置，请刷新页面后重试')
+          return
+        }
+        // 带上 login=1：手机扫码落地后自动弹出登录窗口
+        try {
+          const u = new URL(site)
+          u.searchParams.set('login', '1')
+          url = u.toString()
+        } catch (e) {
+          url = site + (site.indexOf('?') < 0 ? '?' : '&') + 'login=1'
+        }
         hint = '微信扫一扫<br>打开手机版站点'
-        if (tip) tip.textContent = '进入站点后点右上角「登录」，选择微信扫码即可完成登录。'
+        if (tip) tip.textContent = '扫码后会自动打开登录窗口，选择微信扫码即可完成登录。'
         if (genBtn) genBtn.textContent = '生成手机版入口码'
       } else {
         url = await API.wechatLoginUrl()
@@ -231,6 +246,8 @@
         if (tip) tip.textContent = '用微信扫码后在手机上完成授权；本地 127.0.0.1 地址回调会失败，请使用托管链接或本地服务。'
         if (genBtn) genBtn.textContent = '生成登录二维码'
       }
+      // 把实际编码的地址留在 DOM 上，便于排查与自动化验证
+      box.dataset.qrUrl = url
       // 用内置 QR 渲染器把地址画成真二维码（纯前端离线生成）
       const svg = typeof window.buildQrSvg === 'function' ? window.buildQrSvg(url) : ''
       if (svg) {
@@ -4584,6 +4601,18 @@
       document.querySelector('.nav').classList.remove('mobile-open')
     })
   })
+
+  // 从站点预览环境扫码进来（二维码地址带 login=1）：
+  // 自动弹出登录层并切到微信页签，省掉访客自己找按钮这一步。
+  try {
+    if (new URLSearchParams(window.location.search).get('login') === '1') {
+      setTimeout(() => {
+        openLogin()
+        const wechatTab = document.querySelector('.login-tab[data-login="wechat"]')
+        if (wechatTab) wechatTab.click()
+      }, 700)
+    }
+  } catch (e) { /* 参数解析失败不影响正常启动 */ }
 
   boot()
 })()
