@@ -486,3 +486,42 @@ table.data tbody tr:hover { background: #FEFAF6; }
   transform: translateY(-2px);
   box-shadow: 0 6px 18px rgba(10, 31, 51, .10);
 }
+
+/* ---------------- 离线只读演示提示条 ---------------- */
+.offline-bar {
+  position: fixed;
+  left: 50%;
+  bottom: 18px;
+  transform: translateX(-50%);
+  z-index: 320;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: min(760px, calc(100vw - 32px));
+  padding: 9px 16px;
+  border-radius: 999px;
+  background: #FFF7E6;
+  border: 1px solid #F2C879;
+  color: #7A4A05;
+  font-size: 12.5px;
+  line-height: 1.5;
+  box-shadow: 0 8px 24px rgba(122, 74, 5, .14);
+}
+.offline-bar b { color: #8A5306; font-weight: 700; }
+.offline-bar-dot {
+  flex: none;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #E0A32E;
+  box-shadow: 0 0 0 3px rgba(224, 163, 46, .18);
+}
+.offline-bar-txt {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+@media (max-width: 860px) {
+  .offline-bar { bottom: 10px; padding: 8px 12px; font-size: 12px; }
+  .offline-bar-txt { white-space: normal; }
+}

@@ -3105,12 +3105,93 @@
     )
   }
 
+  /* ---------------- 离线只读演示 ---------------- */
+
+  /** 探测单个端点：拿到任何 HTTP 响应即视为可达（401 也算通） */
+  function probeEndpoint(endpoint, timeoutMs) {
+    if (!endpoint) return Promise.resolve(false)
+    const cfg = window.APP_CONFIG
+    const key = (cfg && cfg.publicConfig && cfg.publicConfig.publishableKey) || ''
+    const ctrl = typeof AbortController === 'function' ? new AbortController() : null
+    const timer = setTimeout(() => { if (ctrl) ctrl.abort() }, timeoutMs)
+    return fetch(endpoint + '/.cloud/database/rest/platform_settings?select=id&limit=1', {
+      method: 'GET',
+      // 必须绕过缓存：命中缓存会误判「云端还通」，实际请求已被 CORS 拦死
+      cache: 'no-store',
+      signal: ctrl ? ctrl.signal : undefined,
+      // 鉴权头必须是 x-wb-webapp-access-key；带 x-client-info 会被预检拒绝
+      headers: { 'x-wb-webapp-access-key': key }
+    })
+      .then((res) => res.status > 0)
+      .catch(() => false)
+      .then((ok) => { clearTimeout(timer); return ok })
+  }
+
+  /**
+   * 并发探测主端点与备用端点，返回第一个可达端点。
+   * 返回 undefined 表示配置缺失、无法判断（按可达处理，走正常登录）。
+   */
+  async function findReachableEndpoint() {
+    const cfg = window.APP_CONFIG
+    if (!cfg || !cfg.publicConfig) return undefined
+    const list = [cfg.publicConfig.endpoint].concat(cfg.fallbackEndpoints || [])
+    const uniq = list.filter((v, i) => v && list.indexOf(v) === i)
+    if (!uniq.length) return undefined
+    const flags = await Promise.all(uniq.map((ep) => probeEndpoint(ep, 2600)))
+    const i = flags.indexOf(true)
+    return i < 0 ? null : uniq[i]
+  }
+
+  /**
+   * 离线只读演示：跳过登录直接进后台。
+   * 登录要短信验证码、审核结算要写库，在离线下都不可能成功 ——
+   * 与其把人卡在登录页，不如用演示身份进来看只读快照。
+   */
+  function enterOfflineDemo() {
+    S.session = { user: { id: 'offline-demo-admin', name: '演示管理员' } }
+    S.isStaff = true
+    S.staffName = '演示管理员'
+    S.uid = 'offline-demo-admin'
+    $('#adminName').textContent = '演示管理员'
+    $('#adminAvatar').textContent = '演'
+    $('#sideUser').textContent = '演示管理员'
+    $('#loginMask').classList.remove('show')
+    showOfflineBar()
+    render()
+  }
+
+  let offlineBar = null
+  function showOfflineBar() {
+    if (offlineBar) return
+    offlineBar = document.createElement('div')
+    offlineBar.className = 'offline-bar'
+    offlineBar.innerHTML =
+      '<span class="offline-bar-dot"></span><b>只读演示版</b>' +
+      '<span class="offline-bar-txt">当前域名不在云服务白名单内，数据为离站快照；登录、审核、结算等写操作请访问完整版站点。</span>'
+    document.body.appendChild(offlineBar)
+    document.body.classList.add('has-offline-bar')
+  }
+
   /* ---------------- 启动 ---------------- */
 
   async function boot() {
     const now = new Date()
     const week = ['日', '一', '二', '三', '四', '五', '六'][now.getDay()]
     $('#todayLabel').textContent = `${now.getFullYear()} 年 ${now.getMonth() + 1} 月 ${now.getDate()} 日 星期${week}`
+
+    // 先判端点可达性：GitHub Pages 域名不在平台 CORS 白名单，
+    // 云请求必被浏览器拦掉，登录流程不可能走通 —— 直接进只读演示。
+    const reachable = await findReachableEndpoint()
+    if (reachable === null && typeof window.enableOfflineMode === 'function' && window.SEED_DATA) {
+      window.enableOfflineMode()
+      enterOfflineDemo()
+      return
+    }
+    // 主端点挂了但备用端点活着：让 config.js 重建 client
+    if (reachable && window.APP_CONFIG && window.APP_CONFIG.publicConfig &&
+        reachable !== window.APP_CONFIG.publicConfig.endpoint && window.ensureEndpoint) {
+      try { await window.ensureEndpoint() } catch (e) { console.warn('[admin] 端点切换失败', e) }
+    }
 
     const session = await API.getSession()
     if (session) {

@@ -47,6 +47,11 @@
       return
     }
     var SEED = window.SEED_DATA
+    // 管理端演示数据（纯合成）：订单/结算/会员/客服这些涉及客户隐私的表
+    // 不能进公开快照，只在管理端加载 js/admin-demo.js 时合并进来
+    if (window.ADMIN_DEMO) {
+      SEED = Object.assign({}, SEED, window.ADMIN_DEMO)
+    }
 
     /** 内存查询：实现 PostgREST 风格的链式 builder（thenable，可直接 await） */
     function query(table) {

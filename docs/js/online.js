@@ -33,6 +33,8 @@
   async function beat(force) {
     if (!force && document.hidden) return
     if (!window.API || typeof window.API.reportOnline !== 'function') return
+    // 离线演示模式：云端必被 CORS 拦，别再发心跳刷控制台错误，直接显示「–」
+    if (window.cloud && window.cloud.__offline) { set(null); return }
     var now = Date.now()
     if (!force && now - lastBeat < BEAT_MS - 3000) return
     lastBeat = now
