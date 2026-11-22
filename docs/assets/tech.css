@@ -1995,7 +1995,9 @@ body {
 .smart-entry-desc { color: #7A6A5C !important; font-size: 12.5px !important; line-height: 1.5 !important; }
 .smart-entry-arrow { color: #B5793D !important; font-size: 30px !important; line-height: 1 !important; flex: 0 0 auto !important; }
 
-.smart-page { max-width: 1180px !important; margin: 0 auto !important; padding: 26px 20px 60px !important; }
+/* 智能工作台：与站内 .app 主容器（max-width:100% + 24px 内边距）完全对齐，
+   不再自己锁 1180px —— 否则 1700px 屏幕上两侧各空 280px，与首页割裂。 */
+.smart-page { width: 100% !important; max-width: 100% !important; margin: 0 !important; padding: 26px 0 0 !important; box-sizing: border-box !important; }
 .smart-hero {
   position: relative !important; overflow: hidden !important; border-radius: 22px !important;
   min-height: 250px !important; display: flex !important; align-items: center !important;
@@ -2174,13 +2176,28 @@ body {
 .cmd-empty { padding: 40px 16px !important; text-align: center !important; color: #8A7A6A !important; font-size: 13px !important; }
 .cmd-foot { display: flex !important; justify-content: space-between !important; padding: 9px 16px !important; border-top: 1px solid #EADDC8 !important; background: #FBF6F0 !important; color: #9C8A72 !important; font-size: 11px !important; }
 
+/* 响应式分档：宽屏 3 列（6 条结果正好 3×2 铺满），中屏 2 列，窄屏 1 列。
+   与 adaptive-grid.js「内容 100% 铺满宽度、不留白边」的全站约定一致。 */
+@media (min-width: 1500px) {
+  .smart-results { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
+  .smart-hero { min-height: clamp(250px, 16vw, 300px) !important; }
+  .smart-hero-inner { padding: 40px 52px !important; max-width: 820px !important; }
+  .smart-hero-title { font-size: 38px !important; }
+}
+@media (min-width: 861px) and (max-width: 1499px) {
+  .smart-results { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+}
 @media (max-width: 1100px) {
   .smart-form { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
-  .smart-results, .smart-quote-grid { grid-template-columns: 1fr !important; }
   .cmd-trigger-text, .cmd-trigger-kbd { display: none !important; }
 }
+@media (max-width: 860px) {
+  .smart-results, .smart-quote-grid { grid-template-columns: 1fr !important; }
+  .smart-match-top { flex-wrap: wrap !important; }
+  .smart-weights { flex-wrap: wrap !important; }
+}
 @media (max-width: 768px) {
-  .smart-page { padding: 16px 12px 44px !important; }
+  .smart-page { padding: 16px 0 0 !important; }
   .smart-hero-inner { padding: 26px 22px !important; }
   .smart-hero-title { font-size: 25px !important; }
   .smart-form { grid-template-columns: 1fr !important; padding: 16px !important; }

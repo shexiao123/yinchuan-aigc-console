@@ -791,8 +791,9 @@ img { max-width: 100%; display: block; }
   body { padding-bottom: 90px; }
 }
 
-/* 横排导航项较多，窄于 1280 时改用汉堡菜单，避免顶栏被挤出视口产生横向滚动 */
-@media (max-width: 1280px) {
+/* 横排导航项 11 个（含「智能工作台」），窄于 1500 时改用汉堡菜单，
+   避免顶栏被挤出视口产生横向滚动（1281–1500 区间实测放不下 11 项 + 搜索 + 登录，1500 恰好溢出 67px） */
+@media (max-width: 1500px) {
   .nav { display: none; }
   .nav.mobile-open {
     display: flex; position: absolute; top: 68px; left: 0; right: 0;
