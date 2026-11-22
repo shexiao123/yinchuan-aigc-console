@@ -72,18 +72,17 @@ const ok = (name, cond, extra) => {
   await send('Page.navigate', { url: url + sep + 'r=' + Date.now() })
   await sleep(MODE === 'local' ? 5500 : 7500)
 
-  // 热销服务已折叠：先记录默认收起状态，再展开后做密度/去重断言
-  let foldDefault = {}
+  // 热销服务 2026-11-23 晚起撤销折叠：8 张卡默认直接平铺
+  let hotDefault = {}
   try {
-    foldDefault = JSON.parse(await ev(`JSON.stringify((()=>{
-      const d = document.querySelector('.home-hot-fold')
-      return { exists: !!d, open: d ? d.open : null,
-        headInSummary: !!(d && d.querySelector('summary .v2-head')),
-        cards: d ? d.querySelectorAll('.home-svc').length : 0 }
+    hotDefault = JSON.parse(await ev(`JSON.stringify((()=>{
+      const sec = document.querySelector('.v2-svc')
+      return { exists: !!sec,
+        details: document.querySelectorAll('.home-hot-fold, .v2-svc details').length,
+        flat: !!(sec && sec.querySelector('.home-hot-body')),
+        cards: sec ? sec.querySelectorAll('.home-svc').length : 0 }
     })())`))
-  } catch (e) { foldDefault = { exists: false } }
-  await ev(`(()=>{const d=document.querySelector('.home-hot-fold');if(d)d.open=true;return 'ok'})()`)
-  await sleep(350)
+  } catch (e) { hotDefault = { exists: false } }
 
   const read = `JSON.stringify((()=>{
     const q = s => document.querySelector(s)
@@ -172,11 +171,11 @@ const ok = (name, cond, extra) => {
   ok('分类只显示 8 个项目名称、无描述、点名称才进内容',
     s.catLinks === 8 && s.catDescs === 0 && s.catHrefs.length === 8 && s.catHrefs.every(h => /^#\/services\?category=/.test(h || '')),
     s.catLinks + ' 个名称 / 描述 ' + s.catDescs)
-  ok('热销服务已折叠（默认收起、区块头在 summary 内）',
-    foldDefault.exists === true && foldDefault.open === false && foldDefault.headInSummary === true && foldDefault.cards === 8,
-    'open=' + foldDefault.open + ' / 卡 ' + foldDefault.cards)
+  ok('热销服务不折叠（8 张卡默认直接平铺）',
+    hotDefault.exists === true && hotDefault.details === 0 && hotDefault.flat === true && hotDefault.cards === 8,
+    'details ' + hotDefault.details + ' / 卡 ' + hotDefault.cards)
   ok('精选服务 4 列 8 张（不回归）', s.svcCols === 4 && s.svcCount === 8, s.svcCols + ' 列 / ' + s.svcCount + ' 张')
-  ok('服务卡图高仍收小（<170px）', s.imgH > 0 && s.imgH < 170, s.imgH + 'px')
+  ok('服务卡封面 3:2 完整显示（不裁成窄条）', s.imgH > 180 && s.imgH < 280, s.imgH + 'px')
   ok('整页封面零重复且无裂图', s.photos > 0 && s.uniq === s.photos && s.broken === 0, s.uniq + '/' + s.photos + ' 唯一 / 裂图 ' + s.broken)
   ok('智能工作台改深色宽幅断点', s.entryDark === true && s.orbit === true)
   ok('四步流程 4 列 4 步', s.flowCols === 4 && s.flowSteps === 4, s.flowCols + ' 列 / ' + s.flowSteps + ' 步')

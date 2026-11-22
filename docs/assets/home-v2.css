@@ -16,7 +16,8 @@
    ⚠️ 保留不动的既有功能（有回归测试断言）：
       Hero ::before 东方实景图 opacity:1 / 实底 rgb(247,239,225) /
       标题色 rgb(36,26,18) / 右侧作品照 .jpg；
-      分类三组平铺不折叠；.home-svc-grid 4·3·2 分档与图高 148px（展开后不变）。
+      分类三组平铺不折叠；.home-svc-grid 4·3·2 分档；
+      热销服务 2026-11-23 晚起也不折叠，封面 3:2 完整显示（见第 17 段）。
    ================================================================ */
 
 /* ---------- 0. 全局节奏 ---------- */
@@ -226,10 +227,9 @@
 .home.home-v2 .home-cat-link:hover { background: #F3E7D4 !important; color: #8A5222 !important; }
 .home.home-v2 .home-cat-go { font-style: normal; font-size: 15px; color: #B5793D; }
 
-/* ---------- 5.1 热销服务折叠（2026-11-23 舍先生要求） ----------
-   原生 <details>：默认收起只保留统一区块头这一条，点标题展开 4 列卡片。
-   展开状态由 app.js 模块级 hotFoldOpen 跨 SPA 重渲染恢复。
-   ⚠️ 全部用 .home.home-v2 前缀 + !important，压过 tech.css 第 10 段兜底。 */
+/* ---------- 5.1 热销服务折叠（已撤销，规则保留备查） ----------
+   ⚠️ 2026-11-23 晚舍先生「这边不做折叠了」，app.js 不再输出 <details>，
+      以下 .home-hot-fold* 规则不再命中；现行版式见文件最末第 17 段。
 .home.home-v2 .home-hot-fold {
   background: rgba(255, 253, 249, .86) !important;
   border: 1px solid rgba(180, 140, 95, .30) !important; border-radius: 16px !important;
@@ -483,9 +483,7 @@
   .home.home-v2 .home-sec-title { font-size: 21px !important; }
   .home.home-v2 .home-sec-sub { display: none !important; }
   .home.home-v2 .v2-head { padding-bottom: 12px !important; }
-  .home.home-v2 .home-hot-fold { padding: 4px 12px 2px !important; }
-  .home.home-v2 .v2-fold-count { display: none !important; }
-  .home.home-v2 .home-hot-fold-body { padding-top: 14px !important; }
+  .home.home-v2 .home-hot-body { padding: 0 2px !important; }
   .home.home-v2 .smart-entry { padding: 20px !important; }
   .home.home-v2 .smart-entry-media { display: none !important; }
   .home.home-v2 .smart-entry-title { font-size: 18px !important; }
@@ -565,4 +563,94 @@
 }
 .home.home-v2 .home-cat-group-head {
   text-shadow: 0 1px 2px rgba(250, 245, 236, 1), 0 0 8px rgba(250, 245, 236, .95) !important;
+}
+
+/* ================================================================
+   17. 热销服务：撤销折叠 + 图片不裁剪 / 整卡 50% 透明 / 不留白
+   （2026-11-23 舍先生截图要求「这边不做折叠了」）
+   · 旧版：原生 <details> 默认收起、卡片白底实色 + cover 裁成 148px 窄条、
+     flex:1 / margin-top:auto 把文字区撑出白底空白。
+   · 新版：统一区块头 + 8 张卡直接平铺；封面按 3:2 完整显示
+     （object-fit:fill，不裁切、不变形留白边），整卡严格 opacity:.5、
+     背景透明无白底，文字区自然高度不拉伸；hover / focus-within 恢复 1。
+   ⚠️ 追加在文件最末，用 .home.home-v2 前缀 + !important 压过 tech.css
+      第 10 段（height:148px / aspect-ratio:auto / padding 兜底）。
+   ================================================================ */
+/* 17.1 不折叠：区块头与其他区块统一，内容直接平铺 */
+.home.home-v2 .v2-svc .v2-head { margin-bottom: 18px !important; }
+.home.home-v2 .home-hot-body { background: transparent !important; padding: 0 !important; }
+.home.home-v2 .v2-svc-more { margin-top: 18px !important; }
+
+/* 17.2 整卡 50% 透明、无白底、无阴影 */
+.home.home-v2 .home-svc {
+  background: transparent !important;
+  border: 1px solid rgba(180, 140, 95, .28) !important;
+  box-shadow: none !important;
+  border-radius: 12px !important;
+  overflow: hidden !important;
+  opacity: .5 !important;
+  transition: opacity .2s ease, border-color .2s ease !important;
+}
+.home.home-v2 .home-svc:hover,
+.home.home-v2 .home-svc:focus-within {
+  opacity: 1 !important;
+  border-color: rgba(138, 82, 34, .55) !important;
+  transform: none !important;
+}
+
+/* 17.3 封面完整显示：3:2 不裁剪、不变形留白边，禁用 hover 放大裁切 */
+.home.home-v2 .home-svc-media {
+  aspect-ratio: 3 / 2 !important;
+  height: auto !important;
+  background: transparent !important;
+  border: 0 !important;
+  overflow: hidden !important;
+}
+.home.home-v2 .home-svc-media img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: fill !important;
+  display: block !important;
+  transform: none !important;
+}
+.home.home-v2 .home-svc:hover .home-svc-media img { transform: none !important; }
+
+/* 17.4 不留白：文字区自然高度，去掉 flex:1 / margin-top:auto 撑开的空白 */
+.home.home-v2 .home-svc-body {
+  flex: none !important;
+  background: transparent !important;
+  padding: 9px 11px 11px !important;
+  gap: 3px !important;
+}
+.home.home-v2 .home-svc-foot { margin-top: 0 !important; padding-top: 5px !important; }
+
+/* 17.5 文字补偿：整卡 opacity:.5 会把深色字压到几乎看不见，
+   这里把文字压到近黑并加重笔画（不铺任何白底，仍不留白），
+   价格单独用深铜红拉开层次；hover 时恢复 1 后观感更实。 */
+.home.home-v2 .home-svc-title,
+.home.home-v2 .home-svc-sub,
+.home.home-v2 .home-svc-meta,
+.home.home-v2 .home-svc-unit {
+  color: #17100B !important;
+  font-weight: 760 !important;
+  -webkit-text-stroke: .45px rgba(23, 16, 11, .9);
+  text-shadow: 0 1px 2px rgba(255, 250, 240, .7) !important;
+}
+.home.home-v2 .home-svc-title { font-size: 14px !important; }
+.home.home-v2 .home-svc-price,
+.home.home-v2 .home-svc-price .price-value {
+  color: #7A2E12 !important;
+  font-weight: 820 !important;
+  -webkit-text-stroke: .4px rgba(90, 34, 14, .85);
+  text-shadow: 0 1px 2px rgba(255, 250, 240, .8) !important;
+}
+.home.home-v2 .home-svc-tags .tag {
+  background: rgba(250, 245, 236, .62) !important;
+  color: #5A2210 !important;
+  font-weight: 700 !important;
+  text-shadow: 0 1px 2px rgba(255, 250, 240, .9) !important;
+}
+@media (max-width: 560px) {
+  .home.home-v2 .home-svc-body { padding: 7px 8px 9px !important; }
+  .home.home-v2 .v2-svc .v2-head { margin-bottom: 14px !important; }
 }

@@ -96,9 +96,7 @@ const PROBE = `JSON.stringify((()=>{
     const sep = BASE.includes('?') ? '&' : '?'
     await send('Page.navigate', { url: BASE + sep + 'r=' + Date.now() + '_' + c.w })
     await sleep(MODE === 'local' ? 4500 : 7000)
-    // 热销服务已折叠：先展开 details，否则卡片 display:none、lazy 图不加载会被误判成裂图
-    await ev(`(()=>{const d=document.querySelector('.home-hot-fold');if(d)d.open=true;return 'ok'})()`)
-    await sleep(250)
+    // 热销服务 2026-11-23 晚起不再折叠，8 张卡默认直接平铺
     // 卡片图是 loading="lazy"：先滚动到位再探测，否则 naturalWidth=0 会被误判成裂图
     await ev(`(()=>{const g=document.querySelector('.home-svc-grid');if(g)g.scrollIntoView({block:'center'});return 'ok'})()`)
     await sleep(900)
@@ -109,8 +107,8 @@ const PROBE = `JSON.stringify((()=>{
     ok('热销区 ' + c.cols + ' 列', st.cols === c.cols, '实际 ' + st.cols)
     ok('卡片数 ' + c.cards + ' 张（整行铺满）', st.svcCount === c.cards, '实际 ' + st.svcCount)
     ok('单卡宽度 < ' + c.maxW + 'px', st.cardW > 0 && st.cardW < c.maxW, st.cardW + 'px')
-    ok('图片高度已收小', st.imgH > 0 && st.imgH < 170, st.imgH + 'px')
-    console.log('     单卡 ' + st.cardW + '×' + (st.imgH + 110) + 'px，图高 ' + st.imgH + 'px')
+    ok('封面 3:2 完整显示、不裁成窄条', st.imgH > 0 && Math.abs(st.imgH - st.cardW * 2 / 3) < 10, st.imgH + 'px / 卡宽 ' + st.cardW + 'px')
+    console.log('     单卡 ' + st.cardW + '×' + (st.imgH + 145) + 'px，图高 ' + st.imgH + 'px')
     ok('分类卡有背景图', st.catCount > 0 && st.emptyCat === 0, st.catCount + ' 张 / 空 ' + st.emptyCat)
     ok('整页封面零重复', st.photos.length > 0 && st.uniq === st.photos.length,
       st.uniq + ' 唯一 / ' + st.photos.length + ' 张：' + st.photos.join(', '))

@@ -624,17 +624,6 @@
   }
   let renderedHomeCols = 0
 
-  /* 热销服务折叠状态（2026-11-23 舍先生要求「将热销服务也做折叠」）
-     用原生 <details>，无需在 SPA 重渲染后重新绑定事件；
-     但 DOM 会被重建，所以把展开状态记在模块级变量里恢复。
-     toggle 事件不冒泡，必须在 document 的 capture 阶段监听。 */
-  let hotFoldOpen = false
-  document.addEventListener('toggle', (e) => {
-    if (e.target && e.target.classList && e.target.classList.contains('home-hot-fold')) {
-      hotFoldOpen = !!e.target.open
-    }
-  }, true)
-
   const VIEWS = {}
 
   function render() {
@@ -896,54 +885,37 @@
           </div>
         </section>
 
-        <!-- ④ 热销服务：默认折叠，点区块头展开 4 列紧凑卡（整页封面去重） -->
+        <!-- ④ 热销服务：不折叠，统一区块头 + 4 列平铺（整页封面去重）
+             （2026-11-23 舍先生「这边不做折叠了」） -->
         <section class="home-section v2-svc">
-          <details class="home-hot-fold" ${hotFoldOpen ? 'open' : ''}>
-            <summary class="home-hot-fold-head">
-              <div class="home-sec-head v2-head">
-                <div class="v2-head-l">
-                  <span class="v2-head-idx">02</span>
-                  <div class="v2-head-txt">
-                    <span class="v2-head-kicker">POPULAR SERVICES</span>
-                    <h2 class="home-sec-title">热销服务<span class="home-sec-sub">按销量排序</span></h2>
-                  </div>
-                </div>
-                <span class="home-sec-more v2-fold-toggle">
-                  <span class="v2-fold-count">${hot.length} 项精选</span>
-                  <span class="v2-fold-label v2-fold-label-closed">展开查看</span>
-                  <span class="v2-fold-label v2-fold-label-open">收起</span>
-                  <i class="v2-fold-arrow" aria-hidden="true">⌄</i>
+          ${secHead('02', 'POPULAR SERVICES', '热销服务', '按销量排序', '#/services', `${hot.length} 项精选`)}
+          <div class="home-hot-body">
+            <div class="home-svc-grid">
+              ${hot
+                .map((s) => {
+                  const photo = svcPhotos.get(s.id) || fallbackPhoto(s.id)
+                  return `
+            <a class="home-svc" href="#/service/${s.id}">
+              <span class="home-svc-media">
+                <img ${API.imgAttrs(photo, 'home-svc-img')} alt="${API.esc(s.title || '')}" loading="lazy" />
+                ${s.original_price ? '<span class="home-svc-badge">限时优惠</span>' : ''}
+              </span>
+              <span class="home-svc-body">
+                <span class="home-svc-title ellipsis">${API.esc(s.title)}</span>
+                ${s.subtitle ? `<span class="home-svc-sub ellipsis">${API.esc(s.subtitle)}</span>` : ''}
+                <span class="home-svc-meta">★ ${s.rating} · 已售 ${s.sales_count} · ${s.delivery_days} 天交付</span>
+                <span class="home-svc-tags">${(s.tags || []).slice(0, 3).map((t) => `<span class="tag">${API.esc(t)}</span>`).join('')}</span>
+                <span class="home-svc-foot">
+                  <span class="home-svc-unit">${API.esc(s.unit)}</span>
+                  <span class="home-svc-price"><span class="price-value">¥${API.yuanShort(s.price)}</span>${s.original_price ? `<s class="price-old">¥${API.yuanShort(s.original_price)}</s>` : ''}</span>
                 </span>
-              </div>
-            </summary>
-            <div class="home-hot-fold-body">
-              <div class="home-svc-grid">
-                ${hot
-                  .map((s) => {
-                    const photo = svcPhotos.get(s.id) || fallbackPhoto(s.id)
-                    return `
-              <a class="home-svc" href="#/service/${s.id}">
-                <span class="home-svc-media">
-                  <img ${API.imgAttrs(photo, 'home-svc-img')} alt="${API.esc(s.title || '')}" loading="lazy" />
-                  ${s.original_price ? '<span class="home-svc-badge">限时优惠</span>' : ''}
-                </span>
-                <span class="home-svc-body">
-                  <span class="home-svc-title ellipsis">${API.esc(s.title)}</span>
-                  ${s.subtitle ? `<span class="home-svc-sub ellipsis">${API.esc(s.subtitle)}</span>` : ''}
-                  <span class="home-svc-meta">★ ${s.rating} · 已售 ${s.sales_count} · ${s.delivery_days} 天交付</span>
-                  <span class="home-svc-tags">${(s.tags || []).slice(0, 3).map((t) => `<span class="tag">${API.esc(t)}</span>`).join('')}</span>
-                  <span class="home-svc-foot">
-                    <span class="home-svc-unit">${API.esc(s.unit)}</span>
-                    <span class="home-svc-price"><span class="price-value">¥${API.yuanShort(s.price)}</span>${s.original_price ? `<s class="price-old">¥${API.yuanShort(s.original_price)}</s>` : ''}</span>
-                  </span>
-                </span>
-              </a>`
-                  })
-                  .join('')}
-              </div>
-              <a class="v2-svc-more" href="#/services">浏览更多服务 <i aria-hidden="true">↗</i></a>
+              </span>
+            </a>`
+                })
+                .join('')}
             </div>
-          </details>
+            <a class="v2-svc-more" href="#/services">浏览更多服务 <i aria-hidden="true">↗</i></a>
+          </div>
         </section>
 
         <!-- ⑤ 智能工作台：深色宽幅，作为整页唯一的明暗断点 -->
