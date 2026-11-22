@@ -73,6 +73,7 @@ const PROBE = `JSON.stringify((()=>{
     footMargins: cards.map(e => cs(e.querySelector('.home-svc-foot'), 'marginTop')),
     gaps: cards.map(e => Math.round(e.getBoundingClientRect().bottom - e.querySelector('.home-svc-foot').getBoundingClientRect().bottom)),
     catOpacities: qa('.home-cat-group').map(e => cs(e, 'opacity')),
+    catCoverOpacities: qa('.home-cat-group-cover').map(e => cs(e, 'opacity')),
     catDetails: qa('.home-cat-panel details, .home-cat-fold-item').length,
     docW: document.documentElement.scrollWidth,
     winW: window.innerWidth
@@ -155,8 +156,10 @@ const PROBE = `JSON.stringify((()=>{
   ok('同一行卡片等高、无参差留白', rowH.size === 1, Array.from(rowH).join('/') + 'px')
 
   // ⑤ 分类区不受影响
-  ok('分类仍平铺不折叠、卡片仍 50% 透明', s.catDetails === 0 && s.catOpacities.length === 3 && s.catOpacities.every(v => v === '0.5'),
-    'details ' + s.catDetails + ' / ' + s.catOpacities.join('/'))
+  ok('分类仍平铺不折叠、照片半透明而文字清晰',
+    s.catDetails === 0 && s.catOpacities.length === 3 && s.catOpacities.every(v => v === '1') &&
+    s.catCoverOpacities.length === 3 && s.catCoverOpacities.every(v => v === '0.5'),
+    'details ' + s.catDetails + ' / 卡 ' + s.catOpacities.join('/') + ' 照片 ' + s.catCoverOpacities.join('/'))
 
   // ⑥ hover 恢复清晰（真鼠标事件）
   const box = await ev(`JSON.stringify((()=>{const r=document.querySelector('.v2-svc .home-svc').getBoundingClientRect();return {x:Math.round(r.left+r.width/2),y:Math.round(r.top+Math.min(r.height/2,120))}})())`)

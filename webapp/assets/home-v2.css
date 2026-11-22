@@ -654,3 +654,65 @@
   .home.home-v2 .home-svc-body { padding: 7px 8px 9px !important; }
   .home.home-v2 .v2-svc .v2-head { margin-bottom: 14px !important; }
 }
+
+/* ================================================================
+   18. 分类卡底部名称「必须清楚展示」（2026-11-23 舍先生红框截图）
+   病根：第 16 段把 opacity:.5 加在**整卡**上，名称文字被一起压到
+   50% alpha，米白柔光/描边反而把字洗得更糊，红框里几乎看不见。
+   解法：把半透明只留给照片层，文字层完全不受 opacity 影响——
+   · .home-cat-group 整卡恢复 opacity:1（卡片仍无白底、无空白拉伸）
+   · .home-cat-group-cover 单独 opacity:.5，照片依旧半透明；
+     hover / focus-within 时照片恢复 1
+   · 名称行给 .92 米白**行内衬** + 近黑加粗字 + 去掉所有柔光描边，
+     衬底只铺文字行，不是整块白底，仍满足「不留白」
+   ================================================================ */
+.home.home-v2 .home-cat-group {
+  opacity: 1 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  transition: none !important;
+}
+.home.home-v2 .home-cat-group-cover {
+  opacity: .5 !important;
+  transition: opacity .2s ease !important;
+}
+.home.home-v2 .home-cat-group:hover .home-cat-group-cover,
+.home.home-v2 .home-cat-group:focus-within .home-cat-group-cover {
+  opacity: 1 !important;
+}
+.home.home-v2 .home-cat-group-head {
+  background: rgba(250, 245, 236, .88) !important;
+  text-shadow: none !important;
+  -webkit-text-stroke: 0 !important;
+}
+.home.home-v2 .home-cat-group-name {
+  color: #17100B !important;
+  font-weight: 820 !important;
+  -webkit-text-stroke: 0 !important;
+  text-shadow: none !important;
+}
+.home.home-v2 .home-cat-group-idx,
+.home.home-v2 .home-cat-group-count {
+  color: #5A2210 !important;
+  font-weight: 750 !important;
+  -webkit-text-stroke: 0 !important;
+  text-shadow: none !important;
+}
+.home.home-v2 .home-cat-link {
+  background: rgba(250, 245, 236, .92) !important;
+  color: #17100B !important;
+  font-weight: 800 !important;
+  font-size: 13.5px !important;
+  -webkit-text-stroke: 0 !important;
+  text-shadow: none !important;
+}
+.home.home-v2 .home-cat-link:hover {
+  background: #F0DEBE !important;
+  color: #6A2C10 !important;
+}
+.home.home-v2 .home-cat-go {
+  color: #7A2E12 !important;
+  font-weight: 800 !important;
+  -webkit-text-stroke: 0 !important;
+  text-shadow: none !important;
+}

@@ -5,8 +5,11 @@
  * 旧版：cover 被 background-size:cover 裁成 88px 窄条，白底实色卡 +
  *       flex:1 把 2 项那两组撑出大片空白。
  * 新版：封面 3:2 完整显示（100% 100%，不裁切不变形不留白边），
- *       组名/名称叠在照片上，卡片无白底、名称列表贴底，整卡 opacity:.5，
- *       hover / focus-within 恢复 1。
+ *       组名/名称叠在照片上，卡片无白底、名称列表贴底。
+ * 追加（06:31「红框位置文字必须清楚展示」）：整卡 opacity:.5 会连文字一起压淡，
+ *       改为**只有封面照片层 opacity:.5**，整卡与文字层 opacity:1；
+ *       名称行 .92 米白行内衬 + 近黑加粗字、去掉柔光描边；
+ *       hover / focus-within 只把照片恢复 1。
  *
  * 用法：node tools/test-cat-transparent.js local|pages|live
  * 前置：本机 8899 静态服务、9222 无头 Chrome 调试端口
@@ -53,7 +56,14 @@ const PROBE = `JSON.stringify((()=>{
     details: qa('.home-cat-panel details, .home-cat-fold-item').length,
     hrefs: links.map(a => a.getAttribute('href')),
     opacities: groups.map(e => getComputedStyle(e).opacity),
+    coverOpacities: covers.map(e => getComputedStyle(e).opacity),
     bgColors: groups.map(e => getComputedStyle(e).backgroundColor),
+    linkBgs: links.map(e => getComputedStyle(e).backgroundColor),
+    linkColors: links.map(e => getComputedStyle(e).color),
+    linkWeights: links.map(e => getComputedStyle(e).fontWeight),
+    linkShadows: links.map(e => getComputedStyle(e).textShadow),
+    linkStrokes: links.map(e => getComputedStyle(e).getPropertyValue('-webkit-text-stroke-width')),
+    headBgs: qa('.home-cat-group-head').map(e => getComputedStyle(e).backgroundColor),
     shadows: groups.map(e => getComputedStyle(e).boxShadow),
     coverSizes: covers.map(e => getComputedStyle(e).backgroundSize),
     coverUrls: covers.map(bgUrl),
@@ -115,7 +125,19 @@ const PROBE = `JSON.stringify((()=>{
 
   ok('三组分类仍在、不折叠', s.groupCount === 3 && s.coverCount === 3 && s.details === 0,
     s.groupCount + ' 组 / details ' + s.details)
-  ok('整个卡片严格 50% 透明', s.opacities.length === 3 && s.opacities.every(v => v === '0.5'), s.opacities.join(' / '))
+  ok('半透明只作用于照片层、整卡文字层完全清晰',
+    s.opacities.length === 3 && s.opacities.every(v => v === '1') &&
+    s.coverOpacities.length === 3 && s.coverOpacities.every(v => v === '0.5'),
+    '卡 ' + s.opacities.join('/') + ' / 照片 ' + s.coverOpacities.join('/'))
+  const alphas = s.linkBgs.map(v => { const m = v.match(/rgba?\([^)]*?,\s*([\d.]+)\)/); return m ? Number(m[1]) : 1 })
+  ok('名称行高不透明米白衬（文字底够实）', alphas.length === 8 && alphas.every(v => v >= .88), alphas.join(' / '))
+  ok('名称字近黑加粗、不再被柔光描边糊掉',
+    s.linkColors.every(v => /rgb\(23, 16, 11\)/.test(v)) &&
+    s.linkWeights.every(v => Number(v) >= 800) &&
+    s.linkShadows.every(v => v === 'none') &&
+    s.linkStrokes.every(v => /^0px$|^$/.test(v.trim())),
+    s.linkColors[0] + ' / ' + s.linkWeights[0] + ' / ' + s.linkShadows[0] + ' / stroke ' + s.linkStrokes[0])
+  ok('组名行同样有实衬、文字清楚', s.headBgs.length === 3 && s.headBgs.every(v => /rgba\(250, 245, 236, 0\.8/.test(v)), s.headBgs[0])
   ok('卡片无白色实底（背景透明）', s.bgColors.every(v => /rgba\(0, 0, 0, 0\)|transparent/.test(v)), s.bgColors[0])
   ok('卡片不再有白卡阴影', s.shadows.every(v => v === 'none'), s.shadows[0])
   ok('封面不裁剪：background-size = 100% 100%', s.coverSizes.every(v => v === '100% 100%'), s.coverSizes.join(' / '))
@@ -129,7 +151,7 @@ const PROBE = `JSON.stringify((()=>{
     s.groupRects.map(r => r.h).join('/') + 'px')
   ok('8 个项目名称仍可点、只显示名称', s.linkCount === 8 && s.hrefs.every(h => /^#\/services\?category=/.test(h || '')),
     s.linkCount + ' 个')
-  ok('名称文字为深色（半透明下仍可读）', /rgb\(36, 26, 18\)|rgb\(42, 26, 14\)/.test(s.linkColor), s.linkColor)
+  ok('名称文字为近黑（红框内可清楚辨认）', /rgb\(23, 16, 11\)|rgb\(36, 26, 18\)/.test(s.linkColor), s.linkColor)
 
   // 三张封面真的能加载（不是空 URL / 裂图）
   const loaded = await ev(`(async()=>{const urls=${JSON.stringify(s.coverUrls)};const r=await Promise.all(urls.map(u=>new Promise(res=>{const i=new Image();i.onload=()=>res(i.naturalWidth);i.onerror=()=>res(0);i.src=u})));return JSON.stringify(r)})()`)
@@ -142,8 +164,8 @@ const PROBE = `JSON.stringify((()=>{
   if (pt.y > 0 && pt.y < 900) {
     await send('Input.dispatchMouseEvent', { type: 'mouseMoved', x: pt.x, y: pt.y })
     await sleep(350)
-    const ho = await ev(`getComputedStyle(document.querySelector('.home-cat-group')).opacity`)
-    ok('鼠标移入恢复清晰（opacity 1）', ho === '1', 'opacity=' + ho)
+    const ho = await ev(`getComputedStyle(document.querySelector('.home-cat-group-cover')).opacity`)
+    ok('鼠标移入照片恢复清晰（封面 opacity 1）', ho === '1', 'opacity=' + ho)
     await send('Input.dispatchMouseEvent', { type: 'mouseMoved', x: 5, y: 5 })
     await sleep(250)
   }
@@ -152,10 +174,11 @@ const PROBE = `JSON.stringify((()=>{
   // 手机端：无横向溢出、卡片仍保持完整 3:2
   await send('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 1, mobile: false })
   await sleep(1200)
-  const m = await ev(`JSON.stringify((()=>{const c=document.querySelector('.home-cat-group-cover');const r=c?c.getBoundingClientRect():null;return {docW:document.documentElement.scrollWidth,winW:window.innerWidth,ratio:r?r.width/r.height:0,op:c?getComputedStyle(c.closest('.home-cat-group')).opacity:''}})())`)
+  const m = await ev(`JSON.stringify((()=>{const c=document.querySelector('.home-cat-group-cover');const r=c?c.getBoundingClientRect():null;return {docW:document.documentElement.scrollWidth,winW:window.innerWidth,ratio:r?r.width/r.height:0,op:c?getComputedStyle(c.closest('.home-cat-group')).opacity:'',coverOp:c?getComputedStyle(c).opacity:''}})())`)
   let mm = {}; try { mm = JSON.parse(m) } catch (e) {}
-  ok('390px 手机端无横向溢出、仍 3:2 / 50%', mm.docW <= mm.winW + 2 && Math.abs((mm.ratio || 0) - 1.5) < 0.05 && mm.op === '0.5',
-    mm.docW + ':' + mm.winW + ' / ' + (mm.ratio || 0).toFixed(3) + ' / ' + mm.op)
+  ok('390px 手机端无横向溢出、仍 3:2 / 照片 50% / 文字清晰',
+    mm.docW <= mm.winW + 2 && Math.abs((mm.ratio || 0) - 1.5) < 0.05 && mm.op === '1' && mm.coverOp === '0.5',
+    mm.docW + ':' + mm.winW + ' / ' + (mm.ratio || 0).toFixed(3) + ' / 卡 ' + mm.op + ' 照片 ' + mm.coverOp)
   await shot('cat-transparent-' + MODE + '-390')
 
   // 点名称仍进入服务列表（折叠/透明不影响跳转）
