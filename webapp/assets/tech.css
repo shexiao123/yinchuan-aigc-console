@@ -2247,4 +2247,46 @@ body:not(.admin-page) {
   .cmd-overlay { padding-top: 8vh !important; }
 }
 
+/* ================================================================
+   10. 首页卡片密度（2026-11-23）
+   单卡占比收小：宽屏 4 列 × 2 行，图片、文字、间距同步收紧。
+   与 app.js homeCardCols() 的分档保持一致（4 / 3 / 2 列）。
+   放在文件末尾并带 !important，覆盖前面所有「线上版终稿」兜底规则。
+   ================================================================ */
+.home-svc-grid { grid-template-columns: repeat(4, minmax(0, 1fr)) !important; gap: 14px !important; }
+.home-svc { border-radius: 13px !important; }
+.home-svc-media { aspect-ratio: auto !important; height: 148px !important; }
+.home-svc-body { padding: 10px 12px 12px !important; gap: 4px !important; }
+.home-svc-title { font-size: 13.5px !important; line-height: 1.4 !important; }
+.home-svc-sub { font-size: 11.5px !important; line-height: 1.4 !important; }
+.home-svc-meta { font-size: 10.5px !important; }
+.home-svc-tags { gap: 4px !important; }
+.home-svc-tags .tag { font-size: 10px !important; padding: 2px 6px !important; }
+.home-svc-foot { padding-top: 6px !important; }
+.home-svc-unit { font-size: 10.5px !important; }
+.home-svc-price .price-value { font-size: 15.5px !important; }
+.home-svc-price .price-old { font-size: 10.5px !important; }
+.home-svc-badge { top: 7px !important; left: 7px !important; font-size: 10px !important; padding: 3px 7px !important; border-radius: 6px !important; }
+/* 分类卡同步收小，避免两组卡片密度不一致 */
+.home-cat-groups { gap: 18px !important; }
+.home-cat-row { gap: 14px !important; }
+.home-cat-media { height: 104px !important; }
+.home-cat-name { font-size: 13.5px !important; padding: 10px 12px 2px !important; }
+.home-cat-desc { font-size: 11px !important; line-height: 1.5 !important; padding: 0 12px 11px !important; }
+.home-section { margin-top: 38px !important; }
+@media (max-width: 1319px) {
+  .home-svc-grid { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
+}
+@media (max-width: 999px) {
+  .home-svc-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+  .home-cat-media { height: 92px !important; }
+}
+@media (max-width: 560px) {
+  .home-svc-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; gap: 10px !important; }
+  .home-svc-body { padding: 9px 10px 10px !important; }
+  .home-svc-media { aspect-ratio: auto !important; height: 112px !important; }
+  .home-cat-media { height: 84px !important; }
+  .home-section { margin-top: 28px !important; }
+}
+
 

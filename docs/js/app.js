@@ -540,6 +540,13 @@
     if (gridResizeTimer) clearTimeout(gridResizeTimer)
     gridResizeTimer = setTimeout(() => {
       gridResizeTimer = null
+      // 首页热销区按列数决定卡片数量，跨断点时重渲染，避免末行留半排
+      const cols = homeCardCols()
+      if (renderedHomeCols && cols !== renderedHomeCols) {
+        renderedHomeCols = cols
+        if (parseHash().route === 'home') render()
+        return
+      }
       if (window.AdaptiveGrid) window.AdaptiveGrid.fitAll(app)
     }, 120)
   })
@@ -568,6 +575,54 @@
   }
 
   /* ---------------- 视图 ---------------- */
+
+  /**
+   * 卡片封面去重分配（2026-11-23）
+   *
+   * 旧逻辑：封面按 category_id 映射，两个同分类服务必然拿到同一张图，
+   * 首页热销区出现两张「美女对镜」。现在改成按卡片逐张分配、同批不重复：
+   * 优先用原本的分类/服务配图（语义正确），撞车时按 id 稳定散列换一张未用过的。
+   * used 可在多个卡片区之间共用，保证整页不重复。
+   */
+  // cover-03 留给 Hero 与智能工作台横条，不参与卡片分配，避免整页撞图
+  const CARD_PHOTO_POOL = [
+    'assets/covers/cover-01.jpg', 'assets/covers/cover-02.jpg',
+    'assets/covers/cover-04.jpg', 'assets/covers/cover-05.jpg',
+    'assets/covers/cover-06.jpg', 'assets/covers/cover-07.jpg',
+    'assets/covers/cover-08.jpg', 'assets/covers/cover-09.jpg',
+    'assets/covers/warm/w-card-10.jpg', 'assets/covers/warm/w-card-11.jpg',
+    'assets/covers/warm/w-card-12.jpg', 'assets/covers/warm/w-card-13.jpg',
+    'assets/covers/warm/w-card-14.jpg', 'assets/covers/warm/w-card-15.jpg',
+    'assets/covers/warm/w-card-16.jpg', 'assets/covers/warm/w-card-17.jpg'
+  ]
+  const CARD_PHOTO_VER = '?v=20261123f'
+  function cardPhotoKey(url) {
+    if (!url) return ''
+    const path = String(url).split('?')[0]
+    return CARD_PHOTO_POOL.find((p) => path.endsWith(p.slice('assets/covers/'.length))) || ''
+  }
+  function uniqueCardPhotos(items, used, getUrl) {
+    const map = new Map()
+    ;(items || []).forEach((item, idx) => {
+      let pick = cardPhotoKey(getUrl(item))
+      if (!pick || used.has(pick)) {
+        const seed = (Number(item.id) || idx + 1) + idx * 5
+        for (let k = 0; k < CARD_PHOTO_POOL.length; k++) {
+          const cand = CARD_PHOTO_POOL[(seed + k) % CARD_PHOTO_POOL.length]
+          if (!used.has(cand)) { pick = cand; break }
+        }
+      }
+      if (!pick) pick = CARD_PHOTO_POOL[idx % CARD_PHOTO_POOL.length]
+      used.add(pick)
+      map.set(item.id, pick + CARD_PHOTO_VER)
+    })
+    return map
+  }
+  function homeCardCols() {
+    const w = window.innerWidth || 1280
+    return w >= 1320 ? 4 : w >= 1000 ? 3 : 2
+  }
+  let renderedHomeCols = 0
 
   const VIEWS = {}
 
@@ -628,22 +683,26 @@
     const settings = S.settings || (S.settings = await API.getSettings().catch(() => ({
       commission_rate: 0.10, min_order_amount: 100, support_phone: '', notice: ''
     })))
-    const hot = (services || []).slice(0, 6)
+    // 卡片收小后按列数补足两行，保证每行铺满、末行不留半排
+    const homeCols = homeCardCols()
+    renderedHomeCols = homeCols
+    const hot = (services || []).slice(0, homeCols === 2 ? 6 : homeCols * 2)
 
     const heroBanner = banners[0] || { title: '银川AIGC数字文化产业基地', subtitle: '', theme: 'amber' }
     const minis = (banners || []).slice(1, 5)
 
-    // 首页卡片一律用真实摄影照片：云端没配图、或图加载不出来时也不露出色块 / MG 占位
-    const HOME_PHOTOS = [
-      'cover-01.jpg', 'cover-02.jpg', 'cover-05.jpg', 'cover-06.jpg',
-      'cover-08.jpg', 'cover-07.jpg', 'cover-09.jpg', 'cover-04.jpg'
-    ]
+    // 卡片一律用真实摄影照片：分类区与热销区共用同一套去重池，整页 16 张卡不撞图
+    const usedPhotos = new Set()
+    // 热销卡是大图商品卡，优先占住与分类对应的照片；分类导航卡再用剩下的，
+    // 这样既整页零重复，又让「婚礼跟拍配婚纱」「棚拍配摄影棚」尽量对题。
+    const svcPhotos = uniqueCardPhotos(hot, usedPhotos, (s) => s.coverUrl)
+    const catPhotos = uniqueCardPhotos(categories, usedPhotos, (c) => c.imageUrl)
     const fallbackPhoto = (id) => {
       const n = Number(id)
-      const i = Number.isFinite(n) ? ((n - 1) % HOME_PHOTOS.length + HOME_PHOTOS.length) % HOME_PHOTOS.length : 0
-      return 'assets/covers/' + HOME_PHOTOS[i] + '?v=20261122b'
+      const i = Number.isFinite(n) ? ((n - 1) % CARD_PHOTO_POOL.length + CARD_PHOTO_POOL.length) % CARD_PHOTO_POOL.length : 0
+      return CARD_PHOTO_POOL[i] + CARD_PHOTO_VER
     }
-    const heroImage = heroBanner.imageUrl || 'assets/covers/cover-03.jpg?v=20261122b'
+    const heroImage = heroBanner.imageUrl || 'assets/covers/cover-03.jpg?v=20261123f'
     const bannerHref = (b) => (b.link_type === 'all' || !b.link_value ? '#/services' : '#/services?category=' + b.link_value)
 
     const providerCount = (providers || []).length
@@ -701,7 +760,7 @@
         </section>
 
         <a class="smart-entry" href="#/smart">
-          <span class="smart-entry-media" style="background-image:url('assets/covers/cover-03.jpg?v=20261122b')"></span>
+          <span class="smart-entry-media" style="background-image:url('assets/covers/light/warm-hero-bg.jpg?v=20261123f')"></span>
           <span class="smart-entry-body">
             <span class="smart-entry-tag">NEW · 智能工作台</span>
             <span class="smart-entry-title">不知道该找谁做？让算法替你选</span>
@@ -782,7 +841,7 @@
               const bySlug = {}
               categories.forEach((c) => { bySlug[c.slug] = c })
               const card = (c) => {
-                const photo = c.imageUrl || fallbackPhoto(c.id)
+                const photo = catPhotos.get(c.id) || fallbackPhoto(c.id)
                 return `
               <a class="home-cat" href="#/services?category=${c.slug}">
                 <span class="home-cat-media has-img" style="background-image:url('${API.esc(photo)}')"></span>
@@ -816,7 +875,7 @@
           <div class="home-svc-grid">
             ${hot
               .map((s) => {
-                const photo = s.coverUrl || fallbackPhoto(s.category_id)
+                const photo = svcPhotos.get(s.id) || fallbackPhoto(s.id)
                 return `
               <a class="home-svc" href="#/service/${s.id}">
                 <span class="home-svc-media">
@@ -896,12 +955,13 @@
     `
   }
 
-  function svcCard(s) {
+  function svcCard(s, photo) {
     const cover = API.coverTheme(s.id)
+    const img = photo || s.coverUrl
     return `
       <a class="card svc-card" href="#/service/${s.id}">
         <div class="svc-cover" style="background:${cover}">
-          ${s.coverUrl ? `<img ${API.imgAttrs(s.coverUrl, 'svc-cover-img')} alt="${API.esc(s.title || '')}" loading="lazy" />` : '<span class="svc-cover-mark">MG</span>'}
+          ${img ? `<img ${API.imgAttrs(img, 'svc-cover-img')} alt="${API.esc(s.title || '')}" loading="lazy" />` : '<span class="svc-cover-mark">MG</span>'}
           ${s.original_price ? '<span class="svc-cover-badge">限时优惠</span>' : ''}
         </div>
         <div class="svc-body">
@@ -1820,6 +1880,8 @@
     const providers = await API.listProviders()
     const providerMap = {}
     providers.forEach((p) => { providerMap[p.id] = p })
+    // 列表页同样逐张去重，避免同分类的多个服务共用一张封面
+    const listPhotos = uniqueCardPhotos(services, new Set(), (s) => s.coverUrl)
 
     // 漫剧制作按项目整案对接，不划分标品服务项：该分类下无服务时显示整案引导
     const isComic = S.serviceCategory === 'comic-drama' && !S.serviceKeyword
@@ -1867,10 +1929,11 @@
           ? `<div class="svc-grid">${services
               .map((s) => {
                 const p = providerMap[s.provider_id] || {}
+                const photo = listPhotos.get(s.id) || s.coverUrl
                 return `
             <a class="card svc-card" href="#/service/${s.id}">
               <div class="svc-cover" style="background:${API.coverTheme(s.id)}">
-                ${s.coverUrl ? `<img ${API.imgAttrs(s.coverUrl, 'svc-cover-img')} alt="${API.esc(s.title || '')}" loading="lazy" />` : '<span class="svc-cover-mark">MG</span>'}
+                ${photo ? `<img ${API.imgAttrs(photo, 'svc-cover-img')} alt="${API.esc(s.title || '')}" loading="lazy" />` : '<span class="svc-cover-mark">MG</span>'}
               </div>
               <div class="svc-body">
                 <span class="svc-title ellipsis">${API.esc(s.title)}</span>
@@ -4094,6 +4157,7 @@
     }
     const p = provider
     const related = reviews.filter((r) => r.provider_owner_id === p.owner_id)
+    const providerPhotos = uniqueCardPhotos(services, new Set(), (s) => s.coverUrl)
 
     return `
       <div class="page-head">
@@ -4119,7 +4183,7 @@
         <div class="section-head"><span class="section-title">在架服务<span class="count">${services.length} 项</span></span></div>
         ${
           services.length
-            ? `<div class="svc-grid">${services.map(svcCard).join('')}</div>`
+            ? `<div class="svc-grid">${services.map((s) => svcCard(s, providerPhotos.get(s.id))).join('')}</div>`
             : `<div class="empty"><div class="empty-icon">🧩</div><span class="empty-text">暂无在架服务</span></div>`
         }
       </div>
